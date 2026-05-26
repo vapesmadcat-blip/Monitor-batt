@@ -13,7 +13,7 @@ jobs:
     - name: Baixar Codigo
       uses: actions/checkout@v4
 
-    - name: Criar Estrutura Interna Automatically
+    - name: Criar Estrutura Interna Automaticamente
       run: |
         mkdir -p www
         
@@ -113,8 +113,11 @@ jobs:
         cordova platform add android
         cordova build android --debug
 
-    - name: Disponibilizar APK para Download
-      uses: actions/upload-artifact@v4
+    - name: Criar Release e Disponibilizar APK Direto
+      uses: softprops/action-gh-release@v2
       with:
-        name: Monitor-Energia-APK
-        path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
+        tag_name: v1.0.${{ github.run_number }}
+        name: Versão Inicial APK v1.0.${{ github.run_number }}
+        files: platforms/android/app/build/outputs/apk/debug/app-debug.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
