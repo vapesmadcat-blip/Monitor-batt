@@ -1,0 +1,120 @@
+name: Gerador Automatico de APK
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Baixar Codigo
+      uses: actions/checkout@v3
+
+    - name: Criar Estrutura Interna Automaticamente
+      run: |
+        mkdir -p www
+        
+        # Cria o arquivo de configuracao
+        cat << 'EOF' > config.xml
+        <?xml version='1.0' encoding='utf-8'?>
+        <widget id="com.joao.monitorbateria" version="1.0.0" xmlns="http://www.w3.org/ns/widgets">
+            <name>Monitor Energia</name>
+            <description>Monitor de Bateria Fullscreen</description>
+            <author email="contato@joao.com">João Kirsting</author>
+            <content src="index.html" />
+            <access origin="*" />
+            <preference name="Fullscreen" value="true" />
+            <preference name="Orientation" value="portrait" />
+            <preference name="BackgroundColor" value="#0a0a0a" />
+            <platform name="android">
+                <allow-intent href="market:*" />
+            </platform>
+        </widget>
+        EOF
+
+        # Cria o HTML funcional da bateria
+        cat << 'EOF' > www/index.html
+        <!DOCTYPE html>
+        <html lang="pt-br">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+            <title>Monitor de Bateria</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body, html {
+                    width: 100%; height: 100%; overflow: hidden;
+                    background-color: #0a0a0a; display: flex;
+                    flex-direction: column; justify-content: center;
+                    align-items: center; font-family: sans-serif; color: white;
+                }
+                .bateria-corpo {
+                    width: 130px; height: 240px; border: 5px solid #333;
+                    border-radius: 20px; position: relative; background: #111; padding: 5px;
+                }
+                .bateria-corpo::before {
+                    content: ''; position: absolute; top: -16px; left: 50%;
+                    transform: translateX(-50%); width: 45px; height: 12px;
+                    background: #333; border-radius: 5px 5px 0 0;
+                }
+                .nivel-preenchimento {
+                    width: 100%; height: 0%; position: absolute; bottom: 0; left: 0;
+                    border-radius: 14px; transition: height 1s ease-in-out, background-color 0.5s;
+                }
+                #texto-porcentagem { font-size: 4rem; font-weight: bold; margin-top: 25px; }
+                #status-carregando { margin-top: 10px; font-size: 1rem; color: #666; text-transform: uppercase; letter-spacing: 2px; }
+            </style>
+        </head>
+        <body>
+            <div class="bateria-corpo"><div id="barra-carga" class="nivel-preenchimento"></div></div>
+            <div id="texto-porcentagem">--%</div>
+            <div id="status-carregando">Sincronizando...</div>
+            <script src="cordova.js"></script>
+            <script>
+                const barraCarga = document.getElementById('barra-carga');
+                const textoPorcentagem = document.getElementById('texto-porcentagem');
+                const statusCarregando = document.getElementById('status-carregando');
+                function atualizarInterfaceBateria(battery) {
+                    const nivel = Math.round(battery.level * 100);
+                    textoPorcentagem.textContent = nivel + "%";
+                    barraCarga.style.height = nivel + "%";
+                    if (nivel <= 20) barraCarga.style.backgroundColor = "#ff4d4d";
+                    else if (nivel <= 50) barraCarga.style.backgroundColor = "#ffd11a";
+                    else barraCarga.style.backgroundColor = "#2ecc71";
+                    statusCarregando.textContent = battery.charging ? "⚡ Carregando..." : "🔋 Bateria";
+                }
+                function iniciar() {
+                    if ('getBattery' in navigator) {
+                        navigator.getBattery().then(battery => {
+                            atualizarInterfaceBateria(battery);
+                            battery.addEventListener('levelchange', () => atualizarInterfaceBateria(battery));
+                            battery.addEventListener('chargingchange', () => atualizarInterfaceBateria(battery));
+                        });
+                    }
+                }
+                document.addEventListener('deviceready', iniciar, false);
+            </script>
+        </body>
+        </html>
+        EOF
+
+    - name: Configurar Java JDK 11
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '11'
+
+    - name: Instalar Cordova e Compilar Aplicativo
+      run: |
+        npm install -g cordova
+        cordova platform add android
+        cordova build android --debug
+
+    - name: Disponibilizar APK para Download
+      uses: actions/upload-artifact@v3
+      with:
+        name: Monitor-Energia-APK
+        path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
