@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Monitor de Bateria</string>
+    <string name="notification_channel_name">Monitor de Bateria</string>
+    <string name="notification_channel_desc">Alertas de bateria baixa e monitoramento em segundo plano</string>
+    <string name="notification_title">Monitor de Bateria Ativo</string>
+    <string name="notification_text">Monitoramento residente em execução. Toque para abrir.</string>
+    <string name="notification_low_title">⚠️ BATERIA BAIXA!</string>
+    <string name="notification_low_text">Bateria abaixo de 5%. Beep a cada 30s ativado.</string>
+</resources>
