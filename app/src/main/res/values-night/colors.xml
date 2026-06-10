@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="battery_green">#81C784</color>
+    <color name="battery_yellow">#FFF176</color>
+    <color name="battery_red">#EF9A9A</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0BEC5</color>
+</resources>
