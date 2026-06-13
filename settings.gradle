@@ -6,4 +6,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "BatteryMonitor"
-include ':app'
+include ":app"
