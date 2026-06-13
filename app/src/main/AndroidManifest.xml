@@ -17,6 +17,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BatteryMonitor"
         tools:targetApi="31">
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -26,10 +27,22 @@
             </intent-filter>
         </activity>
 
+        <!-- Serviço de monitoramento de bateria -->
         <service
-            android:name=".BatteryMonitorService"
+            android:name=".BatteryService"
             android:foregroundServiceType="specialUse"
             android:exported="false" />
+
+        <!-- Receiver para reiniciar o serviço após reboot -->
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

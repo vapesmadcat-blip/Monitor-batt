@@ -53,8 +53,11 @@ public class BatteryService extends Service {
     public void onCreate() {
         super.onCreate();
         handler = new Handler(Looper.getMainLooper());
-
-        toneGenerator = createToneGenerator();
+        try {
+            toneGenerator = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
+        } catch (RuntimeException e) {
+            toneGenerator = null;
+        }
 
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MonitorBatt::wl");
@@ -64,52 +67,15 @@ public class BatteryService extends Service {
         createChannel();
         registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
-        // Força checagem inicial da bateria
-        checkInitialBatteryStatus();
-
         beepRunnable = new Runnable() {
             @Override
             public void run() {
                 if (alerting && toneGenerator != null) {
-                    try {
-                        toneGenerator.startTone(ToneGenerator.TONE_CDMA_HIGH_L, 650);
-                    } catch (Exception ignored) {}
+                    toneGenerator.startTone(ToneGenerator.TONE_CDMA_HIGH_L, 600);
                 }
-                if (alerting) {
-                    handler.postDelayed(this, BEEP_INTERVAL_MS);
-                }
+                handler.postDelayed(this, BEEP_INTERVAL_MS);
             }
         };
-    }
-
-    private ToneGenerator createToneGenerator() {
-        try {
-            return new ToneGenerator(AudioManager.STREAM_ALARM, 100);
-        } catch (RuntimeException e1) {
-            try {
-                return new ToneGenerator(AudioManager.STREAM_RING, 100);
-            } catch (RuntimeException e2) {
-                try {
-                    return new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
-                } catch (RuntimeException e3) {
-                    return null;
-                }
-            }
-        }
-    }
-
-    private void checkInitialBatteryStatus() {
-        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = registerReceiver(null, ifilter);
-        if (batteryStatus != null) {
-            int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            int plugged = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
-            currentLevel = (level >= 0 && scale > 0) ? (int) ((level * 100f) / scale) : -1;
-            charging = plugged != 0;
-            updateNotification();
-            evaluateAlertState();
-        }
     }
 
     @Override
