@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.batterymonitor'
+    namespace 'com.vapesmadcat.monitorbatt'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.example.batterymonitor"
+        applicationId "com.vapesmadcat.monitorbatt"
         minSdk 24
         targetSdk 34
         versionCode 1
