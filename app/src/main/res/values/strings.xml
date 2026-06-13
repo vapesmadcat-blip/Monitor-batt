@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Battery Monitor</string>
-    <string name="battery_fmt" formatted="false">Battery: %d%% (%s)</string>
+    <string name="battery_fmt">Battery: %1$d%% (%2$s)</string>
     <string name="charger_on">Charging</string>
     <string name="charger_off">Discharging</string>
     <string name="status_running">Service running</string>
     <string name="status_stopped">Service stopped</string>
     <string name="notif_initial">Monitoring battery...</string>
-    <string name="notif_fmt" formatted="false">%d%% - %s</string>
+    <string name="notif_fmt">%1$d%% - %2$s</string>
     <string name="channel_name">Battery Alerts</string>
     <string name="channel_desc">Monitors battery level and charging status</string>
 </resources>
