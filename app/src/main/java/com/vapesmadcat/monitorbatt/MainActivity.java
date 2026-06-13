@@ -8,7 +8,6 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.widget.Button;
-import android.widget.SeekBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,8 +18,6 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView batteryText;
     private TextView statusText;
-    private SeekBar thresholdSeekBar;
-    private TextView thresholdValue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,31 +28,6 @@ public class MainActivity extends AppCompatActivity {
         statusText = findViewById(R.id.statusText);
         Button startBtn = findViewById(R.id.startBtn);
         Button stopBtn = findViewById(R.id.stopBtn);
-
-        // Configuração do SeekBar para threshold (padrão 90% para teste)
-        thresholdSeekBar = findViewById(R.id.thresholdSeekBar);
-        thresholdValue = findViewById(R.id.thresholdValue);
-
-        int savedThreshold = getSharedPreferences("battery_prefs", MODE_PRIVATE)
-                .getInt("threshold", 90);
-        thresholdSeekBar.setProgress(savedThreshold);
-        thresholdValue.setText(savedThreshold + "%");
-
-        thresholdSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                thresholdValue.setText(progress + "%");
-                getSharedPreferences("battery_prefs", MODE_PRIVATE)
-                        .edit()
-                        .putInt("threshold", progress)
-                        .apply();
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
 
         startBtn.setOnClickListener(v -> {
             requestNotificationPermissionIfNeeded();

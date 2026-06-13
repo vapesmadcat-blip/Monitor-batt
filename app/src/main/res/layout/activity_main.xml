@@ -52,35 +52,4 @@
         android:text="Parar Monitor"
         android:layout_marginTop="8dp" />
 
-    <!-- Configuração do limiar do BIP -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Bipar a partir de:"
-        android:textSize="18sp"
-        android:layout_marginTop="32dp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-
-        <SeekBar
-            android:id="@+id/thresholdSeekBar"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:max="100"
-            android:progress="90" />
-
-        <TextView
-            android:id="@+id/thresholdValue"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="90%"
-            android:textSize="18sp"
-            android:layout_marginStart="16dp" />
-    </LinearLayout>
-
 </LinearLayout>
