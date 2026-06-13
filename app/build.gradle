@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace "com.example.batteryalert"
+    namespace "com.vapesmadcat.monitorbatt"
     compileSdk 34
 
     defaultConfig {
