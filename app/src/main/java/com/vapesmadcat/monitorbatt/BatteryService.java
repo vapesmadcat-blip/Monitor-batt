@@ -24,7 +24,7 @@ public class BatteryService extends Service {
 
     public static final String CHANNEL_ID = "battery_alert_channel";
     public static final int NOTIF_ID = 1;
-    private static final int DEFAULT_THRESHOLD = 90; // Para teste rápido
+    private static final int THRESHOLD = 5;
     private static final long BEEP_INTERVAL_MS = 30_000L;
 
     private Handler handler;
@@ -118,14 +118,8 @@ public class BatteryService extends Service {
         return START_STICKY;
     }
 
-    private int getThreshold() {
-        return getSharedPreferences("battery_prefs", MODE_PRIVATE)
-                .getInt("threshold", DEFAULT_THRESHOLD);
-    }
-
     private void evaluateAlertState() {
-        int threshold = getThreshold();
-        boolean shouldAlert = currentLevel >= 0 && currentLevel <= threshold && !charging;
+        boolean shouldAlert = currentLevel >= 0 && currentLevel <= THRESHOLD && !charging;
         if (shouldAlert && !alerting) {
             alerting = true;
             handler.removeCallbacks(beepRunnable);
