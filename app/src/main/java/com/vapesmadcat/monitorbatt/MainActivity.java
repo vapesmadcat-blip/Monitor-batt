@@ -8,7 +8,6 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,32 +16,29 @@ import androidx.core.content.ContextCompat;
 
 public class MainActivity extends AppCompatActivity {
 
-    private ProgressBar progressBar;
-    private TextView tvLevel;
-    private TextView tvStatus;
+    private TextView batteryText;
+    private TextView statusText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        progressBar = findViewById(R.id.progressBar);
-        tvLevel = findViewById(R.id.tvLevel);
-        tvStatus = findViewById(R.id.tvStatus);
+        batteryText = findViewById(R.id.batteryText);
+        statusText = findViewById(R.id.statusText);
+        Button startBtn = findViewById(R.id.startBtn);
+        Button stopBtn = findViewById(R.id.stopBtn);
 
-        Button btnStart = findViewById(R.id.btnStart);
-        Button btnStop = findViewById(R.id.btnStop);
-
-        btnStart.setOnClickListener(v -> {
+        startBtn.setOnClickListener(v -> {
             requestNotificationPermissionIfNeeded();
             Intent i = new Intent(this, BatteryService.class);
             ContextCompat.startForegroundService(this, i);
-            tvStatus.setText(R.string.status_running);
+            statusText.setText(R.string.status_running);
         });
 
-        btnStop.setOnClickListener(v -> {
+        stopBtn.setOnClickListener(v -> {
             stopService(new Intent(this, BatteryService.class));
-            tvStatus.setText(R.string.status_stopped);
+            statusText.setText(R.string.status_stopped);
         });
 
         updateBatteryReadout();
@@ -58,22 +54,12 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = registerReceiver(null, ifilter);
         if (batteryStatus == null) return;
-
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
         int plugged = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
-
         int pct = (level >= 0 && scale > 0) ? (int) ((level * 100f) / scale) : -1;
         String charger = plugged != 0 ? getString(R.string.charger_on) : getString(R.string.charger_off);
-
-        if (pct >= 0) {
-            progressBar.setProgress(pct);
-            tvLevel.setText(pct + "%");
-        } else {
-            tvLevel.setText("--%");
-        }
-
-        tvStatus.setText(getString(R.string.battery_fmt, pct >= 0 ? pct : 0, charger));
+        batteryText.setText(getString(R.string.battery_fmt, pct, charger));
     }
 
     private void requestNotificationPermissionIfNeeded() {
