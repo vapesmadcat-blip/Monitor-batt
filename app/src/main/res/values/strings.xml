@@ -1,16 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Monitor-batt</string>
-    <string name="loading">Lendo bateria…</string>
-    <string name="start">Iniciar monitoramento</string>
-    <string name="stop">Parar monitoramento</string>
-    <string name="status_running">Monitorando em background</string>
-    <string name="status_stopped">Parado</string>
-    <string name="battery_fmt">Bateria: %1$d%% • %2$s</string>
-    <string name="notif_initial">Monitorando bateria…</string>
-    <string name="notif_fmt">Bateria %1$d%% • %2$s</string>
-    <string name="charger_on">carregador conectado</string>
-    <string name="charger_off">sem carregador</string>
-    <string name="channel_name">Alerta de Bateria</string>
-    <string name="channel_desc">Notificação persistente do serviço de monitoramento.</string>
+    <string name="app_name">BatteryMonitor</string>
 </resources>
