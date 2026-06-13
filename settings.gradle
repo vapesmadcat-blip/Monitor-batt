@@ -11,5 +11,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "BatteryMonitor"
+rootProject.name = "MonitorBatt"
 include ':app'
