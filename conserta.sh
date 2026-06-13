@@ -1,4 +1,3 @@
-cat > conserta.sh << 'EOF'
 #!/system/bin/sh
 echo "Corrigindo strings.xml..."
 sed -i 's/<string name="notif_fmt">/<string name="notif_fmt" formatted="false">/g' app/src/main/res/values/strings.xml
@@ -12,4 +11,3 @@ fi
 echo "Removendo package do manifest..."
 sed -i 's/ package="[^"]*"//' app/src/main/AndroidManifest.xml
 echo "Pronto! Execute ./gradlew clean build"
-EOF
