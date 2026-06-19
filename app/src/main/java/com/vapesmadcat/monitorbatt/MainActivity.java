@@ -24,10 +24,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        batteryText = findViewById(R.id.batteryText);
-        statusText = findViewById(R.id.statusText);
-        Button startBtn = findViewById(R.id.startBtn);
-        Button stopBtn = findViewById(R.id.stopBtn);
+        batteryText = findViewById(R.id.tvLevel);
+        statusText = findViewById(R.id.tvStatus);
+        Button startBtn = findViewById(R.id.btnStart);
+        Button stopBtn = findViewById(R.id.btnStop);
 
         startBtn.setOnClickListener(v -> {
             requestNotificationPermissionIfNeeded();
