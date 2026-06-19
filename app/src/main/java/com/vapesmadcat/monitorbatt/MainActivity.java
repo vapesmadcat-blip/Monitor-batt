@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView statusText;
     private TextView thresholdValueText;
     private TextView intervalValueText;
+    private TextView alertModeText;
     private SeekBar thresholdSeek;
     private SeekBar intervalSeek;
     private SharedPreferences preferences;
@@ -41,26 +42,39 @@ public class MainActivity extends AppCompatActivity {
         statusText = findViewById(R.id.tvStatus);
         thresholdValueText = findViewById(R.id.tvThresholdValue);
         intervalValueText = findViewById(R.id.tvIntervalValue);
+        alertModeText = findViewById(R.id.tvAlertMode);
         thresholdSeek = findViewById(R.id.seekThreshold);
         intervalSeek = findViewById(R.id.seekInterval);
         Button startBtn = findViewById(R.id.btnStart);
         Button stopBtn = findViewById(R.id.btnStop);
+        Button muteBtn = findViewById(R.id.btnMute);
 
         setupControls();
 
         startBtn.setOnClickListener(v -> {
             requestNotificationPermissionIfNeeded();
             saveSettings();
+            preferences.edit().putBoolean(BatteryService.KEY_MUTED, false).apply();
             Intent i = new Intent(this, BatteryService.class);
             ContextCompat.startForegroundService(this, i);
             statusText.setText(R.string.status_running);
+            alertModeText.setText(R.string.alert_mode_active);
         });
 
         stopBtn.setOnClickListener(v -> {
             stopService(new Intent(this, BatteryService.class));
             statusText.setText(R.string.status_stopped);
+            alertModeText.setText(R.string.alert_mode_stopped);
         });
 
+        muteBtn.setOnClickListener(v -> {
+            boolean muted = !preferences.getBoolean(BatteryService.KEY_MUTED, false);
+            preferences.edit().putBoolean(BatteryService.KEY_MUTED, muted).apply();
+            updateMuteButton(muted);
+            alertModeText.setText(muted ? R.string.alert_mode_muted : R.string.alert_mode_active);
+        });
+
+        updateMuteButton(preferences.getBoolean(BatteryService.KEY_MUTED, false));
         updateBatteryReadout();
     }
 
@@ -68,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadSettings();
+        updateMuteButton(preferences.getBoolean(BatteryService.KEY_MUTED, false));
         updateBatteryReadout();
     }
 
@@ -125,6 +140,11 @@ public class MainActivity extends AppCompatActivity {
                 .apply();
     }
 
+    private void updateMuteButton(boolean muted) {
+        Button muteBtn = findViewById(R.id.btnMute);
+        muteBtn.setText(muted ? R.string.btn_unmute : R.string.btn_mute);
+    }
+
     private int getThresholdFromProgress(int progress) {
         return progress + 5;
     }
@@ -148,6 +168,14 @@ public class MainActivity extends AppCompatActivity {
         batteryText.setText(getString(R.string.battery_percent_fmt, pct));
         batteryText.setTextColor(getBatteryColor(pct));
         statusText.setText(getString(R.string.battery_fmt, pct, charger));
+        alertModeText.setText(getAlertLabel(pct));
+        alertModeText.setTextColor(getBatteryColor(pct));
+    }
+
+    private String getAlertLabel(int pct) {
+        if (pct <= 10) return getString(R.string.alert_level_critical);
+        if (pct <= 30) return getString(R.string.alert_level_attention);
+        return getString(R.string.alert_level_normal);
     }
 
     private int getBatteryColor(int pct) {
