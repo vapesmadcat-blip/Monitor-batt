@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar thresholdSeek;
     private SeekBar intervalSeek;
     private SharedPreferences preferences;
+    private Button muteBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
         intervalSeek = findViewById(R.id.seekInterval);
         Button startBtn = findViewById(R.id.btnStart);
         Button stopBtn = findViewById(R.id.btnStop);
-        Button muteBtn = findViewById(R.id.btnMute);
+        muteBtn = findViewById(R.id.btnMute);
 
         setupControls();
 
@@ -58,20 +59,21 @@ public class MainActivity extends AppCompatActivity {
             Intent i = new Intent(this, BatteryService.class);
             ContextCompat.startForegroundService(this, i);
             statusText.setText(R.string.status_running);
-            alertModeText.setText(R.string.alert_mode_active);
+            alertModeText.setText(getString(R.string.alert_mode_active));
+            updateMuteButton(false);
         });
 
         stopBtn.setOnClickListener(v -> {
             stopService(new Intent(this, BatteryService.class));
             statusText.setText(R.string.status_stopped);
-            alertModeText.setText(R.string.alert_mode_stopped);
+            alertModeText.setText(getString(R.string.alert_mode_stopped));
         });
 
         muteBtn.setOnClickListener(v -> {
             boolean muted = !preferences.getBoolean(BatteryService.KEY_MUTED, false);
             preferences.edit().putBoolean(BatteryService.KEY_MUTED, muted).apply();
             updateMuteButton(muted);
-            alertModeText.setText(muted ? R.string.alert_mode_muted : R.string.alert_mode_active);
+            alertModeText.setText(getString(muted ? R.string.alert_mode_muted : R.string.alert_mode_active));
         });
 
         updateMuteButton(preferences.getBoolean(BatteryService.KEY_MUTED, false));
@@ -141,8 +143,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateMuteButton(boolean muted) {
-        Button muteBtn = findViewById(R.id.btnMute);
-        muteBtn.setText(muted ? R.string.btn_unmute : R.string.btn_mute);
+        muteBtn.setText(getString(muted ? R.string.btn_unmute : R.string.btn_mute));
     }
 
     private int getThresholdFromProgress(int progress) {
