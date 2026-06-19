@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.BatteryManager;
@@ -17,6 +18,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
@@ -24,8 +26,12 @@ public class BatteryService extends Service {
 
     public static final String CHANNEL_ID = "battery_alert_channel";
     public static final int NOTIF_ID = 1;
-    private static final int THRESHOLD = 5;
-    private static final long BEEP_INTERVAL_MS = 30_000L;
+    public static final String PREFS_NAME = "monitor_batt_prefs";
+    public static final String KEY_THRESHOLD = "threshold";
+    public static final String KEY_BEEP_INTERVAL_SECONDS = "beep_interval_seconds";
+    public static final String KEY_MUTED = "muted";
+    public static final int DEFAULT_THRESHOLD = 10;
+    public static final int DEFAULT_BEEP_INTERVAL_SECONDS = 15;
 
     private Handler handler;
     private Runnable beepRunnable;
@@ -44,8 +50,8 @@ public class BatteryService extends Service {
             int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
             currentLevel = (level >= 0 && scale > 0) ? (int) ((level * 100f) / scale) : -1;
             charging = plugged != 0;
-            updateNotification();
             evaluateAlertState();
+            updateNotification();
         }
     };
 
@@ -64,38 +70,48 @@ public class BatteryService extends Service {
         createChannel();
         registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
-        // Força checagem inicial da bateria
-        checkInitialBatteryStatus();
-
         beepRunnable = new Runnable() {
             @Override
             public void run() {
-                if (alerting && toneGenerator != null) {
-                    try {
-                        toneGenerator.startTone(ToneGenerator.TONE_CDMA_HIGH_L, 650);
-                    } catch (Exception ignored) {}
-                }
                 if (alerting) {
-                    handler.postDelayed(this, BEEP_INTERVAL_MS);
+                    if (toneGenerator != null && !isMuted()) {
+                        try {
+                            toneGenerator.startTone(getToneForLevel(), getToneDurationMs());
+                        } catch (Exception ignored) { }
+                    }
+                    updateNotification();
+                    handler.postDelayed(this, getCurrentIntervalMs());
                 }
             }
         };
+
+        checkInitialBatteryStatus();
+    }
+
+    private boolean isMuted() {
+        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        return preferences.getBoolean(KEY_MUTED, false);
     }
 
     private ToneGenerator createToneGenerator() {
-        try {
-            return new ToneGenerator(AudioManager.STREAM_ALARM, 100);
-        } catch (RuntimeException e1) {
+        int[] streams = {
+            AudioManager.STREAM_ALARM,
+            AudioManager.STREAM_NOTIFICATION,
+            AudioManager.STREAM_RING,
+            AudioManager.STREAM_MUSIC,
+            AudioManager.STREAM_SYSTEM
+        };
+        
+        for (int stream : streams) {
             try {
-                return new ToneGenerator(AudioManager.STREAM_RING, 100);
-            } catch (RuntimeException e2) {
-                try {
-                    return new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
-                } catch (RuntimeException e3) {
-                    return null;
-                }
+                ToneGenerator tg = new ToneGenerator(stream, 100);
+                Log.d("BatteryService", "ToneGenerator created with stream: " + stream);
+                return tg;
+            } catch (RuntimeException e) {
+                Log.e("BatteryService", "Failed to create ToneGenerator for stream: " + stream);
             }
         }
+        return null;
     }
 
     private void checkInitialBatteryStatus() {
@@ -107,51 +123,124 @@ public class BatteryService extends Service {
             int plugged = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
             currentLevel = (level >= 0 && scale > 0) ? (int) ((level * 100f) / scale) : -1;
             charging = plugged != 0;
-            updateNotification();
             evaluateAlertState();
+            updateNotification();
         }
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        startForeground(NOTIF_ID, buildNotification(getString(R.string.notif_initial)));
+        startForeground(NOTIF_ID, buildNotification(getNotificationTitle(), getNotificationText()));
+        evaluateAlertState();
+        updateNotification();
         return START_STICKY;
     }
 
     private void evaluateAlertState() {
-        boolean shouldAlert = currentLevel >= 0 && currentLevel <= THRESHOLD && !charging;
+        boolean shouldAlert = currentLevel >= 0 && currentLevel <= getThreshold() && !charging;
+        Log.d("BatteryService", "Level: " + currentLevel + ", Threshold: " + getThreshold() + ", Charging: " + charging + ", ShouldAlert: " + shouldAlert);
         if (shouldAlert && !alerting) {
             alerting = true;
             handler.removeCallbacks(beepRunnable);
             handler.post(beepRunnable);
+            Log.d("BatteryService", "Alert started");
         } else if (!shouldAlert && alerting) {
             alerting = false;
             handler.removeCallbacks(beepRunnable);
+            Log.d("BatteryService", "Alert stopped");
         }
+    }
+
+    private int getThreshold() {
+        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        return preferences.getInt(KEY_THRESHOLD, DEFAULT_THRESHOLD);
+    }
+
+    private long getBaseBeepIntervalMs() {
+        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        int seconds = preferences.getInt(KEY_BEEP_INTERVAL_SECONDS, DEFAULT_BEEP_INTERVAL_SECONDS);
+        return seconds * 1000L;
+    }
+
+    private long getCurrentIntervalMs() {
+        long interval = getBaseBeepIntervalMs();
+        return interval > 0 ? interval : DEFAULT_BEEP_INTERVAL_SECONDS * 1000L;
+    }
+
+    private int getToneForLevel() {
+        int halfThreshold = Math.max(1, getThreshold() / 2);
+
+        if (currentLevel <= 1) {
+            return ToneGenerator.TONE_CDMA_EMERGENCY_RINGBACK;
+        }
+        if (currentLevel <= 2) {
+            return ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD;
+        }
+        if (currentLevel <= 5) {
+            return ToneGenerator.TONE_CDMA_HIGH_L;
+        }
+        if (currentLevel <= halfThreshold) {
+            return ToneGenerator.TONE_PROP_BEEP2;
+        }
+        return ToneGenerator.TONE_PROP_BEEP;
+    }
+
+    private int getToneDurationMs() {
+        if (currentLevel <= 1) return 1200;
+        if (currentLevel <= 2) return 900;
+        if (currentLevel <= 5) return 700;
+        return 450;
+    }
+
+    private String getNotificationTitle() {
+        if (alerting) {
+            return "ALERTA ATIVO";
+        }
+        if (isMuted()) {
+            return "Monitor de Bateria • Silenciado";
+        }
+        return getString(R.string.app_name);
+    }
+
+    private String getNotificationText() {
+        if (currentLevel < 0) {
+            return getString(R.string.notif_initial);
+        }
+
+        String powerState = charging ? getString(R.string.charger_on) : getString(R.string.charger_off);
+        String alertState;
+        if (alerting) {
+            alertState = "alerta ativo";
+        } else if (isMuted()) {
+            alertState = "silenciado";
+        } else {
+            alertState = "monitorando";
+        }
+
+        return "Bateria " + currentLevel + "% • "
+                + powerState + " • alerta em " + getThreshold() + "% • bip a cada "
+                + (getCurrentIntervalMs() / 1000) + "s • " + alertState;
     }
 
     private void updateNotification() {
-        String text;
-        if (currentLevel < 0) {
-            text = getString(R.string.notif_initial);
-        } else {
-            text = getString(R.string.notif_fmt, currentLevel,
-                    charging ? getString(R.string.charger_on) : getString(R.string.charger_off));
-        }
         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        if (nm != null) nm.notify(NOTIF_ID, buildNotification(text));
+        if (nm != null) {
+            nm.notify(NOTIF_ID, buildNotification(getNotificationTitle(), getNotificationText()));
+        }
     }
 
-    private Notification buildNotification(String text) {
+    private Notification buildNotification(String title, String text) {
         Intent openIntent = new Intent(this, MainActivity.class);
         PendingIntent pi = PendingIntent.getActivity(this, 0, openIntent,
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_lock_idle_low_battery)
-                .setContentTitle(getString(R.string.app_name))
+                .setContentTitle(title)
                 .setContentText(text)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(text))
                 .setOngoing(true)
+                .setOnlyAlertOnce(true)
                 .setContentIntent(pi)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build();
@@ -171,7 +260,7 @@ public class BatteryService extends Service {
 
     @Override
     public void onDestroy() {
-        try { unregisterReceiver(batteryReceiver); } catch (Exception ignored) {}
+        try { unregisterReceiver(batteryReceiver); } catch (Exception ignored) { }
         if (handler != null) handler.removeCallbacks(beepRunnable);
         if (toneGenerator != null) { toneGenerator.release(); toneGenerator = null; }
         if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
