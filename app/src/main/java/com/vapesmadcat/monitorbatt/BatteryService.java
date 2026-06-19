@@ -151,22 +151,7 @@ public class BatteryService extends Service {
     }
 
     private long getCurrentIntervalMs() {
-        long base = getBaseBeepIntervalMs();
-        int halfThreshold = Math.max(1, getThreshold() / 2);
-
-        if (currentLevel <= 1) {
-            return 2000L;
-        }
-        if (currentLevel <= 2) {
-            return 4000L;
-        }
-        if (currentLevel <= 5) {
-            return 8000L;
-        }
-        if (currentLevel <= halfThreshold) {
-            return Math.min(base, 10000L);
-        }
-        return base;
+        return getBaseBeepIntervalMs();
     }
 
     private int getToneForLevel() {
