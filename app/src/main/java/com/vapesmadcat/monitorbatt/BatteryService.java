@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.BatteryManager;
@@ -24,8 +25,11 @@ public class BatteryService extends Service {
 
     public static final String CHANNEL_ID = "battery_alert_channel";
     public static final int NOTIF_ID = 1;
-    private static final int THRESHOLD = 5;
-    private static final long BEEP_INTERVAL_MS = 30_000L;
+    public static final String PREFS_NAME = "monitor_batt_prefs";
+    public static final String KEY_THRESHOLD = "threshold";
+    public static final String KEY_BEEP_INTERVAL_SECONDS = "beep_interval_seconds";
+    public static final int DEFAULT_THRESHOLD = 10;
+    public static final int DEFAULT_BEEP_INTERVAL_SECONDS = 15;
 
     private Handler handler;
     private Runnable beepRunnable;
@@ -63,8 +67,6 @@ public class BatteryService extends Service {
 
         createChannel();
         registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-
-        // Força checagem inicial da bateria
         checkInitialBatteryStatus();
 
         beepRunnable = new Runnable() {
@@ -73,10 +75,10 @@ public class BatteryService extends Service {
                 if (alerting && toneGenerator != null) {
                     try {
                         toneGenerator.startTone(ToneGenerator.TONE_CDMA_HIGH_L, 650);
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) { }
                 }
                 if (alerting) {
-                    handler.postDelayed(this, BEEP_INTERVAL_MS);
+                    handler.postDelayed(this, getBeepIntervalMs());
                 }
             }
         };
@@ -114,12 +116,13 @@ public class BatteryService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        startForeground(NOTIF_ID, buildNotification(getString(R.string.notif_initial)));
+        startForeground(NOTIF_ID, buildNotification(getNotificationText()));
+        evaluateAlertState();
         return START_STICKY;
     }
 
     private void evaluateAlertState() {
-        boolean shouldAlert = currentLevel >= 0 && currentLevel <= THRESHOLD && !charging;
+        boolean shouldAlert = currentLevel >= 0 && currentLevel <= getThreshold() && !charging;
         if (shouldAlert && !alerting) {
             alerting = true;
             handler.removeCallbacks(beepRunnable);
@@ -130,16 +133,33 @@ public class BatteryService extends Service {
         }
     }
 
-    private void updateNotification() {
-        String text;
+    private int getThreshold() {
+        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        return preferences.getInt(KEY_THRESHOLD, DEFAULT_THRESHOLD);
+    }
+
+    private long getBeepIntervalMs() {
+        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        int seconds = preferences.getInt(KEY_BEEP_INTERVAL_SECONDS, DEFAULT_BEEP_INTERVAL_SECONDS);
+        return seconds * 1000L;
+    }
+
+    private String getNotificationText() {
         if (currentLevel < 0) {
-            text = getString(R.string.notif_initial);
-        } else {
-            text = getString(R.string.notif_fmt, currentLevel,
-                    charging ? getString(R.string.charger_on) : getString(R.string.charger_off));
+            return getString(R.string.notif_initial);
         }
+        return getString(
+                R.string.notif_fmt_detailed,
+                currentLevel,
+                charging ? getString(R.string.charger_on) : getString(R.string.charger_off),
+                getThreshold(),
+                (int) (getBeepIntervalMs() / 1000)
+        );
+    }
+
+    private void updateNotification() {
         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        if (nm != null) nm.notify(NOTIF_ID, buildNotification(text));
+        if (nm != null) nm.notify(NOTIF_ID, buildNotification(getNotificationText()));
     }
 
     private Notification buildNotification(String text) {
@@ -151,6 +171,7 @@ public class BatteryService extends Service {
                 .setSmallIcon(android.R.drawable.ic_lock_idle_low_battery)
                 .setContentTitle(getString(R.string.app_name))
                 .setContentText(text)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(text))
                 .setOngoing(true)
                 .setContentIntent(pi)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -171,7 +192,7 @@ public class BatteryService extends Service {
 
     @Override
     public void onDestroy() {
-        try { unregisterReceiver(batteryReceiver); } catch (Exception ignored) {}
+        try { unregisterReceiver(batteryReceiver); } catch (Exception ignored) { }
         if (handler != null) handler.removeCallbacks(beepRunnable);
         if (toneGenerator != null) { toneGenerator.release(); toneGenerator = null; }
         if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
