@@ -1,20 +1,20 @@
 <resources>
     <string name="app_name">Monitor de Bateria</string>
 
-    <!-- Notificações -->
     <string name="notif_initial">Monitorando bateria...</string>
     <string name="notif_fmt">Bateria: %1$d%% • %2$s</string>
+    <string name="notif_fmt_detailed">Bateria: %1$d%% • %2$s • alerta em %3$d%% • bip a cada %4$d s</string>
     <string name="charger_on">Carregando</string>
-    <string name="charger_off">Na tomada não</string>
+    <string name="charger_off">Fora da tomada</string>
 
-    <!-- Canal de notificação -->
     <string name="channel_name">Alerta de Bateria Baixa</string>
     <string name="channel_desc">Notificações quando a bateria está crítica</string>
 
-    <!-- Status na tela -->
     <string name="status_running">Monitoramento ativo</string>
     <string name="status_stopped">Monitoramento parado</string>
 
-    <!-- Formato da bateria na tela principal -->
     <string name="battery_fmt">Bateria: %1$d%% • %2$s</string>
+    <string name="battery_percent_fmt">%1$d%%</string>
+    <string name="threshold_value_fmt">%1$d%%</string>
+    <string name="interval_value_fmt">%1$d segundos</string>
 </resources>
