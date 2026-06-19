@@ -28,6 +28,7 @@ public class BatteryService extends Service {
     public static final String PREFS_NAME = "monitor_batt_prefs";
     public static final String KEY_THRESHOLD = "threshold";
     public static final String KEY_BEEP_INTERVAL_SECONDS = "beep_interval_seconds";
+    public static final String KEY_MUTED = "muted";
     public static final int DEFAULT_THRESHOLD = 10;
     public static final int DEFAULT_BEEP_INTERVAL_SECONDS = 15;
 
@@ -72,7 +73,7 @@ public class BatteryService extends Service {
         beepRunnable = new Runnable() {
             @Override
             public void run() {
-                if (alerting && toneGenerator != null) {
+                if (alerting && toneGenerator != null && !isMuted()) {
                     try {
                         toneGenerator.startTone(getToneForLevel(), getToneDurationMs());
                     } catch (Exception ignored) { }
@@ -82,6 +83,11 @@ public class BatteryService extends Service {
                 }
             }
         };
+    }
+
+    private boolean isMuted() {
+        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        return preferences.getBoolean(KEY_MUTED, false);
     }
 
     private ToneGenerator createToneGenerator() {
@@ -192,10 +198,13 @@ public class BatteryService extends Service {
         if (currentLevel < 0) {
             return getString(R.string.notif_initial);
         }
-        return "Bateria: " + currentLevel + "% • "
-                + (charging ? getString(R.string.charger_on) : getString(R.string.charger_off))
-                + " • alerta em " + getThreshold() + "%"
-                + " • bip a cada " + (getCurrentIntervalMs() / 1000) + " s";
+        return getString(
+                R.string.notif_fmt_detailed,
+                currentLevel,
+                charging ? getString(R.string.charger_on) : getString(R.string.charger_off),
+                getThreshold(),
+                (int) (getCurrentIntervalMs() / 1000)
+        );
     }
 
     private void updateNotification() {
