@@ -74,11 +74,11 @@ public class BatteryService extends Service {
             public void run() {
                 if (alerting && toneGenerator != null) {
                     try {
-                        toneGenerator.startTone(ToneGenerator.TONE_CDMA_HIGH_L, 650);
+                        toneGenerator.startTone(getToneForLevel(), getToneDurationMs());
                     } catch (Exception ignored) { }
                 }
                 if (alerting) {
-                    handler.postDelayed(this, getBeepIntervalMs());
+                    handler.postDelayed(this, getCurrentIntervalMs());
                 }
             }
         };
@@ -138,23 +138,64 @@ public class BatteryService extends Service {
         return preferences.getInt(KEY_THRESHOLD, DEFAULT_THRESHOLD);
     }
 
-    private long getBeepIntervalMs() {
+    private long getBaseBeepIntervalMs() {
         SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         int seconds = preferences.getInt(KEY_BEEP_INTERVAL_SECONDS, DEFAULT_BEEP_INTERVAL_SECONDS);
         return seconds * 1000L;
+    }
+
+    private long getCurrentIntervalMs() {
+        long base = getBaseBeepIntervalMs();
+        int halfThreshold = Math.max(1, getThreshold() / 2);
+
+        if (currentLevel <= 1) {
+            return 2000L;
+        }
+        if (currentLevel <= 2) {
+            return 4000L;
+        }
+        if (currentLevel <= 5) {
+            return 8000L;
+        }
+        if (currentLevel <= halfThreshold) {
+            return Math.min(base, 10000L);
+        }
+        return base;
+    }
+
+    private int getToneForLevel() {
+        int halfThreshold = Math.max(1, getThreshold() / 2);
+
+        if (currentLevel <= 1) {
+            return ToneGenerator.TONE_CDMA_EMERGENCY_RINGBACK;
+        }
+        if (currentLevel <= 2) {
+            return ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD;
+        }
+        if (currentLevel <= 5) {
+            return ToneGenerator.TONE_CDMA_HIGH_L;
+        }
+        if (currentLevel <= halfThreshold) {
+            return ToneGenerator.TONE_PROP_BEEP2;
+        }
+        return ToneGenerator.TONE_PROP_BEEP;
+    }
+
+    private int getToneDurationMs() {
+        if (currentLevel <= 1) return 1200;
+        if (currentLevel <= 2) return 900;
+        if (currentLevel <= 5) return 700;
+        return 450;
     }
 
     private String getNotificationText() {
         if (currentLevel < 0) {
             return getString(R.string.notif_initial);
         }
-        return getString(
-                R.string.notif_fmt_detailed,
-                currentLevel,
-                charging ? getString(R.string.charger_on) : getString(R.string.charger_off),
-                getThreshold(),
-                (int) (getBeepIntervalMs() / 1000)
-        );
+        return "Bateria: " + currentLevel + "% • "
+                + (charging ? getString(R.string.charger_on) : getString(R.string.charger_off))
+                + " • alerta em " + getThreshold() + "%"
+                + " • bip a cada " + (getCurrentIntervalMs() / 1000) + " s";
     }
 
     private void updateNotification() {
