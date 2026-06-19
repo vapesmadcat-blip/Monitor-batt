@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.PorterDuff;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -143,8 +144,16 @@ public class MainActivity extends AppCompatActivity {
         String charger = plugged != 0 ? getString(R.string.charger_on) : getString(R.string.charger_off);
 
         progressBar.setProgress(Math.max(pct, 0));
+        progressBar.getProgressDrawable().setColorFilter(getBatteryColor(pct), PorterDuff.Mode.SRC_IN);
         batteryText.setText(getString(R.string.battery_percent_fmt, pct));
+        batteryText.setTextColor(getBatteryColor(pct));
         statusText.setText(getString(R.string.battery_fmt, pct, charger));
+    }
+
+    private int getBatteryColor(int pct) {
+        if (pct <= 10) return 0xFFE11D48;
+        if (pct <= 30) return 0xFFF59E0B;
+        return 0xFF22C55E;
     }
 
     private void requestNotificationPermissionIfNeeded() {
