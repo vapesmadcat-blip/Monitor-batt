@@ -56,8 +56,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (BatteryService.ACTION_BIP.equals(intent.getAction())) {
-                String state = intent.getStringExtra("state");
-                triggerVisualBip(state);
+                triggerVisualBip();
             }
         }
     };
@@ -102,19 +101,14 @@ public class MainActivity extends AppCompatActivity {
         startBtn.setOnClickListener(v -> {
             requestNotificationPermissionIfNeeded();
             saveSettings();
-            
             Intent i = new Intent(this, BatteryService.class);
             ContextCompat.startForegroundService(this, i);
             updateServiceButtons(true);
-            
-            Toast.makeText(this, "Monitor Iniciado!", Toast.LENGTH_SHORT).show();
         });
 
         stopBtn.setOnClickListener(v -> {
             stopService(new Intent(this, BatteryService.class));
             updateServiceButtons(false);
-            bipIndicator.setTextColor(Color.WHITE);
-            Toast.makeText(this, "Monitor Desativado", Toast.LENGTH_SHORT).show();
         });
 
         muteBtn.setOnClickListener(v -> {
@@ -124,10 +118,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
         testBeepBtn.setOnClickListener(v -> {
-            triggerVisualBip("red");
+            triggerVisualBip();
             playTestBeep();
         });
 
+        // Registro do Receiver com permissão para receber do próprio app
         IntentFilter filter = new IntentFilter(BatteryService.ACTION_BIP);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(bipReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
@@ -139,16 +134,12 @@ public class MainActivity extends AppCompatActivity {
         updateBatteryReadout();
     }
 
-    private void triggerVisualBip(String state) {
+    private void triggerVisualBip() {
         runOnUiThread(() -> {
-            if ("red".equals(state)) {
-                bipIndicator.setTextColor(Color.RED);
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    bipIndicator.setTextColor(Color.YELLOW); // Volta para amarelo (sinal de vida)
-                }, 1000);
-            } else if ("yellow".equals(state)) {
-                bipIndicator.setTextColor(Color.YELLOW);
-            }
+            bipIndicator.setTextColor(Color.RED);
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                bipIndicator.setTextColor(Color.WHITE);
+            }, 1000);
         });
     }
 
@@ -239,7 +230,8 @@ public class MainActivity extends AppCompatActivity {
     private int getIntervalFromProgress(int progress) { return (progress + 1) * 5; }
 
     private void updateBatteryReadout() {
-        Intent batteryStatus = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = registerReceiver(null, ifilter);
         if (batteryStatus == null) return;
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
