@@ -55,7 +55,10 @@ public class MainActivity extends AppCompatActivity {
     private final BroadcastReceiver bipReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            triggerVisualBip();
+            if (BatteryService.ACTION_BIP.equals(intent.getAction())) {
+                String state = intent.getStringExtra("state");
+                triggerVisualBip(state);
+            }
         }
     };
 
@@ -99,14 +102,19 @@ public class MainActivity extends AppCompatActivity {
         startBtn.setOnClickListener(v -> {
             requestNotificationPermissionIfNeeded();
             saveSettings();
+            
             Intent i = new Intent(this, BatteryService.class);
             ContextCompat.startForegroundService(this, i);
             updateServiceButtons(true);
+            
+            Toast.makeText(this, "Monitor Iniciado!", Toast.LENGTH_SHORT).show();
         });
 
         stopBtn.setOnClickListener(v -> {
             stopService(new Intent(this, BatteryService.class));
             updateServiceButtons(false);
+            bipIndicator.setTextColor(Color.WHITE);
+            Toast.makeText(this, "Monitor Desativado", Toast.LENGTH_SHORT).show();
         });
 
         muteBtn.setOnClickListener(v -> {
@@ -116,26 +124,32 @@ public class MainActivity extends AppCompatActivity {
         });
 
         testBeepBtn.setOnClickListener(v -> {
-            triggerVisualBip();
+            triggerVisualBip("red");
             playTestBeep();
         });
 
-        registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"), Context.RECEIVER_NOT_EXPORTED);
+        IntentFilter filter = new IntentFilter(BatteryService.ACTION_BIP);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(bipReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(bipReceiver, filter);
+        }
         
         updateMuteButton(preferences.getBoolean(BatteryService.KEY_MUTED, false));
         updateBatteryReadout();
-        checkServiceRunning();
     }
 
-    private void triggerVisualBip() {
-        bipIndicator.setTextColor(Color.RED);
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            bipIndicator.setTextColor(Color.WHITE);
-        }, 1000);
-    }
-
-    private void checkServiceRunning() {
-        // Simples verificação via flag ou similar se necessário, por ora usamos o estado visual
+    private void triggerVisualBip(String state) {
+        runOnUiThread(() -> {
+            if ("red".equals(state)) {
+                bipIndicator.setTextColor(Color.RED);
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    bipIndicator.setTextColor(Color.YELLOW); // Volta para amarelo (sinal de vida)
+                }, 1000);
+            } else if ("yellow".equals(state)) {
+                bipIndicator.setTextColor(Color.YELLOW);
+            }
+        });
     }
 
     private void updateServiceButtons(boolean running) {
@@ -146,8 +160,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupControls() {
-        thresholdSeek.setMax(25); // 5 to 30
-        intervalSeek.setMax(11); // 5 to 60 (steps of 5)
+        thresholdSeek.setMax(25);
+        intervalSeek.setMax(11);
 
         AdapterView.OnItemSelectedListener listener = new AdapterView.OnItemSelectedListener() {
             @Override
@@ -225,8 +239,7 @@ public class MainActivity extends AppCompatActivity {
     private int getIntervalFromProgress(int progress) { return (progress + 1) * 5; }
 
     private void updateBatteryReadout() {
-        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = registerReceiver(null, ifilter);
+        Intent batteryStatus = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         if (batteryStatus == null) return;
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
@@ -273,10 +286,8 @@ public class MainActivity extends AppCompatActivity {
         try {
             ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
             tg.startTone(ToneGenerator.TONE_PROP_BEEP2, 300);
-            tg.release();
-        } catch (Exception e) {
-            Toast.makeText(this, "Erro no bip", Toast.LENGTH_SHORT).show();
-        }
+            new Handler(Looper.getMainLooper()).postDelayed(tg::release, 1000);
+        } catch (Exception ignored) {}
     }
 
     private void requestNotificationPermissionIfNeeded() {
