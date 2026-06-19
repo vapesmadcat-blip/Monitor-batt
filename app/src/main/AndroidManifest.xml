@@ -3,9 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
@@ -17,6 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BatteryMonitor"
         tools:targetApi="31">
+        
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -27,9 +30,18 @@
         </activity>
 
         <service
-            android:name=".BatteryMonitorService"
+            android:name=".BatteryService"
             android:foregroundServiceType="specialUse"
-            android:exported="false" />
+            android:exported="false">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_CATEGORY" android:value="battery_monitor" />
+        </service>
+
+        <receiver android:name=".BootReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>
