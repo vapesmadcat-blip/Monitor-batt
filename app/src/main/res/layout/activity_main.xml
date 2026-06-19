@@ -96,6 +96,16 @@
                 android:text="Status"
                 android:textSize="16sp"
                 android:textColor="#4B5563" />
+
+            <TextView
+                android:id="@+id/tvAlertMode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Normal"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#22C55E" />
         </LinearLayout>
 
         <LinearLayout
@@ -186,6 +196,13 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="Salvar e iniciar monitor" />
+
+        <Button
+            android:id="@+id/btnMute"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Silenciar" />
 
         <Button
             android:id="@+id/btnStop"
