@@ -17,4 +17,13 @@
     <string name="battery_percent_fmt">%1$d%%</string>
     <string name="threshold_value_fmt">%1$d%%</string>
     <string name="interval_value_fmt">%1$d segundos</string>
+
+    <string name="btn_mute">Silenciar</string>
+    <string name="btn_unmute">Reativar som</string>
+    <string name="alert_mode_active">Som ativo</string>
+    <string name="alert_mode_stopped">Monitor parado</string>
+    <string name="alert_mode_muted">Silenciado</string>
+    <string name="alert_level_normal">Normal</string>
+    <string name="alert_level_attention">Atenção</string>
+    <string name="alert_level_critical">Crítico</string>
 </resources>
