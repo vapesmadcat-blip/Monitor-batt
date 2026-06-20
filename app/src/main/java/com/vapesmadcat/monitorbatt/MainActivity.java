@@ -1,6 +1,7 @@
 package com.vapesmadcat.monitorbatt;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -52,6 +53,9 @@ public class MainActivity extends AppCompatActivity {
     private String[] characterKeys = {"none", "lula", "bolsonaro", "goku", "vegeta"};
     private boolean isModified = false;
 
+    // Chave para persistência do estado do serviço
+    public static final String KEY_SERVICE_ENABLED = "service_enabled";
+
     private final BroadcastReceiver bipReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -59,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    // NOVO: Receptor para atualização em tempo real
     private final BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -107,13 +110,16 @@ public class MainActivity extends AppCompatActivity {
         startBtn.setOnClickListener(v -> {
             requestNotificationPermissionIfNeeded();
             saveSettings();
-            Intent i = new Intent(this, BatteryService.class);
-            ContextCompat.startForegroundService(this, i);
+            // Salva que o usuário ativou o serviço
+            preferences.edit().putBoolean(KEY_SERVICE_ENABLED, true).apply();
+            startBatteryService();
             updateServiceButtons(true);
         });
 
         stopBtn.setOnClickListener(v -> {
-            stopService(new Intent(this, BatteryService.class));
+            // Salva que o usuário desativou o serviço
+            preferences.edit().putBoolean(KEY_SERVICE_ENABLED, false).apply();
+            stopBatteryService();
             updateServiceButtons(false);
         });
 
@@ -135,12 +141,41 @@ public class MainActivity extends AppCompatActivity {
             registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"));
         }
 
-        // NOVO: Registro do receptor de Bateria
+        // Registro do receptor de Bateria
         registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         
         updateMuteButton(preferences.getBoolean(BatteryService.KEY_MUTED, false));
         updateBatteryReadout();
-        checkServiceRunning();
+        
+        // Verifica se o serviço deve estar rodando e atualiza a UI
+        boolean shouldBeRunning = preferences.getBoolean(KEY_SERVICE_ENABLED, false);
+        boolean isRunning = isServiceRunning(BatteryService.class);
+        
+        if (shouldBeRunning && !isRunning) {
+            startBatteryService();
+            updateServiceButtons(true);
+        } else {
+            updateServiceButtons(isRunning);
+        }
+    }
+
+    private void startBatteryService() {
+        Intent i = new Intent(this, BatteryService.class);
+        ContextCompat.startForegroundService(this, i);
+    }
+
+    private void stopBatteryService() {
+        stopService(new Intent(this, BatteryService.class));
+    }
+
+    private boolean isServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void triggerVisualBip() {
@@ -150,15 +185,13 @@ public class MainActivity extends AppCompatActivity {
         }, 1000);
     }
 
-    private void checkServiceRunning() {
-        // Simples verificação via flag ou similar se necessário, por ora usamos o estado visual
-    }
-
     private void updateServiceButtons(boolean running) {
         startBtn.setEnabled(!running);
         startBtn.setAlpha(running ? 0.5f : 1.0f);
         stopBtn.setEnabled(running);
         stopBtn.setAlpha(running ? 1.0f : 0.5f);
+        statusText.setText(running ? "Monitoramento: ATIVO" : "Monitoramento: DESATIVADO");
+        statusText.setTextColor(running ? 0xFF4ADE80 : 0xFFFF4D4F);
     }
 
     private void setupControls() {
@@ -168,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
         AdapterView.OnItemSelectedListener listener = new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
+                if (isModifiedByCode) return;
                 checkChanges();
             }
             @Override public void onNothingSelected(AdapterView<?> p) {}
@@ -201,7 +235,10 @@ public class MainActivity extends AppCompatActivity {
         saveBtn.setVisibility(View.VISIBLE);
     }
 
+    private boolean isModifiedByCode = false;
+
     private void loadSettings() {
+        isModifiedByCode = true;
         int threshold = preferences.getInt(BatteryService.KEY_THRESHOLD, BatteryService.DEFAULT_THRESHOLD);
         int intervalSeconds = preferences.getInt(BatteryService.KEY_BEEP_INTERVAL_SECONDS, BatteryService.DEFAULT_BEEP_INTERVAL_SECONDS);
         String savedChar = preferences.getString(BatteryService.KEY_CHARACTER_VOICE, "none");
@@ -218,6 +255,7 @@ public class MainActivity extends AppCompatActivity {
         updateTexts();
         isModified = false;
         saveBtn.setVisibility(View.GONE);
+        isModifiedByCode = false;
     }
 
     private void saveSettings() {
@@ -307,6 +345,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         updateBatteryReadout();
+        // Atualiza botões caso o serviço tenha sido parado pelo sistema
+        updateServiceButtons(isServiceRunning(BatteryService.class));
     }
 
     @Override
