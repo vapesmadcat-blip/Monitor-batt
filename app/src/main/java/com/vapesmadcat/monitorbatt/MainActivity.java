@@ -59,6 +59,14 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    // NOVO: Receptor para atualização em tempo real
+    private final BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            updateBatteryReadout();
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -120,7 +128,15 @@ public class MainActivity extends AppCompatActivity {
             playTestBeep();
         });
 
-        registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"), Context.RECEIVER_NOT_EXPORTED);
+        // Registro do receptor de Bip
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"), Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"));
+        }
+
+        // NOVO: Registro do receptor de Bateria
+        registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         
         updateMuteButton(preferences.getBoolean(BatteryService.KEY_MUTED, false));
         updateBatteryReadout();
@@ -288,8 +304,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        updateBatteryReadout();
+    }
+
+    @Override
     protected void onDestroy() {
         try { unregisterReceiver(bipReceiver); } catch (Exception ignored) {}
+        try { unregisterReceiver(batteryReceiver); } catch (Exception ignored) {}
         super.onDestroy();
     }
 }
