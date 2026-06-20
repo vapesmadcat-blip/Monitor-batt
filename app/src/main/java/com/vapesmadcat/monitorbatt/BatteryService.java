@@ -44,6 +44,10 @@ public class BatteryService extends Service {
     private int currentLevel = -1;
     private boolean charging = false;
 
+    // Controle de tempo para a voz (1 vez por minuto)
+    private long lastVoiceTime = 0;
+    private static final long VOICE_COOLDOWN_MS = 60000; // 60 segundos
+
     private final BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -76,6 +80,8 @@ public class BatteryService extends Service {
             public void run() {
                 if (alerting) {
                     triggerBip();
+                    // Tenta tocar a voz respeitando o intervalo de 1 minuto
+                    playCharacterVoiceIfNeeded(currentLevel);
                     handler.postDelayed(this, getCurrentIntervalMs());
                 }
             }
@@ -143,15 +149,23 @@ public class BatteryService extends Service {
             alerting = true;
             handler.removeCallbacks(beepRunnable);
             handler.post(beepRunnable);
-            playCharacterVoice(currentLevel);
+            // Toca a voz imediatamente ao entrar no estado de alerta
+            playCharacterVoiceIfNeeded(currentLevel);
         } else if (!shouldAlert && alerting) {
             alerting = false;
             handler.removeCallbacks(beepRunnable);
         }
     }
 
-    private void playCharacterVoice(int level) {
+    private void playCharacterVoiceIfNeeded(int level) {
         if (isMuted()) return;
+        
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastVoiceTime < VOICE_COOLDOWN_MS) {
+            // Ainda está no intervalo de espera (cooldown) de 1 minuto
+            return;
+        }
+
         String character = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getString(KEY_CHARACTER_VOICE, "none");
         if ("none".equals(character)) return;
 
@@ -162,6 +176,8 @@ public class BatteryService extends Service {
                 if (mp != null) {
                     mp.setOnCompletionListener(MediaPlayer::release);
                     mp.start();
+                    lastVoiceTime = currentTime; // Atualiza o tempo da última reprodução
+                    Log.d("BatteryService", "Voz do personagem reproduzida: " + character);
                 }
             } catch (Exception e) {
                 Log.e("BatteryService", "Erro na voz", e);
