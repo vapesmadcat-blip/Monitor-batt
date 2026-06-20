@@ -11,12 +11,14 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.media.ToneGenerator;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -48,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private Button saveBtn;
     private Button startBtn;
     private Button stopBtn;
+    private Button playVoiceBtn;
     
     private String[] characters = {"Nenhum", "Lula", "Bolsonaro", "Goku", "Vegeta"};
     private String[] characterKeys = {"none", "lula", "bolsonaro", "goku", "vegeta"};
@@ -92,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
         startBtn = findViewById(R.id.btnStart);
         stopBtn = findViewById(R.id.btnStop);
         muteBtn = findViewById(R.id.btnMute);
+        playVoiceBtn = findViewById(R.id.btnPlayVoice);
         Button testBeepBtn = findViewById(R.id.btnTestBeep);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, characters);
@@ -129,6 +133,10 @@ public class MainActivity extends AppCompatActivity {
             updateMuteButton(muted);
         });
 
+        playVoiceBtn.setOnClickListener(v -> {
+            playVoicePreview();
+        });
+
         testBeepBtn.setOnClickListener(v -> {
             triggerVisualBip();
             playTestBeep();
@@ -159,6 +167,35 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void playVoicePreview() {
+        int pos = characterSpinner.getSelectedItemPosition();
+        if (pos < 0 || pos >= characterKeys.length) return;
+        
+        String character = characterKeys[pos];
+        if ("none".equals(character)) {
+            Toast.makeText(this, "Nenhuma voz selecionada", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Tenta tocar a voz de nível "low" como preview
+        int resId = getResources().getIdentifier("voice_" + character + "_low", "raw", getPackageName());
+        if (resId != 0) {
+            try {
+                MediaPlayer mp = MediaPlayer.create(this, resId);
+                if (mp != null) {
+                    mp.setOnCompletionListener(MediaPlayer::release);
+                    mp.start();
+                    Toast.makeText(this, "Ouvindo: " + characters[pos], Toast.LENGTH_SHORT).show();
+                }
+            } catch (Exception e) {
+                Log.e("MainActivity", "Erro ao tocar preview de voz", e);
+                Toast.makeText(this, "Erro ao tocar voz", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(this, "Arquivo de voz não encontrado", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void startBatteryService() {
         Intent i = new Intent(this, BatteryService.class);
         ContextCompat.startForegroundService(this, i);
@@ -170,6 +207,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        if (manager == null) return false;
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             if (serviceClass.getName().equals(service.service.getClassName())) {
                 return true;
