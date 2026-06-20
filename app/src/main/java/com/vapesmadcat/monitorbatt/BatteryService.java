@@ -44,9 +44,9 @@ public class BatteryService extends Service {
     private int currentLevel = -1;
     private boolean charging = false;
 
-    // Controle de tempo para a voz (1 vez por minuto)
+    // Controle de tempo para a voz (1 vez por minuto durante o alerta)
     private long lastVoiceTime = 0;
-    private static final long VOICE_COOLDOWN_MS = 60000; // 60 segundos
+    private static final long VOICE_COOLDOWN_MS = 60000;
 
     private final BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
         @Override
@@ -54,8 +54,17 @@ public class BatteryService extends Service {
             int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
             int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
             int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
-            currentLevel = (level >= 0 && scale > 0) ? (int) ((level * 100f) / scale) : -1;
-            charging = plugged != 0;
+            
+            int newLevel = (level >= 0 && scale > 0) ? (int) ((level * 100f) / scale) : -1;
+            boolean newCharging = plugged != 0;
+
+            // Detecta o momento exato em que o carregador é conectado
+            if (newCharging && !charging) {
+                onChargerConnected();
+            }
+
+            currentLevel = newLevel;
+            charging = newCharging;
             evaluateAlertState();
             updateNotification();
         }
@@ -80,7 +89,6 @@ public class BatteryService extends Service {
             public void run() {
                 if (alerting) {
                     triggerBip();
-                    // Tenta tocar a voz respeitando o intervalo de 1 minuto
                     playCharacterVoiceIfNeeded(currentLevel);
                     handler.postDelayed(this, getCurrentIntervalMs());
                 }
@@ -88,6 +96,11 @@ public class BatteryService extends Service {
         };
 
         checkInitialBatteryStatus();
+    }
+
+    private void onChargerConnected() {
+        Log.d("BatteryService", "Carregador conectado! Tocando áudio de alívio...");
+        playSpecificVoice("charging");
     }
 
     private void triggerBip() {
@@ -99,7 +112,6 @@ public class BatteryService extends Service {
                     Log.e("BatteryService", "Erro ao tocar tom", e);
                 }
             }
-            // Envia broadcast para a MainActivity mudar a cor do texto "BIP"
             sendBroadcast(new Intent("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"));
         }
         updateNotification();
@@ -110,15 +122,9 @@ public class BatteryService extends Service {
     }
 
     private ToneGenerator createToneGenerator() {
-        int[] streams = {
-            AudioManager.STREAM_ALARM,
-            AudioManager.STREAM_NOTIFICATION,
-            AudioManager.STREAM_MUSIC
-        };
+        int[] streams = {AudioManager.STREAM_ALARM, AudioManager.STREAM_NOTIFICATION, AudioManager.STREAM_MUSIC};
         for (int stream : streams) {
-            try {
-                return new ToneGenerator(stream, 100);
-            } catch (Exception ignored) {}
+            try { return new ToneGenerator(stream, 100); } catch (Exception ignored) {}
         }
         return null;
     }
@@ -149,7 +155,6 @@ public class BatteryService extends Service {
             alerting = true;
             handler.removeCallbacks(beepRunnable);
             handler.post(beepRunnable);
-            // Toca a voz imediatamente ao entrar no estado de alerta
             playCharacterVoiceIfNeeded(currentLevel);
         } else if (!shouldAlert && alerting) {
             alerting = false;
@@ -159,30 +164,34 @@ public class BatteryService extends Service {
 
     private void playCharacterVoiceIfNeeded(int level) {
         if (isMuted()) return;
-        
         long currentTime = System.currentTimeMillis();
-        if (currentTime - lastVoiceTime < VOICE_COOLDOWN_MS) {
-            // Ainda está no intervalo de espera (cooldown) de 1 minuto
-            return;
+        if (currentTime - lastVoiceTime < VOICE_COOLDOWN_MS) return;
+
+        String type = (level <= 5 ? "critical" : "low");
+        if (playSpecificVoice(type)) {
+            lastVoiceTime = currentTime;
         }
+    }
 
+    private boolean playSpecificVoice(String type) {
+        if (isMuted()) return false;
         String character = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getString(KEY_CHARACTER_VOICE, "none");
-        if ("none".equals(character)) return;
+        if ("none".equals(character)) return false;
 
-        int resId = getResources().getIdentifier("voice_" + character + "_" + (level <= 5 ? "critical" : "low"), "raw", getPackageName());
+        int resId = getResources().getIdentifier("voice_" + character + "_" + type, "raw", getPackageName());
         if (resId != 0) {
             try {
                 MediaPlayer mp = MediaPlayer.create(this, resId);
                 if (mp != null) {
                     mp.setOnCompletionListener(MediaPlayer::release);
                     mp.start();
-                    lastVoiceTime = currentTime; // Atualiza o tempo da última reprodução
-                    Log.d("BatteryService", "Voz do personagem reproduzida: " + character);
+                    return true;
                 }
             } catch (Exception e) {
-                Log.e("BatteryService", "Erro na voz", e);
+                Log.e("BatteryService", "Erro ao tocar voz: " + type, e);
             }
         }
+        return false;
     }
 
     private int getThreshold() {
@@ -216,7 +225,6 @@ public class BatteryService extends Service {
     private Notification buildNotification(String title, String text) {
         PendingIntent pi = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class),
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
-
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_lock_idle_low_battery)
                 .setContentTitle(title)
