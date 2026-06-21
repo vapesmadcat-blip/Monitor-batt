@@ -1,43 +1,117 @@
-<!-- NOVO: 3 Níveis de Voz Configuráveis -->
+<!-- ==================== 3 NÍVEIS DE VOZ CONFIGURÁVEIS ==================== -->
 <TextView
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:text="Níveis de Voz (configuráveis)"
     android:textColor="#A0C4E2"
     android:textSize="14sp"
-    android:layout_marginTop="16dp"
-    android:layout_marginBottom="8dp"/>
+    android:layout_marginTop="20dp"
+    android:layout_marginBottom="8dp"
+    android:paddingStart="4dp"/>
 
 <!-- Voz Baixa -->
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:gravity="center_vertical">
+    android:gravity="center_vertical"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp">
+
     <TextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="Voz Baixa"
-        android:textColor="#FFFFFF"/>
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"/>
+
     <TextView
         android:id="@+id/tvVoiceLowValue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="10%"
         android:textColor="#3F9EF0"
-        android:textStyle="bold"/>
+        android:textStyle="bold"
+        android:textSize="15sp"/>
 </LinearLayout>
+
 <SeekBar
     android:id="@+id/seekVoiceLow"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:max="80"/>
+    android:max="80"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp"/>
 
 <!-- Voz Crítica -->
-<LinearLayout ... > ... </LinearLayout>
-<SeekBar android:id="@+id/seekVoiceCritical" ... />
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:layout_marginTop="12dp"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp">
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Voz Crítica"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"/>
+
+    <TextView
+        android:id="@+id/tvVoiceCriticalValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="5%"
+        android:textColor="#3F9EF0"
+        android:textStyle="bold"
+        android:textSize="15sp"/>
+</LinearLayout>
+
+<SeekBar
+    android:id="@+id/seekVoiceCritical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:max="80"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp"/>
 
 <!-- Voz Quase Acabando -->
-<LinearLayout ... > ... </LinearLayout>
-<SeekBar android:id="@+id/seekVoiceVeryLow" ... />
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:layout_marginTop="12dp"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp">
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Voz Quase Acabando"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"/>
+
+    <TextView
+        android:id="@+id/tvVoiceVeryLowValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="2%"
+        android:textColor="#3F9EF0"
+        android:textStyle="bold"
+        android:textSize="15sp"/>
+</LinearLayout>
+
+<SeekBar
+    android:id="@+id/seekVoiceVeryLow"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:max="80"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp"/>
