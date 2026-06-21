@@ -32,8 +32,10 @@ import android.widget.Toast;
 import android.widget.AdapterView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import android.widget.Switch;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -54,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private Button startBtn;
     private Button stopBtn;
     private Button playVoiceBtn;
+    private Switch themeSwitch;
     
     private String[] characters = {
         "Nenhum", "Lula", "Bolsonaro", "Goku", "Vegeta", 
@@ -75,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Chave para persistência do estado do serviço
     public static final String KEY_SERVICE_ENABLED = "service_enabled";
+    public static final String KEY_THEME_MODE = "theme_mode"; // 0 = Dark, 1 = Light
 
     private final BroadcastReceiver bipReceiver = new BroadcastReceiver() {
         @Override
@@ -115,10 +119,23 @@ public class MainActivity extends AppCompatActivity {
         muteBtn = findViewById(R.id.btnMute);
         playVoiceBtn = findViewById(R.id.btnPlayVoice);
         Button testBeepBtn = findViewById(R.id.btnTestBeep);
+        themeSwitch = findViewById(R.id.switchTheme);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, characters);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item, characters);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         characterSpinner.setAdapter(adapter);
+
+        // Carregar e aplicar tema salvo
+        int savedTheme = preferences.getInt(KEY_THEME_MODE, 0); // 0 = Dark (padrão)
+        themeSwitch.setChecked(savedTheme == 1); // true = Light
+        applyTheme(savedTheme);
+        
+        // Listener para alternar tema
+        themeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            int newTheme = isChecked ? 1 : 0; // 1 = Light, 0 = Dark
+            preferences.edit().putInt(KEY_THEME_MODE, newTheme).apply();
+            applyTheme(newTheme);
+        });
 
         setupControls();
         setupAnimations();
@@ -166,6 +183,9 @@ public class MainActivity extends AppCompatActivity {
             triggerVisualBip();
             playTestBeep();
         });
+        
+        // Configurar labels do switch de tema
+        updateThemeSwitchLabel();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"), Context.RECEIVER_NOT_EXPORTED);
@@ -177,6 +197,7 @@ public class MainActivity extends AppCompatActivity {
         
         updateMuteButton(preferences.getBoolean(BatteryService.KEY_MUTED, false));
         updateBatteryReadout();
+        updateThemeSwitchLabel();
         
         boolean shouldBeRunning = preferences.getBoolean(KEY_SERVICE_ENABLED, false);
         boolean isRunning = isServiceRunning(BatteryService.class);
@@ -186,6 +207,20 @@ public class MainActivity extends AppCompatActivity {
             updateServiceButtons(true);
         } else {
             updateServiceButtons(isRunning);
+        }
+    }
+    
+    private void applyTheme(int themeMode) {
+        if (themeMode == 1) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        }
+    }
+    
+    private void updateThemeSwitchLabel() {
+        if (themeSwitch != null) {
+            themeSwitch.setText(themeSwitch.isChecked() ? "☀️ Claro" : "🌙 Escuro");
         }
     }
 
@@ -210,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
         }
         isPlayingPreview = false;
         playVoiceBtn.setText("▶");
-        playVoiceBtn.setBackgroundTintList(ContextCompat.getColorStateList(this, android.R.color.holo_blue_light));
+        // Cor gerenciada pelo drawable
     }
 
     private void playVoicePreview() {
@@ -243,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
                 if (currentMediaPlayer != null) {
                     isPlayingPreview = true;
                     playVoiceBtn.setText("■"); // Ícone de Stop
-                    playVoiceBtn.setBackgroundTintList(ContextCompat.getColorStateList(this, android.R.color.holo_red_light));
+                    // Cor gerenciada pelo drawable
 
                     currentMediaPlayer.setOnCompletionListener(mp -> {
                         stopCurrentAudio();
@@ -378,9 +413,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateMuteButton(boolean muted) {
         muteBtn.setText(muted ? "🔇 Desmutar" : "🔊 Silenciar");
-        muteBtn.setBackgroundTintList(ContextCompat.getColorStateList(this,
-                muted ? android.R.color.holo_red_dark : android.R.color.holo_green_dark));
-        muteBtn.setAlpha(1.0f);
+        // Cor gerenciada pelo drawable
+        muteBtn.setAlpha(muted ? 0.6f : 1.0f);
     }
 
     private int getThresholdFromProgress(int progress) { return progress + 5; }

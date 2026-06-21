@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Brand Colors -->
+    <color name="brand_blue">#3B82F6</color>
+    <color name="brand_blue_dark">#2563EB</color>
+    
+    <!-- Status Colors -->
+    <color name="status_success">#22C55E</color>
+    <color name="status_danger">#EF4444</color>
+    <color name="status_warning">#F59E0B</color>
+
+    <!-- Theme Colors -->
+    <color name="dark_bg_primary">#05070A</color>
+    <color name="dark_bg_secondary">#11161C</color>
+    <color name="light_bg_primary">#F3F4F6</color>
+    <color name="light_bg_secondary">#FFFFFF</color>
 </resources>

@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="#05070A">
+    android:background="?android:attr/windowBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,21 +15,45 @@
         android:paddingEnd="24dp"
         android:paddingBottom="32dp">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Monitor de Bateria Pro"
-            android:textSize="26sp"
-            android:textStyle="bold"
-            android:textColor="#F9FAFB" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical|space_between"
+            android:layout_marginBottom="16dp">
+            
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Monitor de Bateria Pro"
+                    android:textSize="26sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Alertas Inteligentes e Vozes"
-            android:textSize="14sp"
-            android:textColor="#8B95A7" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Alertas Inteligentes e Vozes"
+                    android:textSize="14sp"
+                    android:textColor="?android:attr/textColorSecondary" />
+            </LinearLayout>
+            
+            <Switch
+                android:id="@+id/switchTheme"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="🌙 Escuro"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -41,7 +65,8 @@
             <View
                 android:layout_width="72dp"
                 android:layout_height="18dp"
-                android:background="@drawable/battery_cap" />
+                android:background="@drawable/battery_cap"
+                android:backgroundTint="?android:attr/textColorPrimary" />
 
             <FrameLayout
                 android:id="@+id/batteryContainer"
@@ -49,6 +74,7 @@
                 android:layout_height="320dp"
                 android:layout_marginTop="-2dp"
                 android:background="@drawable/battery_shell"
+                android:backgroundTint="?android:attr/textColorPrimary"
                 android:padding="12dp">
 
                 <!-- Bateria preenchendo de baixo para cima -->
@@ -95,15 +121,15 @@
             android:textColor="#FFFFFF"
             android:visibility="visible" />
 
-        <TextView
-            android:id="@+id/tvLevel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="50%"
-            android:textSize="64sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF" />
+            <TextView
+                android:id="@+id/tvLevel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="50%"
+                android:textSize="64sp"
+                android:textStyle="bold"
+                android:textColor="?android:attr/textColorPrimary" />
 
         <TextView
             android:id="@+id/tvStatus"
@@ -132,7 +158,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:orientation="vertical"
-            android:background="#11161C"
+            android:background="?android:attr/colorBackground"
             android:padding="18dp">
 
             <TextView
@@ -141,7 +167,7 @@
                 android:text="Avisar abaixo de"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#F3F4F6" />
+                android:textColor="?android:attr/textColorPrimary" />
 
             <TextView
                 android:id="@+id/tvThresholdValue"
@@ -165,7 +191,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:orientation="vertical"
-            android:background="#11161C"
+            android:background="?android:attr/colorBackground"
             android:padding="18dp">
 
             <TextView
@@ -174,7 +200,7 @@
                 android:text="Intervalo do bip"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#F3F4F6" />
+                android:textColor="?android:attr/textColorPrimary" />
 
             <TextView
                 android:id="@+id/tvIntervalValue"
@@ -198,7 +224,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:orientation="vertical"
-            android:background="#11161C"
+            android:background="?android:attr/colorBackground"
             android:padding="18dp">
 
             <TextView
@@ -207,7 +233,7 @@
                 android:text="Personagem de Voz"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#F3F4F6" />
+                android:textColor="?android:attr/textColorPrimary" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -221,18 +247,20 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:background="#1F2937"
-                    android:padding="8dp" />
+                    android:padding="12dp"
+                    android:background="?android:attr/colorBackground"
+                    android:spinnerMode="dropdown" />
 
                 <Button
                     android:id="@+id/btnPlayVoice"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_marginStart="12dp"
+                    android:background="@drawable/btn_modern_bg"
                     android:text="▶"
-                    android:textSize="18sp"
-                    android:padding="0dp"
-                    android:backgroundTint="#60A5FA" />
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    android:padding="0dp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -248,30 +276,50 @@
         <Button
             android:id="@+id/btnStart"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/btn_modern_bg"
+            android:textColor="#FFFFFF"
+            android:textAllCaps="false"
+            android:textSize="16sp"
+            android:textStyle="bold"
             android:text="Ativar Monitor" />
 
         <Button
             android:id="@+id/btnStop"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_height="56dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/btn_modern_bg"
+            android:textColor="#FFFFFF"
+            android:textAllCaps="false"
+            android:textSize="16sp"
+            android:textStyle="bold"
             android:text="Desativar Monitor"
             android:enabled="false" />
 
         <Button
             android:id="@+id/btnMute"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_height="56dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/btn_modern_bg"
+            android:textColor="#FFFFFF"
+            android:textAllCaps="false"
+            android:textSize="16sp"
+            android:textStyle="bold"
             android:text="Silenciar" />
 
         <Button
             android:id="@+id/btnTestBeep"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_height="56dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/btn_modern_bg"
+            android:textColor="#FFFFFF"
+            android:textAllCaps="false"
+            android:textSize="16sp"
+            android:textStyle="bold"
             android:text="Testar bip" />
 
     </LinearLayout>
