@@ -1,278 +1,43 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- NOVO: 3 Níveis de Voz Configuráveis -->
+<TextView
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:background="#05070A">
+    android:layout_height="wrap_content"
+    android:text="Níveis de Voz (configuráveis)"
+    android:textColor="#A0C4E2"
+    android:textSize="14sp"
+    android:layout_marginTop="16dp"
+    android:layout_marginBottom="8dp"/>
 
-    <LinearLayout
-        android:layout_width="match_parent"
+<!-- Voz Baixa -->
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical">
+    <TextView
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:paddingStart="24dp"
-        android:paddingTop="28dp"
-        android:paddingEnd="24dp"
-        android:paddingBottom="32dp">
+        android:layout_weight="1"
+        android:text="Voz Baixa"
+        android:textColor="#FFFFFF"/>
+    <TextView
+        android:id="@+id/tvVoiceLowValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="10%"
+        android:textColor="#3F9EF0"
+        android:textStyle="bold"/>
+</LinearLayout>
+<SeekBar
+    android:id="@+id/seekVoiceLow"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:max="80"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Monitor de Bateria Pro"
-            android:textSize="26sp"
-            android:textStyle="bold"
-            android:textColor="#F9FAFB" />
+<!-- Voz Crítica -->
+<LinearLayout ... > ... </LinearLayout>
+<SeekBar android:id="@+id/seekVoiceCritical" ... />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Alertas Inteligentes e Vozes"
-            android:textSize="14sp"
-            android:textColor="#8B95A7" />
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
-
-            <View
-                android:layout_width="72dp"
-                android:layout_height="18dp"
-                android:background="@drawable/battery_cap" />
-
-            <FrameLayout
-                android:id="@+id/batteryContainer"
-                android:layout_width="188dp"
-                android:layout_height="320dp"
-                android:layout_marginTop="-2dp"
-                android:background="@drawable/battery_shell"
-                android:padding="12dp">
-
-                <!-- Bateria preenchendo de baixo para cima -->
-                <View
-                    android:id="@+id/batteryFill"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="bottom"
-                    android:background="@drawable/battery_fill_high" />
-
-                <View
-                    android:id="@+id/batteryGloss"
-                    android:layout_width="match_parent"
-                    android:layout_height="120dp"
-                    android:layout_gravity="top"
-                    android:background="@drawable/battery_gloss" />
-
-                <!-- Ícone de Raio para Carregamento -->
-                <TextView
-                    android:id="@+id/tvChargingBolt"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="⚡"
-                    android:textSize="80sp"
-                    android:textColor="#FACC15"
-                    android:shadowColor="#000000"
-                    android:shadowDx="2"
-                    android:shadowDy="2"
-                    android:shadowRadius="4"
-                    android:visibility="gone" />
-            </FrameLayout>
-        </LinearLayout>
-
-        <!-- Indicador Visual de Bip (Debug) -->
-        <TextView
-            android:id="@+id/tvBipIndicator"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="BIP"
-            android:textSize="32sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:visibility="visible" />
-
-        <TextView
-            android:id="@+id/tvLevel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="50%"
-            android:textSize="64sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF" />
-
-        <TextView
-            android:id="@+id/tvStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="BATERIA"
-            android:textAllCaps="true"
-            android:letterSpacing="0.18"
-            android:textSize="18sp"
-            android:textColor="#6B7280" />
-
-        <TextView
-            android:id="@+id/tvAlertMode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Normal"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#22C55E" />
-
-        <!-- Configurações -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:orientation="vertical"
-            android:background="#11161C"
-            android:padding="18dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Avisar abaixo de"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#F3F4F6" />
-
-            <TextView
-                android:id="@+id/tvThresholdValue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="10%"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="#60A5FA" />
-
-            <SeekBar
-                android:id="@+id/seekThreshold"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="vertical"
-            android:background="#11161C"
-            android:padding="18dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Intervalo do bip"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#F3F4F6" />
-
-            <TextView
-                android:id="@+id/tvIntervalValue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="15 segundos"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="#60A5FA" />
-
-            <SeekBar
-                android:id="@+id/seekInterval"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="vertical"
-            android:background="#11161C"
-            android:padding="18dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Personagem de Voz"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#F3F4F6" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <Spinner
-                    android:id="@+id/spinnerCharacter"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="#1F2937"
-                    android:padding="8dp" />
-
-                <Button
-                    android:id="@+id/btnPlayVoice"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_marginStart="8dp"
-                    android:text="▶"
-                    android:textSize="18sp"
-                    android:padding="0dp"
-                    android:backgroundTint="#60A5FA" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- Botões -->
-        <Button
-            android:id="@+id/btnSave"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Salvar Alterações"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/btnStart"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Ativar Monitor" />
-
-        <Button
-            android:id="@+id/btnStop"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Desativar Monitor"
-            android:enabled="false" />
-
-        <Button
-            android:id="@+id/btnMute"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Silenciar" />
-
-        <Button
-            android:id="@+id/btnTestBeep"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Testar bip" />
-
-    </LinearLayout>
-</ScrollView>
+<!-- Voz Quase Acabando -->
+<LinearLayout ... > ... </LinearLayout>
+<SeekBar android:id="@+id/seekVoiceVeryLow" ... />
