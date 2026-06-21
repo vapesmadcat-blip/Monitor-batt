@@ -69,6 +69,10 @@ public class MainActivity extends AppCompatActivity {
     private boolean isCharging = false;
     private AlphaAnimation boltAnimation;
 
+    // Gerenciamento de Áudio
+    private MediaPlayer currentMediaPlayer = null;
+    private boolean isPlayingPreview = false;
+
     // Chave para persistência do estado do serviço
     public static final String KEY_SERVICE_ENABLED = "service_enabled";
 
@@ -147,7 +151,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
         playVoiceBtn.setOnClickListener(v -> {
-            playVoicePreview();
+            if (isPlayingPreview) {
+                stopCurrentAudio();
+            } else {
+                playVoicePreview();
+            }
         });
 
         testBeepBtn.setOnClickListener(v -> {
@@ -184,7 +192,27 @@ public class MainActivity extends AppCompatActivity {
         boltAnimation.setRepeatCount(Animation.INFINITE);
     }
 
+    private void stopCurrentAudio() {
+        if (currentMediaPlayer != null) {
+            try {
+                if (currentMediaPlayer.isPlaying()) {
+                    currentMediaPlayer.stop();
+                }
+                currentMediaPlayer.release();
+            } catch (Exception e) {
+                Log.e("MainActivity", "Erro ao parar áudio", e);
+            }
+            currentMediaPlayer = null;
+        }
+        isPlayingPreview = false;
+        playVoiceBtn.setText("▶");
+        playVoiceBtn.setBackgroundTintList(ContextCompat.getColorStateList(this, android.R.color.holo_blue_light));
+    }
+
     private void playVoicePreview() {
+        // Para qualquer áudio que já esteja tocando
+        stopCurrentAudio();
+
         int pos = characterSpinner.getSelectedItemPosition();
         if (pos < 0 || pos >= characterKeys.length) return;
         
@@ -194,20 +222,27 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Tenta primeiro o áudio de carregamento ou baixo para o preview
+        // Tenta áudio de bateria baixa ou carregamento para o preview
         int resId = getResources().getIdentifier("voice_" + character + "_low", "raw", getPackageName());
         if (resId == 0) resId = getResources().getIdentifier("voice_" + character + "_charging", "raw", getPackageName());
         
         if (resId != 0) {
             try {
-                MediaPlayer mp = MediaPlayer.create(this, resId);
-                if (mp != null) {
-                    mp.setOnCompletionListener(MediaPlayer::release);
-                    mp.start();
+                currentMediaPlayer = MediaPlayer.create(this, resId);
+                if (currentMediaPlayer != null) {
+                    isPlayingPreview = true;
+                    playVoiceBtn.setText("■"); // Ícone de Stop
+                    playVoiceBtn.setBackgroundTintList(ContextCompat.getColorStateList(this, android.R.color.holo_red_light));
+
+                    currentMediaPlayer.setOnCompletionListener(mp -> {
+                        stopCurrentAudio();
+                    });
+                    currentMediaPlayer.start();
                     Toast.makeText(this, "Ouvindo: " + characters[pos], Toast.LENGTH_SHORT).show();
                 }
             } catch (Exception e) {
                 Log.e("MainActivity", "Erro ao tocar preview", e);
+                stopCurrentAudio();
             }
         } else {
             Toast.makeText(this, "Áudio de prévia não disponível", Toast.LENGTH_SHORT).show();
@@ -259,6 +294,10 @@ public class MainActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
                 if (isModifiedByCode) return;
                 checkChanges();
+                // Se mudar o personagem enquanto ouve, para o áudio anterior
+                if (isPlayingPreview) {
+                    stopCurrentAudio();
+                }
             }
             @Override public void onNothingSelected(AdapterView<?> p) {}
         };
@@ -423,7 +462,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        // Opcional: parar o áudio se o usuário sair do app
+        // stopCurrentAudio();
+    }
+
+    @Override
     protected void onDestroy() {
+        stopCurrentAudio();
         try { unregisterReceiver(bipReceiver); } catch (Exception ignored) {}
         try { unregisterReceiver(batteryReceiver); } catch (Exception ignored) {}
         super.onDestroy();
