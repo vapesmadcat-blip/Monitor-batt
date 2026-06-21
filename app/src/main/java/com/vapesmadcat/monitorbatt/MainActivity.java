@@ -148,6 +148,10 @@ public class MainActivity extends AppCompatActivity {
             boolean muted = !preferences.getBoolean(BatteryService.KEY_MUTED, false);
             preferences.edit().putBoolean(BatteryService.KEY_MUTED, muted).apply();
             updateMuteButton(muted);
+            // Se silenciar enquanto uma prévia estiver tocando, para imediatamente
+            if (muted && isPlayingPreview) {
+                stopCurrentAudio();
+            }
         });
 
         playVoiceBtn.setOnClickListener(v -> {
@@ -210,6 +214,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void playVoicePreview() {
+        // Verifica se está mutado
+        boolean muted = preferences.getBoolean(BatteryService.KEY_MUTED, false);
+        if (muted) {
+            Toast.makeText(this, "Som silenciado. Desmute para ouvir.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         // Para qualquer áudio que já esteja tocando
         stopCurrentAudio();
 
@@ -366,8 +377,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateMuteButton(boolean muted) {
-        muteBtn.setText(muted ? "Desmutar" : "Silenciar");
-        muteBtn.setAlpha(muted ? 0.7f : 1.0f);
+        muteBtn.setText(muted ? "🔇 Desmutar" : "🔊 Silenciar");
+        muteBtn.setBackgroundTintList(ContextCompat.getColorStateList(this,
+                muted ? android.R.color.holo_red_dark : android.R.color.holo_green_dark));
+        muteBtn.setAlpha(1.0f);
     }
 
     private int getThresholdFromProgress(int progress) { return progress + 5; }
@@ -437,6 +450,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void playTestBeep() {
+        boolean muted = preferences.getBoolean(BatteryService.KEY_MUTED, false);
+        if (muted) {
+            Toast.makeText(this, "Som silenciado. Desmute para testar.", Toast.LENGTH_SHORT).show();
+            return;
+        }
         try {
             ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
             tg.startTone(ToneGenerator.TONE_PROP_BEEP2, 300);
