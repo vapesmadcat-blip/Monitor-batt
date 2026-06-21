@@ -32,8 +32,14 @@ public class BatteryService extends Service {
     public static final String KEY_BEEP_INTERVAL_SECONDS = "beep_interval_seconds";
     public static final String KEY_MUTED = "muted";
     public static final String KEY_CHARACTER_VOICE = "character_voice";
+    public static final String KEY_VOICE_LOW_THRESHOLD = "voice_low_threshold";
+    public static final String KEY_VOICE_CRITICAL_THRESHOLD = "voice_critical_threshold";
+    public static final String KEY_VOICE_VERYLOW_THRESHOLD = "voice_verylow_threshold";
     public static final int DEFAULT_THRESHOLD = 10;
     public static final int DEFAULT_BEEP_INTERVAL_SECONDS = 15;
+    public static final int DEFAULT_VOICE_LOW_THRESHOLD = 10;
+    public static final int DEFAULT_VOICE_CRITICAL_THRESHOLD = 5;
+    public static final int DEFAULT_VOICE_VERYLOW_THRESHOLD = 2;
 
     private Handler handler;
     private Runnable beepRunnable;

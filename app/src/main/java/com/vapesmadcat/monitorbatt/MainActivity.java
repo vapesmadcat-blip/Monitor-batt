@@ -427,11 +427,117 @@ public class MainActivity extends AppCompatActivity {
                 .apply();
     }
 
-    private void updateMuteButton(boolean muted) { ... } // mantém igual
+    private void updateMuteButton(boolean muted) {
+        muteBtn.setText(muted ? "🔇 Desmutar" : "🔊 Silenciar");
+        muteBtn.setAlpha(muted ? 0.6f : 1.0f);
+    }
 
     private int getThresholdFromProgress(int progress) { return progress + 5; }
     private int getIntervalFromProgress(int progress) { return (progress + 1) * 5; }
 
-    // ... resto do arquivo (updateBatteryReadout, updateChargingUI, etc) continua igual
-    // (não precisa mudar mais nada)
+    private void updateBatteryReadout() {
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = registerReceiver(null, ifilter);
+        if (batteryStatus == null) return;
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+
+        int pct = (level >= 0 && scale > 0) ? (int) ((level * 100f) / scale) : -1;
+        isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
+
+        batteryText.setText(pct + "%");
+        int color = getBatteryColor(pct);
+        batteryText.setTextColor(color);
+        alertModeText.setText(getAlertLabel(pct, isCharging));
+        alertModeText.setTextColor(color);
+        updateBatteryFill(pct);
+        updateChargingUI(isCharging);
+    }
+
+    private void updateChargingUI(boolean charging) {
+        if (charging) {
+            chargingBolt.setVisibility(View.VISIBLE);
+            if (chargingBolt.getAnimation() == null) {
+                chargingBolt.startAnimation(boltAnimation);
+            }
+        } else {
+            chargingBolt.clearAnimation();
+            chargingBolt.setVisibility(View.GONE);
+        }
+    }
+
+    private void updateBatteryFill(int pct) {
+        int safePct = Math.max(0, Math.min(100, pct));
+        Drawable background;
+        if (safePct <= 10) background = ContextCompat.getDrawable(this, R.drawable.battery_fill_low);
+        else if (safePct <= 30) background = ContextCompat.getDrawable(this, R.drawable.battery_fill_mid);
+        else background = ContextCompat.getDrawable(this, R.drawable.battery_fill_high);
+
+        batteryFill.setBackground(background);
+
+        batteryFill.post(() -> {
+            int totalHeight = ((View) batteryFill.getParent()).getHeight();
+            float scale = Math.max(0.01f, safePct / 100f);
+            batteryFill.getLayoutParams().height = (int) (totalHeight * scale);
+            batteryFill.requestLayout();
+        });
+    }
+
+    private String getAlertLabel(int pct, boolean charging) {
+        if (charging && pct >= 100) return "CARGA COMPLETA";
+        if (charging) return "CARREGANDO...";
+        if (pct <= 10) return "CRÍTICO";
+        if (pct <= 30) return "ATENÇÃO";
+        return "NORMAL";
+    }
+
+    private int getBatteryColor(int pct) {
+        if (pct <= 10) return 0xFFFF4D4F;
+        if (pct <= 30) return 0xFFF59E0B;
+        return 0xFF4ADE80;
+    }
+
+    private void playTestBeep() {
+        boolean muted = preferences.getBoolean(BatteryService.KEY_MUTED, false);
+        if (muted) {
+            Toast.makeText(this, "Som silenciado. Desmute para testar.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
+            tg.startTone(ToneGenerator.TONE_PROP_BEEP2, 300);
+            tg.release();
+        } catch (Exception e) {
+            Toast.makeText(this, "Erro no bip", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1001);
+            }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateBatteryReadout();
+        updateServiceButtons(isServiceRunning(BatteryService.class));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        stopCurrentAudio();
+        try { unregisterReceiver(bipReceiver); } catch (Exception ignored) {}
+        try { unregisterReceiver(batteryReceiver); } catch (Exception ignored) {}
+        super.onDestroy();
+    }
 }
