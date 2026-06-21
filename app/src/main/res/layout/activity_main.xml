@@ -44,6 +44,7 @@
                 android:background="@drawable/battery_cap" />
 
             <FrameLayout
+                android:id="@+id/batteryContainer"
                 android:layout_width="188dp"
                 android:layout_height="320dp"
                 android:layout_marginTop="-2dp"
@@ -64,6 +65,21 @@
                     android:layout_height="120dp"
                     android:layout_gravity="top"
                     android:background="@drawable/battery_gloss" />
+
+                <!-- Ícone de Raio para Carregamento -->
+                <TextView
+                    android:id="@+id/tvChargingBolt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="⚡"
+                    android:textSize="80sp"
+                    android:textColor="#FACC15"
+                    android:shadowColor="#000000"
+                    android:shadowDx="2"
+                    android:shadowDy="2"
+                    android:shadowRadius="4"
+                    android:visibility="gone" />
             </FrameLayout>
         </LinearLayout>
 

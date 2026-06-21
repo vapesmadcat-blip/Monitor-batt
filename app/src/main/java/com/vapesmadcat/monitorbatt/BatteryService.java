@@ -43,8 +43,8 @@ public class BatteryService extends Service {
 
     private int currentLevel = -1;
     private boolean charging = false;
+    private boolean fullNotified = false; // Evita repetir o áudio de 100% várias vezes
 
-    // Controle de tempo para a voz (1 vez por minuto durante o alerta)
     private long lastVoiceTime = 0;
     private static final long VOICE_COOLDOWN_MS = 60000;
 
@@ -54,13 +54,21 @@ public class BatteryService extends Service {
             int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
             int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
             int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
+            int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
             
             int newLevel = (level >= 0 && scale > 0) ? (int) ((level * 100f) / scale) : -1;
             boolean newCharging = plugged != 0;
 
-            // Detecta o momento exato em que o carregador é conectado
             if (newCharging && !charging) {
                 onChargerConnected();
+            }
+
+            // Detecta bateria cheia (100%)
+            if (newLevel >= 100 && !fullNotified) {
+                onBatteryFull();
+                fullNotified = true;
+            } else if (newLevel < 95) {
+                fullNotified = false; // Reseta quando a bateria cai um pouco
             }
 
             currentLevel = newLevel;
@@ -99,8 +107,13 @@ public class BatteryService extends Service {
     }
 
     private void onChargerConnected() {
-        Log.d("BatteryService", "Carregador conectado! Tocando áudio de alívio...");
+        Log.d("BatteryService", "Carregador conectado!");
         playSpecificVoice("charging");
+    }
+
+    private void onBatteryFull() {
+        Log.d("BatteryService", "Bateria cheia! 100%");
+        playSpecificVoice("full");
     }
 
     private void triggerBip() {

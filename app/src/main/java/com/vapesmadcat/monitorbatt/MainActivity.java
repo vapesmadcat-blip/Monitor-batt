@@ -20,6 +20,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.ArrayAdapter;
@@ -42,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView intervalValueText;
     private TextView alertModeText;
     private TextView bipIndicator;
+    private TextView chargingBolt;
     private SeekBar thresholdSeek;
     private SeekBar intervalSeek;
     private Spinner characterSpinner;
@@ -55,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
     private String[] characters = {"Nenhum", "Lula", "Bolsonaro", "Goku", "Vegeta"};
     private String[] characterKeys = {"none", "lula", "bolsonaro", "goku", "vegeta"};
     private boolean isModified = false;
+    private boolean isCharging = false;
+    private AlphaAnimation boltAnimation;
 
     // Chave para persistência do estado do serviço
     public static final String KEY_SERVICE_ENABLED = "service_enabled";
@@ -87,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
         intervalValueText = findViewById(R.id.tvIntervalValue);
         alertModeText = findViewById(R.id.tvAlertMode);
         bipIndicator = findViewById(R.id.tvBipIndicator);
+        chargingBolt = findViewById(R.id.tvChargingBolt);
         thresholdSeek = findViewById(R.id.seekThreshold);
         intervalSeek = findViewById(R.id.seekInterval);
         characterSpinner = findViewById(R.id.spinnerCharacter);
@@ -103,6 +109,7 @@ public class MainActivity extends AppCompatActivity {
         characterSpinner.setAdapter(adapter);
 
         setupControls();
+        setupAnimations();
 
         saveBtn.setOnClickListener(v -> {
             saveSettings();
@@ -114,14 +121,12 @@ public class MainActivity extends AppCompatActivity {
         startBtn.setOnClickListener(v -> {
             requestNotificationPermissionIfNeeded();
             saveSettings();
-            // Salva que o usuário ativou o serviço
             preferences.edit().putBoolean(KEY_SERVICE_ENABLED, true).apply();
             startBatteryService();
             updateServiceButtons(true);
         });
 
         stopBtn.setOnClickListener(v -> {
-            // Salva que o usuário desativou o serviço
             preferences.edit().putBoolean(KEY_SERVICE_ENABLED, false).apply();
             stopBatteryService();
             updateServiceButtons(false);
@@ -142,20 +147,17 @@ public class MainActivity extends AppCompatActivity {
             playTestBeep();
         });
 
-        // Registro do receptor de Bip
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"), Context.RECEIVER_NOT_EXPORTED);
         } else {
             registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"));
         }
 
-        // Registro do receptor de Bateria
         registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         
         updateMuteButton(preferences.getBoolean(BatteryService.KEY_MUTED, false));
         updateBatteryReadout();
         
-        // Verifica se o serviço deve estar rodando e atualiza a UI
         boolean shouldBeRunning = preferences.getBoolean(KEY_SERVICE_ENABLED, false);
         boolean isRunning = isServiceRunning(BatteryService.class);
         
@@ -165,6 +167,13 @@ public class MainActivity extends AppCompatActivity {
         } else {
             updateServiceButtons(isRunning);
         }
+    }
+
+    private void setupAnimations() {
+        boltAnimation = new AlphaAnimation(0.2f, 1.0f);
+        boltAnimation.setDuration(800);
+        boltAnimation.setRepeatMode(Animation.REVERSE);
+        boltAnimation.setRepeatCount(Animation.INFINITE);
     }
 
     private void playVoicePreview() {
@@ -177,7 +186,6 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Tenta tocar a voz de nível "low" como preview
         int resId = getResources().getIdentifier("voice_" + character + "_low", "raw", getPackageName());
         if (resId != 0) {
             try {
@@ -189,10 +197,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             } catch (Exception e) {
                 Log.e("MainActivity", "Erro ao tocar preview de voz", e);
-                Toast.makeText(this, "Erro ao tocar voz", Toast.LENGTH_SHORT).show();
             }
-        } else {
-            Toast.makeText(this, "Arquivo de voz não encontrado", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -322,14 +327,30 @@ public class MainActivity extends AppCompatActivity {
         if (batteryStatus == null) return;
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        
         int pct = (level >= 0 && scale > 0) ? (int) ((level * 100f) / scale) : -1;
+        isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
 
         batteryText.setText(pct + "%");
         int color = getBatteryColor(pct);
         batteryText.setTextColor(color);
-        alertModeText.setText(getAlertLabel(pct));
+        alertModeText.setText(getAlertLabel(pct, isCharging));
         alertModeText.setTextColor(color);
         updateBatteryFill(pct);
+        updateChargingUI(isCharging);
+    }
+
+    private void updateChargingUI(boolean charging) {
+        if (charging) {
+            chargingBolt.setVisibility(View.VISIBLE);
+            if (chargingBolt.getAnimation() == null) {
+                chargingBolt.startAnimation(boltAnimation);
+            }
+        } else {
+            chargingBolt.clearAnimation();
+            chargingBolt.setVisibility(View.GONE);
+        }
     }
 
     private void updateBatteryFill(int pct) {
@@ -349,7 +370,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private String getAlertLabel(int pct) {
+    private String getAlertLabel(int pct, boolean charging) {
+        if (charging && pct >= 100) return "CARGA COMPLETA";
+        if (charging) return "CARREGANDO...";
         if (pct <= 10) return "CRÍTICO";
         if (pct <= 30) return "ATENÇÃO";
         return "NORMAL";
@@ -383,7 +406,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         updateBatteryReadout();
-        // Atualiza botões caso o serviço tenha sido parado pelo sistema
         updateServiceButtons(isServiceRunning(BatteryService.class));
     }
 
