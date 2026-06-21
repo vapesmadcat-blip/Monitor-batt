@@ -1,4 +1,5 @@
 <!-- ==================== 3 NÍVEIS DE VOZ CONFIGURÁVEIS ==================== -->
+
 <TextView
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -6,17 +7,18 @@
     android:textColor="#A0C4E2"
     android:textSize="14sp"
     android:layout_marginTop="20dp"
-    android:layout_marginBottom="8dp"
-    android:paddingStart="4dp" />
+    android:layout_marginBottom="12dp"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp" />
 
-<!-- Voz Baixa -->
+<!-- VOZ BAIXA -->
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingStart="4dp"
-    android:paddingEnd="4dp">
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp">
 
     <TextView
         android:layout_width="0dp"
@@ -40,19 +42,19 @@
     android:id="@+id/seekVoiceLow"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:max="80"
-    android:paddingStart="4dp"
-    android:paddingEnd="4dp" />
+    android:max="100"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp" />
 
-<!-- Voz Crítica -->
+<!-- VOZ CRÍTICA -->
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
     android:layout_marginTop="12dp"
-    android:paddingStart="4dp"
-    android:paddingEnd="4dp">
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp">
 
     <TextView
         android:layout_width="0dp"
@@ -76,19 +78,19 @@
     android:id="@+id/seekVoiceCritical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:max="80"
-    android:paddingStart="4dp"
-    android:paddingEnd="4dp" />
+    android:max="100"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp" />
 
-<!-- Voz Quase Acabando -->
+<!-- VOZ QUASE ACABANDO -->
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
     android:layout_marginTop="12dp"
-    android:paddingStart="4dp"
-    android:paddingEnd="4dp">
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp">
 
     <TextView
         android:layout_width="0dp"
@@ -112,6 +114,6 @@
     android:id="@+id/seekVoiceVeryLow"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:max="80"
-    android:paddingStart="4dp"
-    android:paddingEnd="4dp" />
+    android:max="100"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp" />
