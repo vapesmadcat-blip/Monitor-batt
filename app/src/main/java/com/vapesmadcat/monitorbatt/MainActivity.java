@@ -55,8 +55,16 @@ public class MainActivity extends AppCompatActivity {
     private Button stopBtn;
     private Button playVoiceBtn;
     
-    private String[] characters = {"Nenhum", "Lula", "Bolsonaro", "Goku", "Vegeta", "Faustão", "Silvio Santos", "Homer Simpson"};
-    private String[] characterKeys = {"none", "lula", "bolsonaro", "goku", "vegeta", "faustao", "silvio", "homer"};
+    private String[] characters = {
+        "Nenhum", "Lula", "Bolsonaro", "Goku", "Vegeta", 
+        "Faustão", "Silvio Santos", "Homer Simpson",
+        "Rock", "Clássico", "Samba", "Reggae", "Sertanejo"
+    };
+    private String[] characterKeys = {
+        "none", "lula", "bolsonaro", "goku", "vegeta", 
+        "faustao", "silvio", "homer",
+        "rock", "classico", "samba", "reggae", "sertanejo"
+    };
     private boolean isModified = false;
     private boolean isCharging = false;
     private AlphaAnimation boltAnimation;
@@ -182,11 +190,14 @@ public class MainActivity extends AppCompatActivity {
         
         String character = characterKeys[pos];
         if ("none".equals(character)) {
-            Toast.makeText(this, "Nenhuma voz selecionada", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Nenhuma opção selecionada", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        // Tenta primeiro o áudio de carregamento ou baixo para o preview
         int resId = getResources().getIdentifier("voice_" + character + "_low", "raw", getPackageName());
+        if (resId == 0) resId = getResources().getIdentifier("voice_" + character + "_charging", "raw", getPackageName());
+        
         if (resId != 0) {
             try {
                 MediaPlayer mp = MediaPlayer.create(this, resId);
@@ -196,8 +207,10 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this, "Ouvindo: " + characters[pos], Toast.LENGTH_SHORT).show();
                 }
             } catch (Exception e) {
-                Log.e("MainActivity", "Erro ao tocar preview de voz", e);
+                Log.e("MainActivity", "Erro ao tocar preview", e);
             }
+        } else {
+            Toast.makeText(this, "Áudio de prévia não disponível", Toast.LENGTH_SHORT).show();
         }
     }
 
