@@ -55,8 +55,8 @@ public class MainActivity extends AppCompatActivity {
     private Button stopBtn;
     private Button playVoiceBtn;
     
-    private String[] characters = {"Nenhum", "Lula", "Bolsonaro", "Goku", "Vegeta"};
-    private String[] characterKeys = {"none", "lula", "bolsonaro", "goku", "vegeta"};
+    private String[] characters = {"Nenhum", "Lula", "Bolsonaro", "Goku", "Vegeta", "Faustão", "Silvio Santos", "Homer Simpson"};
+    private String[] characterKeys = {"none", "lula", "bolsonaro", "goku", "vegeta", "faustao", "silvio", "homer"};
     private boolean isModified = false;
     private boolean isCharging = false;
     private AlphaAnimation boltAnimation;
