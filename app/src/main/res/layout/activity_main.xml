@@ -24,13 +24,12 @@
             android:gravity="center"
             android:layout_marginBottom="16dp"/>
 
-        <!-- ========== VISUAL DA BATERIA + MASCOTE ========== -->
+        <!-- Visual da Bateria + Mascote -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="280dp"
             android:layout_marginBottom="12dp">
 
-            <!-- Visual da Pilha Normal -->
             <LinearLayout
                 android:id="@+id/batteryContainer"
                 android:layout_width="match_parent"
@@ -42,29 +41,19 @@
                     android:layout_width="120dp"
                     android:layout_height="220dp">
 
-                    <!-- Borda da bateria -->
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                    <View android:layout_width="match_parent" android:layout_height="match_parent"
                         android:background="@drawable/battery_shell"/>
 
-                    <!-- Preenchimento da bateria -->
-                    <View
-                        android:id="@+id/batteryFill"
+                    <View android:id="@+id/batteryFill"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_gravity="bottom"
                         android:background="@drawable/battery_fill_high"/>
 
-                    <!-- Brilho -->
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                    <View android:layout_width="match_parent" android:layout_height="match_parent"
                         android:background="@drawable/battery_gloss"/>
 
-                    <!-- Raio de carregamento -->
-                    <TextView
-                        android:id="@+id/tvChargingBolt"
+                    <TextView android:id="@+id/tvChargingBolt"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
@@ -74,9 +63,7 @@
                         android:visibility="gone"/>
                 </FrameLayout>
 
-                <!-- Porcentagem pequena (dentro do container) -->
-                <TextView
-                    android:id="@+id/tvLevel"
+                <TextView android:id="@+id/tvLevel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
@@ -85,8 +72,7 @@
                     android:textSize="42sp"
                     android:textStyle="bold"/>
 
-                <TextView
-                    android:id="@+id/tvStatus"
+                <TextView android:id="@+id/tvStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="NORMAL"
@@ -95,21 +81,17 @@
                     android:textStyle="bold"/>
             </LinearLayout>
 
-            <!-- ========== MASCOTE ========== -->
-            <ImageView
-                android:id="@+id/ivMascot"
+            <ImageView android:id="@+id/ivMascot"
                 android:layout_width="220dp"
                 android:layout_height="220dp"
                 android:layout_gravity="center"
                 android:visibility="gone"
                 android:scaleType="fitCenter"
                 android:src="@drawable/battery_mascot_1"/>
-
         </FrameLayout>
 
-        <!-- ========== PORCENTAGEM GRANDE ========== -->
-        <TextView
-            android:id="@+id/tvBigPercentage"
+        <!-- Porcentagem Grande -->
+        <TextView android:id="@+id/tvBigPercentage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="--%"
@@ -119,9 +101,8 @@
             android:gravity="center"
             android:layout_marginBottom="20dp"/>
 
-        <!-- ========== INDICADOR DE BIP ========== -->
-        <TextView
-            android:id="@+id/tvBipIndicator"
+        <!-- Bip Indicator -->
+        <TextView android:id="@+id/tvBipIndicator"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="●"
@@ -130,195 +111,130 @@
             android:gravity="center"
             android:layout_marginBottom="16dp"/>
 
-        <!-- ========== BOTÃO TESTAR MONITORAMENTO COMPLETO ========== -->
-        <Button
-            android:id="@+id/btnTestFullMonitoring"
+        <!-- Botão Testar Monitoramento -->
+        <Button android:id="@+id/btnTestFullMonitoring"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="▶ Testar Monitoramento Completo"
             android:layout_marginBottom="24dp"/>
 
-        <!-- ========== CONFIGURAÇÕES ========== -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Configurações"
-            android:textColor="#AAAAAA"
-            android:textSize="14sp"
-            android:layout_marginBottom="8dp"/>
+        <!-- Configurações -->
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Configurações" android:textColor="#AAAAAA"
+            android:textSize="14sp" android:layout_marginBottom="8dp"/>
 
         <!-- Threshold -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Alerta a partir de:"
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginBottom="12dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Alerta a partir de:"
                 android:textColor="#FFFFFF"/>
-
-            <TextView
-                android:id="@+id/tvThresholdValue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="15%"
-                android:textColor="#4ADE80"
-                android:textStyle="bold"/>
+            <TextView android:id="@+id/tvThresholdValue"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="15%" android:textColor="#4ADE80" android:textStyle="bold"/>
         </LinearLayout>
 
-        <SeekBar
-            android:id="@+id/seekThreshold"
+        <SeekBar android:id="@+id/seekThreshold"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="20dp"/>
 
         <!-- Intervalo -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Intervalo do bip:"
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginBottom="12dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Intervalo do bip:"
                 android:textColor="#FFFFFF"/>
-
-            <TextView
-                android:id="@+id/tvIntervalValue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="30 segundos"
-                android:textColor="#4ADE80"
-                android:textStyle="bold"/>
+            <TextView android:id="@+id/tvIntervalValue"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="30 segundos" android:textColor="#4ADE80" android:textStyle="bold"/>
         </LinearLayout>
 
-        <SeekBar
-            android:id="@+id/seekInterval"
+        <SeekBar android:id="@+id/seekInterval"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"/>
 
-        <!-- Switches Granulares -->
-        <Switch
-            android:id="@+id/switchBeep"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Ativar Bip"
-            android:textColor="#FFFFFF"
+        <!-- Switches -->
+        <Switch android:id="@+id/switchBeep"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Ativar Bip" android:textColor="#FFFFFF"
             android:layout_marginBottom="8dp"/>
 
-        <Switch
-            android:id="@+id/switchTts"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Ativar TTS (voz)"
-            android:textColor="#FFFFFF"
+        <Switch android:id="@+id/switchTts"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Ativar TTS (voz)" android:textColor="#FFFFFF"
             android:layout_marginBottom="8dp"/>
 
-        <Switch
-            android:id="@+id/switchCharacterVoice"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Ativar Voz do Personagem"
-            android:textColor="#FFFFFF"
+        <Switch android:id="@+id/switchCharacterVoice"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Ativar Voz do Personagem" android:textColor="#FFFFFF"
             android:layout_marginBottom="16dp"/>
 
         <!-- Estilo Visual -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Estilo Visual:"
-            android:textColor="#AAAAAA"
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Estilo Visual:" android:textColor="#AAAAAA"
             android:layout_marginBottom="6dp"/>
 
-        <Spinner
-            android:id="@+id/spinnerVisualStyle"
+        <Spinner android:id="@+id/spinnerVisualStyle"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginBottom="24dp"/>
 
         <!-- Personagem de voz -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Voz do Personagem:"
-            android:textColor="#AAAAAA"
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Voz do Personagem:" android:textColor="#AAAAAA"
             android:layout_marginBottom="6dp"/>
 
-        <Spinner
-            android:id="@+id/spinnerCharacter"
+        <Spinner android:id="@+id/spinnerCharacter"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginBottom="24dp"/>
 
         <!-- Botões de Áudio -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
-
-            <Button
-                android:id="@+id/btnTestBeep"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Testar Bip"
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginBottom="12dp">
+            <Button android:id="@+id/btnTestBeep"
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Testar Bip"
                 android:layout_marginEnd="8dp"/>
-
-            <Button
-                android:id="@+id/btnPlayVoice"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="▶"
+            <Button android:id="@+id/btnPlayVoice"
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="▶"
                 android:layout_marginStart="8dp"/>
         </LinearLayout>
 
-        <Button
-            android:id="@+id/btnMute"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="🔊 Silenciar"
-            android:layout_marginBottom="16dp"/>
+        <Button android:id="@+id/btnMute"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="🔊 Silenciar" android:layout_marginBottom="16dp"/>
 
         <!-- Botões de Serviço -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
             android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnStart"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Iniciar Monitoramento"
+            <Button android:id="@+id/btnStart"
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Iniciar Monitoramento"
                 android:layout_marginEnd="8dp"/>
-
-            <Button
-                android:id="@+id/btnStop"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Parar"
+            <Button android:id="@+id/btnStop"
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Parar"
                 android:layout_marginStart="8dp"/>
         </LinearLayout>
 
+        <!-- ===================== BOTÃO SOBRE ===================== -->
         <Button
-            android:id="@+id/btnSave"
+            android:id="@+id/btnSobre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sobre"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="16dp"/>
+
+        <Button android:id="@+id/btnSave"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Salvar Configurações"
-            android:visibility="gone"
-            android:layout_marginTop="16dp"/>
+            android:visibility="gone"/>
 
     </LinearLayout>
 </ScrollView>
