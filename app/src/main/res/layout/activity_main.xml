@@ -111,13 +111,6 @@
             android:gravity="center"
             android:layout_marginBottom="16dp"/>
 
-        <!-- Botão Testar Monitoramento -->
-        <Button android:id="@+id/btnTestFullMonitoring"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="▶ Testar Monitoramento Completo"
-            android:layout_marginBottom="24dp"/>
-
         <!-- Configurações -->
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="Configurações" android:textColor="#AAAAAA"
