@@ -38,15 +38,14 @@ import androidx.core.content.ContextCompat;
 
 public class MainActivity extends AppCompatActivity {
 
-    // Views
     private View batteryFill;
     private TextView batteryText, statusText, thresholdValueText, intervalValueText;
     private TextView alertModeText, bipIndicator, chargingBolt;
-    private TextView tvBigPercentage;                    // NOVO - Porcentagem grande
+    private TextView tvBigPercentage;
     private SeekBar thresholdSeek, intervalSeek;
     private Spinner characterSpinner, spinnerVisualStyle;
     private Switch switchBeep, switchTts, switchCharacterVoice;
-    private Button muteBtn, saveBtn, startBtn, stopBtn, playVoiceBtn, btnTestFullMonitoring;
+    private Button muteBtn, saveBtn, startBtn, stopBtn, playVoiceBtn, btnTestFullMonitoring, testBeepBtn;
     private ImageView ivMascot;
 
     private SharedPreferences preferences;
@@ -109,9 +108,8 @@ public class MainActivity extends AppCompatActivity {
         stopBtn = findViewById(R.id.btnStop);
         muteBtn = findViewById(R.id.btnMute);
         playVoiceBtn = findViewById(R.id.btnPlayVoice);
-        Button testBeepBtn = findViewById(R.id.btnTestBeep);
+        testBeepBtn = findViewById(R.id.btnTestBeep);
 
-        // Novos
         switchBeep = findViewById(R.id.switchBeep);
         switchTts = findViewById(R.id.switchTts);
         switchCharacterVoice = findViewById(R.id.switchCharacterVoice);
@@ -246,7 +244,7 @@ public class MainActivity extends AppCompatActivity {
         boltAnimation.setRepeatCount(Animation.INFINITE);
     }
 
-    // ====================== MÉTODOS DO MASCOTE ======================
+    // ====================== MASCOTE ======================
 
     private void updateVisualStyle() {
         boolean useMascot = spinnerVisualStyle.getSelectedItemPosition() == 1;
@@ -256,14 +254,12 @@ public class MainActivity extends AppCompatActivity {
             batteryText.setVisibility(View.GONE);
             chargingBolt.setVisibility(View.GONE);
             alertModeText.setVisibility(View.GONE);
-
             ivMascot.setVisibility(View.VISIBLE);
             updateMascotImage();
         } else {
             batteryFill.setVisibility(View.VISIBLE);
             batteryText.setVisibility(View.VISIBLE);
             alertModeText.setVisibility(View.VISIBLE);
-
             ivMascot.setVisibility(View.GONE);
         }
     }
@@ -491,10 +487,8 @@ public class MainActivity extends AppCompatActivity {
         updateBatteryFill(pct);
         updateChargingUI(isCharging);
 
-        // Atualiza porcentagem grande
         updateBigPercentage(pct);
 
-        // Atualiza mascote se visível
         if (ivMascot != null && ivMascot.getVisibility() == View.VISIBLE) {
             updateMascotImage();
         }
