@@ -42,11 +42,13 @@
                     android:layout_width="120dp"
                     android:layout_height="220dp">
 
+                    <!-- Borda da bateria -->
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:background="@drawable/battery_shell"/>
 
+                    <!-- Preenchimento da bateria -->
                     <View
                         android:id="@+id/batteryFill"
                         android:layout_width="match_parent"
@@ -54,11 +56,13 @@
                         android:layout_gravity="bottom"
                         android:background="@drawable/battery_fill_high"/>
 
+                    <!-- Brilho -->
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:background="@drawable/battery_gloss"/>
 
+                    <!-- Raio de carregamento -->
                     <TextView
                         android:id="@+id/tvChargingBolt"
                         android:layout_width="wrap_content"
@@ -70,6 +74,7 @@
                         android:visibility="gone"/>
                 </FrameLayout>
 
+                <!-- Porcentagem pequena (dentro do container) -->
                 <TextView
                     android:id="@+id/tvLevel"
                     android:layout_width="wrap_content"
@@ -90,7 +95,7 @@
                     android:textStyle="bold"/>
             </LinearLayout>
 
-            <!-- MASCOTE -->
+            <!-- ========== MASCOTE ========== -->
             <ImageView
                 android:id="@+id/ivMascot"
                 android:layout_width="220dp"
@@ -125,7 +130,7 @@
             android:gravity="center"
             android:layout_marginBottom="16dp"/>
 
-        <!-- Botão Testar Monitoramento Completo -->
+        <!-- ========== BOTÃO TESTAR MONITORAMENTO COMPLETO ========== -->
         <Button
             android:id="@+id/btnTestFullMonitoring"
             android:layout_width="match_parent"
@@ -133,7 +138,7 @@
             android:text="▶ Testar Monitoramento Completo"
             android:layout_marginBottom="24dp"/>
 
-        <!-- Configurações -->
+        <!-- ========== CONFIGURAÇÕES ========== -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -200,7 +205,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"/>
 
-        <!-- Switches -->
+        <!-- Switches Granulares -->
         <Switch
             android:id="@+id/switchBeep"
             android:layout_width="match_parent"
