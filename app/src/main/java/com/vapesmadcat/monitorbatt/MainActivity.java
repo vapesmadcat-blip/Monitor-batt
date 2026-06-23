@@ -38,18 +38,16 @@ import androidx.core.content.ContextCompat;
 
 public class MainActivity extends AppCompatActivity {
 
-    // Views existentes
+    // Views
     private View batteryFill;
     private TextView batteryText, statusText, thresholdValueText, intervalValueText;
     private TextView alertModeText, bipIndicator, chargingBolt;
+    private TextView tvBigPercentage;                    // NOVO - Porcentagem grande
     private SeekBar thresholdSeek, intervalSeek;
-    private Spinner characterSpinner;
-    private Button muteBtn, saveBtn, startBtn, stopBtn, playVoiceBtn;
-
-    // NOVOS: Switches + Visual Style + Mascote
+    private Spinner characterSpinner, spinnerVisualStyle;
     private Switch switchBeep, switchTts, switchCharacterVoice;
-    private Spinner spinnerVisualStyle;
-    private ImageView ivMascot;                    // NOVO
+    private Button muteBtn, saveBtn, startBtn, stopBtn, playVoiceBtn, btnTestFullMonitoring;
+    private ImageView ivMascot;
 
     private SharedPreferences preferences;
     private boolean isModified = false;
@@ -113,19 +111,21 @@ public class MainActivity extends AppCompatActivity {
         playVoiceBtn = findViewById(R.id.btnPlayVoice);
         Button testBeepBtn = findViewById(R.id.btnTestBeep);
 
-        // NOVOS
+        // Novos
         switchBeep = findViewById(R.id.switchBeep);
         switchTts = findViewById(R.id.switchTts);
         switchCharacterVoice = findViewById(R.id.switchCharacterVoice);
         spinnerVisualStyle = findViewById(R.id.spinnerVisualStyle);
-        ivMascot = findViewById(R.id.ivMascot);           // NOVO
+        ivMascot = findViewById(R.id.ivMascot);
+        tvBigPercentage = findViewById(R.id.tvBigPercentage);
+        btnTestFullMonitoring = findViewById(R.id.btnTestFullMonitoring);
 
         setupCharacterSpinner();
         setupVisualStyleSpinner();
         setupControls();
         setupAnimations();
 
-        // Listeners dos botões
+        // Listeners
         saveBtn.setOnClickListener(v -> {
             saveSettings();
             isModified = false;
@@ -164,7 +164,9 @@ public class MainActivity extends AppCompatActivity {
             playTestBeep();
         });
 
-        // Registros de Broadcast
+        btnTestFullMonitoring.setOnClickListener(v -> testFullMonitoring());
+
+        // Broadcasts
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"), Context.RECEIVER_NOT_EXPORTED);
         } else {
@@ -231,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
         spinnerVisualStyle.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
                 checkChanges();
-                updateVisualStyle();           // NOVO
+                updateVisualStyle();
             }
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
@@ -244,34 +246,30 @@ public class MainActivity extends AppCompatActivity {
         boltAnimation.setRepeatCount(Animation.INFINITE);
     }
 
-    // ====================== LÓGICA DO MASCOTE ======================
+    // ====================== MÉTODOS DO MASCOTE ======================
 
     private void updateVisualStyle() {
         boolean useMascot = spinnerVisualStyle.getSelectedItemPosition() == 1;
 
         if (useMascot) {
-            // Esconde visual da pilha
             batteryFill.setVisibility(View.GONE);
             batteryText.setVisibility(View.GONE);
             chargingBolt.setVisibility(View.GONE);
             alertModeText.setVisibility(View.GONE);
 
-            // Mostra mascote
             ivMascot.setVisibility(View.VISIBLE);
             updateMascotImage();
         } else {
-            // Mostra visual da pilha
             batteryFill.setVisibility(View.VISIBLE);
             batteryText.setVisibility(View.VISIBLE);
             alertModeText.setVisibility(View.VISIBLE);
 
-            // Esconde mascote
             ivMascot.setVisibility(View.GONE);
         }
     }
 
     private void updateMascotImage() {
-        if (ivMascot.getVisibility() != View.VISIBLE) return;
+        if (ivMascot == null || ivMascot.getVisibility() != View.VISIBLE) return;
 
         Intent batteryStatus = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         if (batteryStatus == null) return;
@@ -290,7 +288,41 @@ public class MainActivity extends AppCompatActivity {
         ivMascot.setImageResource(resId);
     }
 
-    // ====================== FIM DA LÓGICA DO MASCOTE ======================
+    // ====================== PORCENTAGEM GRANDE ======================
+
+    private void updateBigPercentage(int pct) {
+        if (tvBigPercentage == null) return;
+        tvBigPercentage.setText(pct + "%");
+        tvBigPercentage.setTextColor(getBatteryColor(pct));
+    }
+
+    // ====================== TESTE COMPLETO ======================
+
+    private void testFullMonitoring() {
+        boolean beepEnabled = switchBeep.isChecked();
+        boolean ttsEnabled = switchTts.isChecked();
+        boolean voiceEnabled = switchCharacterVoice.isChecked();
+
+        Intent batteryStatus = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int level = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, 50) : 50;
+        int scale = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, 100) : 100;
+        int pct = (int) ((level * 100f) / scale);
+
+        updateBigPercentage(pct);
+
+        if (pct <= 10) {
+            if (beepEnabled) triggerVisualBip();
+            if (ttsEnabled) speakSmartAlert(pct);
+            if (voiceEnabled) playCharacterVoice(pct);
+        } else if (pct <= 30) {
+            if (beepEnabled) triggerVisualBip();
+            if (ttsEnabled) speakSmartAlert(pct);
+        } else {
+            Toast.makeText(this, "Bateria normal (" + pct + "%). Nenhum alerta disparado.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // ====================== MÉTODOS EXISTENTES ======================
 
     private void stopCurrentAudio() {
         if (currentMediaPlayer != null) {
@@ -412,7 +444,6 @@ public class MainActivity extends AppCompatActivity {
         saveBtn.setVisibility(View.GONE);
         isModifiedByCode = false;
 
-        // Atualiza visual na carga inicial
         updateVisualStyle();
     }
 
@@ -460,7 +491,10 @@ public class MainActivity extends AppCompatActivity {
         updateBatteryFill(pct);
         updateChargingUI(isCharging);
 
-        // Atualiza mascote se estiver visível
+        // Atualiza porcentagem grande
+        updateBigPercentage(pct);
+
+        // Atualiza mascote se visível
         if (ivMascot != null && ivMascot.getVisibility() == View.VISIBLE) {
             updateMascotImage();
         }
@@ -538,4 +572,4 @@ public class MainActivity extends AppCompatActivity {
         try { unregisterReceiver(batteryReceiver); } catch (Exception ignored) {}
         super.onDestroy();
     }
-            }
+}
