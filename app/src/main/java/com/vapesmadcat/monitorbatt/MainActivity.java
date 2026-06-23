@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar thresholdSeek, intervalSeek;
     private Spinner characterSpinner, spinnerVisualStyle;
     private Switch switchBeep, switchTts, switchCharacterVoice;
-    private Button muteBtn, saveBtn, startBtn, stopBtn, playVoiceBtn, btnTestFullMonitoring, testBeepBtn, btnSobre;
+    private Button muteBtn, saveBtn, startBtn, stopBtn, playVoiceBtn, testBeepBtn, btnSobre;
     private ImageView ivMascot;
 
     private SharedPreferences preferences;
@@ -113,7 +113,6 @@ public class MainActivity extends AppCompatActivity {
         muteBtn = findViewById(R.id.btnMute);
         playVoiceBtn = findViewById(R.id.btnPlayVoice);
         testBeepBtn = findViewById(R.id.btnTestBeep);
-        btnTestFullMonitoring = findViewById(R.id.btnTestFullMonitoring);
         btnSobre = findViewById(R.id.btnSobre);
 
         switchBeep = findViewById(R.id.switchBeep);
@@ -167,9 +166,6 @@ public class MainActivity extends AppCompatActivity {
             playTestBeep();
         });
 
-        btnTestFullMonitoring.setOnClickListener(v -> testFullMonitoring());
-
-        // ===================== BOTÃO SOBRE =====================
         btnSobre.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, AboutActivity.class);
             startActivity(intent);
@@ -233,18 +229,29 @@ public class MainActivity extends AppCompatActivity {
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
 
-        android.widget.CompoundButton.OnCheckedChangeListener switchListener = (buttonView, isChecked) -> checkChanges();
-        switchBeep.setOnCheckedChangeListener(switchListener);
-        switchTts.setOnCheckedChangeListener(switchListener);
-        switchCharacterVoice.setOnCheckedChangeListener(switchListener);
-
-        spinnerVisualStyle.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
-                checkChanges();
-                updateVisualStyle();
+        // ===================== LÓGICA DOS SWITCHES =====================
+        switchBeep.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            checkChanges();
+            if (isChecked) {
+                triggerVisualBip();
+                playTestBeep();
             }
-            @Override public void onNothingSelected(AdapterView<?> p) {}
         });
+
+        switchTts.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            checkChanges();
+            if (isChecked) {
+                speakBatteryStatusExample();
+            }
+        });
+
+        switchCharacterVoice.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            checkChanges();
+            if (isChecked) {
+                playCharacterVoiceSample();
+            }
+        });
+        // ============================================================
     }
 
     private void setupAnimations() {
@@ -316,50 +323,15 @@ public class MainActivity extends AppCompatActivity {
         tvBigPercentage.setTextColor(getBatteryColor(pct));
     }
 
-    private void testFullMonitoring() {
-        boolean beepEnabled = switchBeep.isChecked();
-        boolean ttsEnabled = switchTts.isChecked();
-        boolean voiceEnabled = switchCharacterVoice.isChecked();
-
-        Intent batteryStatus = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        int level = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, 50) : 50;
-        int scale = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, 100) : 100;
-        int pct = (int) ((level * 100f) / scale);
-
-        updateBigPercentage(pct);
-
-        if (beepEnabled) {
-            triggerVisualBip();
-            playTestBeep();
-        }
-
-        if (voiceEnabled) {
-            playCharacterVoiceSample();
-        }
-
-        if (ttsEnabled) {
-            speakBatteryStatus(pct);
-        }
-
-        if (!beepEnabled && !ttsEnabled && !voiceEnabled) {
-            Toast.makeText(this, "Nenhum alerta ativado.", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void speakBatteryStatus(int pct) {
+    private void speakBatteryStatusExample() {
         if (textToSpeech == null || !ttsInitialized) {
             Toast.makeText(this, "TTS não está pronto. Tente novamente em alguns segundos.", Toast.LENGTH_SHORT).show();
             initTextToSpeech();
             return;
         }
 
-        String status;
-        if (pct <= 10) status = "Crítico";
-        else if (pct <= 30) status = "Atenção";
-        else status = "Normal";
-
-        String message = "Monitor de Bateria Pro. Bateria em " + pct + " por cento. Status: " + status + ".";
-        textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, "battery_status");
+        String message = "Monitor de Bateria Pro. Bateria em 87 por cento. Status: Normal.";
+        textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, "battery_example");
     }
 
     private void playCharacterVoiceSample() {
