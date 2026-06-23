@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.ToneGenerator;
@@ -19,9 +20,12 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+
+import java.util.Locale;
 
 public class BatteryService extends Service {
 
@@ -47,6 +51,9 @@ public class BatteryService extends Service {
 
     private long lastVoiceTime = 0;
     private static final long VOICE_COOLDOWN_MS = 60000;
+
+    // NOVO: TextToSpeech para alertas inteligentes por voz
+    private TextToSpeech tts;
 
     private final BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
         @Override
@@ -92,12 +99,40 @@ public class BatteryService extends Service {
         createChannel();
         registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
+        // ==================== TEXT TO SPEECH (NOVO) ====================
+        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.SUCCESS) {
+                    Locale locale = new Locale("pt", "BR");
+                    int result = tts.setLanguage(locale);
+                    if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        Log.w("BatteryService", "Idioma Português (Brasil) não disponível no TTS. Usuário pode precisar baixar voz.");
+                    } else {
+                        Log.d("BatteryService", "TextToSpeech inicializado com sucesso em pt-BR");
+                    }
+
+                    // Tenta usar STREAM_ALARM para ficar mais audível (mesmo espírito do bip)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        tts.setAudioAttributes(new AudioAttributes.Builder()
+                                .setUsage(AudioAttributes.USAGE_ALARM)
+                                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                                .build());
+                    }
+                } else {
+                    Log.e("BatteryService", "Falha ao inicializar TextToSpeech");
+                }
+            }
+        });
+        // ============================================================
+
         beepRunnable = new Runnable() {
             @Override
             public void run() {
                 if (alerting) {
                     triggerBip();
                     playCharacterVoiceIfNeeded(currentLevel);
+                    speakSmartAlert(currentLevel); // NOVO: TTS inteligente
                     handler.postDelayed(this, getCurrentIntervalMs());
                 }
             }
@@ -109,11 +144,18 @@ public class BatteryService extends Service {
     private void onChargerConnected() {
         Log.d("BatteryService", "Carregador conectado!");
         playSpecificVoice("charging");
+        // Opcional: falar também via TTS
+        if (tts != null && !isMuted()) {
+            tts.speak("Carregador conectado. Monitoramento pausado.", TextToSpeech.QUEUE_FLUSH, null, "charging");
+        }
     }
 
     private void onBatteryFull() {
         Log.d("BatteryService", "Bateria cheia! 100%");
         playSpecificVoice("full");
+        if (tts != null && !isMuted()) {
+            tts.speak("Bateria cheia! 100%. Muito bem!", TextToSpeech.QUEUE_FLUSH, null, "full");
+        }
     }
 
     private void triggerBip() {
@@ -169,6 +211,7 @@ public class BatteryService extends Service {
             handler.removeCallbacks(beepRunnable);
             handler.post(beepRunnable);
             playCharacterVoiceIfNeeded(currentLevel);
+            speakSmartAlert(currentLevel); // NOVO: TTS no momento que entra em alerta
         } else if (!shouldAlert && alerting) {
             alerting = false;
             handler.removeCallbacks(beepRunnable);
@@ -206,6 +249,32 @@ public class BatteryService extends Service {
         }
         return false;
     }
+
+    // ==================== NOVO MÉTODO: TextToSpeech Inteligente ====================
+    private void speakSmartAlert(int level) {
+        if (tts == null || isMuted()) return;
+
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastVoiceTime < VOICE_COOLDOWN_MS) return;
+
+        String message;
+        if (level <= 5) {
+            message = "Alerta crítico! A bateria está em apenas " + level + " por cento. Conecte o carregador imediatamente para evitar o desligamento.";
+        } else if (level <= 15) {
+            message = "Atenção! Bateria baixa em " + level + " por cento. É recomendável conectar o carregador agora.";
+        } else {
+            message = "Monitor de bateria ativo. Nível atual em " + level + " por cento.";
+        }
+
+        try {
+            tts.speak(message, TextToSpeech.QUEUE_FLUSH, null, "battery_tts_" + level);
+            lastVoiceTime = currentTime;
+            Log.d("BatteryService", "TTS falando: " + message);
+        } catch (Exception e) {
+            Log.e("BatteryService", "Erro ao falar via TextToSpeech", e);
+        }
+    }
+    // ======================================================================
 
     private int getThreshold() {
         return getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getInt(KEY_THRESHOLD, DEFAULT_THRESHOLD);
@@ -261,6 +330,14 @@ public class BatteryService extends Service {
         try { unregisterReceiver(batteryReceiver); } catch (Exception ignored) { }
         if (handler != null) handler.removeCallbacks(beepRunnable);
         if (toneGenerator != null) { toneGenerator.release(); toneGenerator = null; }
+
+        // NOVO: limpa o TextToSpeech
+        if (tts != null) {
+            tts.stop();
+            tts.shutdown();
+            tts = null;
+        }
+
         if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
         super.onDestroy();
     }
