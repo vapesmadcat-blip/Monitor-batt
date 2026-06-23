@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar thresholdSeek, intervalSeek;
     private Spinner characterSpinner, spinnerVisualStyle;
     private Switch switchBeep, switchTts, switchCharacterVoice;
-    private Button muteBtn, saveBtn, startBtn, stopBtn, playVoiceBtn, testBeepBtn, btnSobre;
+    private Button muteBtn, saveBtn, startBtn, stopBtn, btnSobre;
     private ImageView ivMascot;
     private LinearLayout batteryContainer;
 
@@ -113,8 +113,6 @@ public class MainActivity extends AppCompatActivity {
         startBtn = findViewById(R.id.btnStart);
         stopBtn = findViewById(R.id.btnStop);
         muteBtn = findViewById(R.id.btnMute);
-        playVoiceBtn = findViewById(R.id.btnPlayVoice);
-        testBeepBtn = findViewById(R.id.btnTestBeep);
         btnSobre = findViewById(R.id.btnSobre);
 
         switchBeep = findViewById(R.id.switchBeep);
@@ -157,16 +155,6 @@ public class MainActivity extends AppCompatActivity {
             preferences.edit().putBoolean(BatteryService.KEY_MUTED, muted).apply();
             updateMuteButton(muted);
             if (muted && isPlayingPreview) stopCurrentAudio();
-        });
-
-        playVoiceBtn.setOnClickListener(v -> {
-            if (isPlayingPreview) stopCurrentAudio();
-            else playVoicePreview();
-        });
-
-        testBeepBtn.setOnClickListener(v -> {
-            triggerVisualBip();
-            playTestBeep();
         });
 
         btnSobre.setOnClickListener(v -> {
@@ -232,25 +220,31 @@ public class MainActivity extends AppCompatActivity {
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
 
+        // Switch do BIP - testa ao ativar
         switchBeep.setOnCheckedChangeListener((buttonView, isChecked) -> {
             checkChanges();
             if (isChecked) {
                 triggerVisualBip();
                 playTestBeep();
+                Toast.makeText(this, "🔊 Bip testado!", Toast.LENGTH_SHORT).show();
             }
         });
 
+        // Switch do TTS - testa ao ativar
         switchTts.setOnCheckedChangeListener((buttonView, isChecked) -> {
             checkChanges();
             if (isChecked) {
                 speakBatteryStatusExample();
+                Toast.makeText(this, "🗣️ Teste de voz TTS ativado!", Toast.LENGTH_SHORT).show();
             }
         });
 
+        // Switch do Personagem - testa ao ativar
         switchCharacterVoice.setOnCheckedChangeListener((buttonView, isChecked) -> {
             checkChanges();
             if (isChecked) {
                 playCharacterVoiceSample();
+                Toast.makeText(this, "🎭 Voz do personagem testada!", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -337,6 +331,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void playCharacterVoiceSample() {
+        // Para qualquer áudio tocando antes
+        stopCurrentAudio();
+        
         int pos = characterSpinner.getSelectedItemPosition();
         if (pos < 0 || pos >= characterKeys.length) return;
 
@@ -354,7 +351,9 @@ public class MainActivity extends AppCompatActivity {
                 if (currentMediaPlayer != null) currentMediaPlayer.release();
                 currentMediaPlayer = MediaPlayer.create(this, resId);
                 if (currentMediaPlayer != null) {
-                    currentMediaPlayer.setOnCompletionListener(mp -> currentMediaPlayer = null);
+                    currentMediaPlayer.setOnCompletionListener(mp -> {
+                        currentMediaPlayer = null;
+                    });
                     currentMediaPlayer.start();
                 }
             } catch (Exception e) {
@@ -372,45 +371,6 @@ public class MainActivity extends AppCompatActivity {
             currentMediaPlayer = null;
         }
         isPlayingPreview = false;
-        playVoiceBtn.setText("▶");
-        playVoiceBtn.setBackgroundTintList(ContextCompat.getColorStateList(this, android.R.color.holo_blue_light));
-    }
-
-    private void playVoicePreview() {
-        boolean muted = preferences.getBoolean(BatteryService.KEY_MUTED, false);
-        if (muted) {
-            Toast.makeText(this, "Som silenciado. Desmute para ouvir.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        stopCurrentAudio();
-
-        int pos = characterSpinner.getSelectedItemPosition();
-        if (pos < 0 || pos >= characterKeys.length) return;
-
-        String character = characterKeys[pos];
-        if ("none".equals(character)) {
-            Toast.makeText(this, "Nenhuma opção selecionada", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        int resId = getResources().getIdentifier("voice_" + character + "_low", "raw", getPackageName());
-        if (resId == 0) resId = getResources().getIdentifier("voice_" + character + "_charging", "raw", getPackageName());
-
-        if (resId != 0) {
-            try {
-                currentMediaPlayer = MediaPlayer.create(this, resId);
-                if (currentMediaPlayer != null) {
-                    isPlayingPreview = true;
-                    playVoiceBtn.setText("■");
-                    playVoiceBtn.setBackgroundTintList(ContextCompat.getColorStateList(this, android.R.color.holo_red_light));
-                    currentMediaPlayer.setOnCompletionListener(mp -> stopCurrentAudio());
-                    currentMediaPlayer.start();
-                }
-            } catch (Exception e) {
-                Log.e("MainActivity", "Erro ao tocar preview", e);
-                stopCurrentAudio();
-            }
-        }
     }
 
     private void startBatteryService() {
@@ -471,9 +431,10 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        switchBeep.setChecked(preferences.getBoolean(BatteryService.KEY_BEEP_ENABLED, true));
-        switchTts.setChecked(preferences.getBoolean(BatteryService.KEY_TTS_ENABLED, true));
-        switchCharacterVoice.setChecked(preferences.getBoolean(BatteryService.KEY_CHARACTER_VOICE_ENABLED, true));
+        // Carregar estados dos switches (inicialmente desligados se não houver configuração salva)
+        switchBeep.setChecked(preferences.getBoolean(BatteryService.KEY_BEEP_ENABLED, false));
+        switchTts.setChecked(preferences.getBoolean(BatteryService.KEY_TTS_ENABLED, false));
+        switchCharacterVoice.setChecked(preferences.getBoolean(BatteryService.KEY_CHARACTER_VOICE_ENABLED, false));
 
         String visual = preferences.getString(BatteryService.KEY_VISUAL_STYLE, "normal");
         spinnerVisualStyle.setSelection("mascot".equals(visual) ? 1 : 0);
