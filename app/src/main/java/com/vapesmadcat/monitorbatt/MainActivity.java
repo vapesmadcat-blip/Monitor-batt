@@ -125,6 +125,20 @@ public class MainActivity extends AppCompatActivity {
 
         setupCharacterSpinner();
         setupVisualStyleSpinner();
+        
+        // ⬇️⬇️⬇️ CORREÇÃO DO MASCOTE - LISTENER DO SPINNER ⬇️⬇️⬇️
+        spinnerVisualStyle.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                updateVisualStyle();  // ATUALIZA NA HORA!
+                checkChanges();       // MARCA PARA SALVAR
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+        // ⬆️⬆️⬆️ FIM DA CORREÇÃO ⬆️⬆️⬆️
+        
         setupControls();
         setupAnimations();
         initTextToSpeech();
