@@ -25,6 +25,7 @@ import android.view.animation.Animation;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.Switch;
@@ -45,9 +46,10 @@ public class MainActivity extends AppCompatActivity {
     private Spinner characterSpinner;
     private Button muteBtn, saveBtn, startBtn, stopBtn, playVoiceBtn;
 
-    // NOVOS: Switches granulares + Visual Style
+    // NOVOS: Switches + Visual Style + Mascote
     private Switch switchBeep, switchTts, switchCharacterVoice;
     private Spinner spinnerVisualStyle;
+    private ImageView ivMascot;                    // NOVO
 
     private SharedPreferences preferences;
     private boolean isModified = false;
@@ -92,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
 
         preferences = getSharedPreferences(BatteryService.PREFS_NAME, MODE_PRIVATE);
 
-        // FindViews existentes
+        // FindViews
         batteryFill = findViewById(R.id.batteryFill);
         batteryText = findViewById(R.id.tvLevel);
         statusText = findViewById(R.id.tvStatus);
@@ -111,18 +113,19 @@ public class MainActivity extends AppCompatActivity {
         playVoiceBtn = findViewById(R.id.btnPlayVoice);
         Button testBeepBtn = findViewById(R.id.btnTestBeep);
 
-        // NOVOS FINDS
+        // NOVOS
         switchBeep = findViewById(R.id.switchBeep);
         switchTts = findViewById(R.id.switchTts);
         switchCharacterVoice = findViewById(R.id.switchCharacterVoice);
         spinnerVisualStyle = findViewById(R.id.spinnerVisualStyle);
+        ivMascot = findViewById(R.id.ivMascot);           // NOVO
 
         setupCharacterSpinner();
         setupVisualStyleSpinner();
         setupControls();
         setupAnimations();
 
-        // Listeners dos botões (mantidos)
+        // Listeners dos botões
         saveBtn.setOnClickListener(v -> {
             saveSettings();
             isModified = false;
@@ -220,13 +223,16 @@ public class MainActivity extends AppCompatActivity {
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
 
-        // Listeners dos novos switches
         android.widget.CompoundButton.OnCheckedChangeListener switchListener = (buttonView, isChecked) -> checkChanges();
         switchBeep.setOnCheckedChangeListener(switchListener);
         switchTts.setOnCheckedChangeListener(switchListener);
         switchCharacterVoice.setOnCheckedChangeListener(switchListener);
+
         spinnerVisualStyle.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) { checkChanges(); }
+            @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
+                checkChanges();
+                updateVisualStyle();           // NOVO
+            }
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
     }
@@ -237,6 +243,54 @@ public class MainActivity extends AppCompatActivity {
         boltAnimation.setRepeatMode(Animation.REVERSE);
         boltAnimation.setRepeatCount(Animation.INFINITE);
     }
+
+    // ====================== LÓGICA DO MASCOTE ======================
+
+    private void updateVisualStyle() {
+        boolean useMascot = spinnerVisualStyle.getSelectedItemPosition() == 1;
+
+        if (useMascot) {
+            // Esconde visual da pilha
+            batteryFill.setVisibility(View.GONE);
+            batteryText.setVisibility(View.GONE);
+            chargingBolt.setVisibility(View.GONE);
+            alertModeText.setVisibility(View.GONE);
+
+            // Mostra mascote
+            ivMascot.setVisibility(View.VISIBLE);
+            updateMascotImage();
+        } else {
+            // Mostra visual da pilha
+            batteryFill.setVisibility(View.VISIBLE);
+            batteryText.setVisibility(View.VISIBLE);
+            alertModeText.setVisibility(View.VISIBLE);
+
+            // Esconde mascote
+            ivMascot.setVisibility(View.GONE);
+        }
+    }
+
+    private void updateMascotImage() {
+        if (ivMascot.getVisibility() != View.VISIBLE) return;
+
+        Intent batteryStatus = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (batteryStatus == null) return;
+
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        int pct = (level >= 0 && scale > 0) ? (int) ((level * 100f) / scale) : 50;
+
+        int resId;
+        if (pct >= 80) resId = R.drawable.battery_mascot_1;
+        else if (pct >= 60) resId = R.drawable.battery_mascot_2;
+        else if (pct >= 40) resId = R.drawable.battery_mascot_3;
+        else if (pct >= 20) resId = R.drawable.battery_mascot_4;
+        else resId = R.drawable.battery_mascot_5;
+
+        ivMascot.setImageResource(resId);
+    }
+
+    // ====================== FIM DA LÓGICA DO MASCOTE ======================
 
     private void stopCurrentAudio() {
         if (currentMediaPlayer != null) {
@@ -346,7 +400,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // NOVOS: Carregar switches e visual
         switchBeep.setChecked(preferences.getBoolean(BatteryService.KEY_BEEP_ENABLED, true));
         switchTts.setChecked(preferences.getBoolean(BatteryService.KEY_TTS_ENABLED, true));
         switchCharacterVoice.setChecked(preferences.getBoolean(BatteryService.KEY_CHARACTER_VOICE_ENABLED, true));
@@ -358,6 +411,9 @@ public class MainActivity extends AppCompatActivity {
         isModified = false;
         saveBtn.setVisibility(View.GONE);
         isModifiedByCode = false;
+
+        // Atualiza visual na carga inicial
+        updateVisualStyle();
     }
 
     private void saveSettings() {
@@ -369,7 +425,6 @@ public class MainActivity extends AppCompatActivity {
                 .putInt(BatteryService.KEY_THRESHOLD, threshold)
                 .putInt(BatteryService.KEY_BEEP_INTERVAL_SECONDS, intervalSeconds)
                 .putString(BatteryService.KEY_CHARACTER_VOICE, selectedChar)
-                // NOVOS
                 .putBoolean(BatteryService.KEY_BEEP_ENABLED, switchBeep.isChecked())
                 .putBoolean(BatteryService.KEY_TTS_ENABLED, switchTts.isChecked())
                 .putBoolean(BatteryService.KEY_CHARACTER_VOICE_ENABLED, switchCharacterVoice.isChecked())
@@ -404,6 +459,11 @@ public class MainActivity extends AppCompatActivity {
         alertModeText.setTextColor(color);
         updateBatteryFill(pct);
         updateChargingUI(isCharging);
+
+        // Atualiza mascote se estiver visível
+        if (ivMascot != null && ivMascot.getVisibility() == View.VISIBLE) {
+            updateMascotImage();
+        }
     }
 
     private void updateChargingUI(boolean charging) {
@@ -478,4 +538,4 @@ public class MainActivity extends AppCompatActivity {
         try { unregisterReceiver(batteryReceiver); } catch (Exception ignored) {}
         super.onDestroy();
     }
-}
+            }
