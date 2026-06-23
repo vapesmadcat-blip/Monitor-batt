@@ -49,7 +49,8 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar thresholdSeek, intervalSeek;
     private Spinner characterSpinner, spinnerVisualStyle;
     private Switch switchBeep, switchTts, switchCharacterVoice;
-    private Button muteBtn, saveBtn, startBtn, stopBtn, btnSobre;
+    private Button muteBtn, saveBtn, btnMonitor, btnSobre;
+    private Button btnTestBeep, btnTestTTS, btnTestVoice;
     private ImageView ivMascot;
     private LinearLayout batteryContainer;
 
@@ -110,10 +111,12 @@ public class MainActivity extends AppCompatActivity {
         intervalSeek = findViewById(R.id.seekInterval);
         characterSpinner = findViewById(R.id.spinnerCharacter);
         saveBtn = findViewById(R.id.btnSave);
-        startBtn = findViewById(R.id.btnStart);
-        stopBtn = findViewById(R.id.btnStop);
+        btnMonitor = findViewById(R.id.btnMonitor);
         muteBtn = findViewById(R.id.btnMute);
         btnSobre = findViewById(R.id.btnSobre);
+        btnTestBeep = findViewById(R.id.btnTestBeep);
+        btnTestTTS = findViewById(R.id.btnTestTTS);
+        btnTestVoice = findViewById(R.id.btnTestVoice);
 
         switchBeep = findViewById(R.id.switchBeep);
         switchTts = findViewById(R.id.switchTts);
@@ -126,23 +129,23 @@ public class MainActivity extends AppCompatActivity {
         setupCharacterSpinner();
         setupVisualStyleSpinner();
         
-        // ⬇️⬇️⬇️ CORREÇÃO DO MASCOTE - LISTENER DO SPINNER ⬇️⬇️⬇️
+        // Listener do Spinner de Estilo Visual
         spinnerVisualStyle.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                updateVisualStyle();  // ATUALIZA NA HORA!
-                checkChanges();       // MARCA PARA SALVAR
+                updateVisualStyle();
+                checkChanges();
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
         });
-        // ⬆️⬆️⬆️ FIM DA CORREÇÃO ⬆️⬆️⬆️
         
         setupControls();
         setupAnimations();
         initTextToSpeech();
 
+        // Botão Salvar
         saveBtn.setOnClickListener(v -> {
             saveSettings();
             isModified = false;
@@ -150,20 +153,34 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Configurações salvas!", Toast.LENGTH_SHORT).show();
         });
 
-        startBtn.setOnClickListener(v -> {
-            requestNotificationPermissionIfNeeded();
-            saveSettings();
-            preferences.edit().putBoolean(KEY_SERVICE_ENABLED, true).apply();
-            startBatteryService();
-            updateServiceButtons(true);
+        // ============================================================
+        // BOTÃO ÚNICO: ATIVAR / PARAR MONITOR
+        // ============================================================
+        btnMonitor.setOnClickListener(v -> {
+            boolean isRunning = isServiceRunning(BatteryService.class);
+            
+            if (isRunning) {
+                // PARA O MONITOR
+                preferences.edit().putBoolean(KEY_SERVICE_ENABLED, false).apply();
+                stopBatteryService();
+                updateMonitorButton(false);
+                statusText.setText("Monitoramento: DESATIVADO");
+                statusText.setTextColor(0xFFFF4D4F);
+                Toast.makeText(this, "Monitor desativado", Toast.LENGTH_SHORT).show();
+            } else {
+                // INICIA O MONITOR
+                requestNotificationPermissionIfNeeded();
+                saveSettings();
+                preferences.edit().putBoolean(KEY_SERVICE_ENABLED, true).apply();
+                startBatteryService();
+                updateMonitorButton(true);
+                statusText.setText("Monitoramento: ATIVO");
+                statusText.setTextColor(0xFF4ADE80);
+                Toast.makeText(this, "Monitor ativado", Toast.LENGTH_SHORT).show();
+            }
         });
 
-        stopBtn.setOnClickListener(v -> {
-            preferences.edit().putBoolean(KEY_SERVICE_ENABLED, false).apply();
-            stopBatteryService();
-            updateServiceButtons(false);
-        });
-
+        // Botão Silenciar
         muteBtn.setOnClickListener(v -> {
             boolean muted = !preferences.getBoolean(BatteryService.KEY_MUTED, false);
             preferences.edit().putBoolean(BatteryService.KEY_MUTED, muted).apply();
@@ -171,11 +188,32 @@ public class MainActivity extends AppCompatActivity {
             if (muted && isPlayingPreview) stopCurrentAudio();
         });
 
+        // Botão Sobre
         btnSobre.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, AboutActivity.class);
             startActivity(intent);
         });
 
+        // ============================================================
+        // BOTÕES DE TESTE
+        // ============================================================
+        btnTestBeep.setOnClickListener(v -> {
+            playTestBeep();
+            triggerVisualBip();
+            Toast.makeText(this, "🔊 Testando Bip...", Toast.LENGTH_SHORT).show();
+        });
+
+        btnTestTTS.setOnClickListener(v -> {
+            speakBatteryStatusExample();
+            Toast.makeText(this, "🗣️ Testando TTS...", Toast.LENGTH_SHORT).show();
+        });
+
+        btnTestVoice.setOnClickListener(v -> {
+            playCharacterVoiceSample();
+            Toast.makeText(this, "🎭 Testando Voz do Personagem...", Toast.LENGTH_SHORT).show();
+        });
+
+        // Registro de Broadcasts
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"), Context.RECEIVER_NOT_EXPORTED);
         } else {
@@ -187,14 +225,24 @@ public class MainActivity extends AppCompatActivity {
         updateBatteryReadout();
         loadSettings();
 
+        // Verifica estado do serviço ao iniciar
         boolean shouldBeRunning = preferences.getBoolean(KEY_SERVICE_ENABLED, false);
         boolean isRunning = isServiceRunning(BatteryService.class);
 
         if (shouldBeRunning && !isRunning) {
             startBatteryService();
-            updateServiceButtons(true);
+            updateMonitorButton(true);
+            statusText.setText("Monitoramento: ATIVO");
+            statusText.setTextColor(0xFF4ADE80);
         } else {
-            updateServiceButtons(isRunning);
+            updateMonitorButton(isRunning);
+            if (isRunning) {
+                statusText.setText("Monitoramento: ATIVO");
+                statusText.setTextColor(0xFF4ADE80);
+            } else {
+                statusText.setText("Monitoramento: DESATIVADO");
+                statusText.setTextColor(0xFFFF4D4F);
+            }
         }
     }
 
@@ -234,7 +282,7 @@ public class MainActivity extends AppCompatActivity {
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
 
-        // Switch do BIP - testa ao ativar
+        // Switch do BIP
         switchBeep.setOnCheckedChangeListener((buttonView, isChecked) -> {
             checkChanges();
             if (isChecked) {
@@ -244,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Switch do TTS - testa ao ativar
+        // Switch do TTS
         switchTts.setOnCheckedChangeListener((buttonView, isChecked) -> {
             checkChanges();
             if (isChecked) {
@@ -253,7 +301,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Switch do Personagem - testa ao ativar
+        // Switch do Personagem
         switchCharacterVoice.setOnCheckedChangeListener((buttonView, isChecked) -> {
             checkChanges();
             if (isChecked) {
@@ -345,7 +393,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void playCharacterVoiceSample() {
-        // Para qualquer áudio tocando antes
         stopCurrentAudio();
         
         int pos = characterSpinner.getSelectedItemPosition();
@@ -409,13 +456,17 @@ public class MainActivity extends AppCompatActivity {
         new Handler(Looper.getMainLooper()).postDelayed(() -> bipIndicator.setTextColor(Color.WHITE), 1000);
     }
 
-    private void updateServiceButtons(boolean running) {
-        startBtn.setEnabled(!running);
-        startBtn.setAlpha(running ? 0.5f : 1.0f);
-        stopBtn.setEnabled(running);
-        stopBtn.setAlpha(running ? 1.0f : 0.5f);
-        statusText.setText(running ? "Monitoramento: ATIVO" : "Monitoramento: DESATIVADO");
-        statusText.setTextColor(running ? 0xFF4ADE80 : 0xFFFF4D4F);
+    // ============================================================
+    // MÉTODO PARA ATUALIZAR O BOTÃO MONITOR
+    // ============================================================
+    private void updateMonitorButton(boolean isRunning) {
+        if (isRunning) {
+            btnMonitor.setText("⏹ PARAR MONITOR");
+            btnMonitor.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.red));
+        } else {
+            btnMonitor.setText("▶ ATIVAR MONITOR");
+            btnMonitor.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.green));
+        }
     }
 
     private void updateTexts() {
@@ -445,7 +496,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Carregar estados dos switches (inicialmente desligados se não houver configuração salva)
         switchBeep.setChecked(preferences.getBoolean(BatteryService.KEY_BEEP_ENABLED, false));
         switchTts.setChecked(preferences.getBoolean(BatteryService.KEY_TTS_ENABLED, false));
         switchCharacterVoice.setChecked(preferences.getBoolean(BatteryService.KEY_CHARACTER_VOICE_ENABLED, false));
@@ -564,7 +614,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         updateBatteryReadout();
-        updateServiceButtons(isServiceRunning(BatteryService.class));
+        
+        boolean isRunning = isServiceRunning(BatteryService.class);
+        updateMonitorButton(isRunning);
+        
+        if (isRunning) {
+            statusText.setText("Monitoramento: ATIVO");
+            statusText.setTextColor(0xFF4ADE80);
+        } else {
+            statusText.setText("Monitoramento: DESATIVADO");
+            statusText.setTextColor(0xFFFF4D4F);
+        }
     }
 
     @Override
