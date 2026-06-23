@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
     private View batteryFill;
     private TextView batteryText, statusText, thresholdValueText, intervalValueText;
-    private TextView alertModeText, bipIndicator, chargingBolt;
+    private TextView bipIndicator, chargingBolt;
     private TextView tvBigPercentage;
     private SeekBar thresholdSeek, intervalSeek;
     private Spinner characterSpinner, spinnerVisualStyle;
@@ -91,13 +91,11 @@ public class MainActivity extends AppCompatActivity {
 
         preferences = getSharedPreferences(BatteryService.PREFS_NAME, MODE_PRIVATE);
 
-        // FindViews
         batteryFill = findViewById(R.id.batteryFill);
         batteryText = findViewById(R.id.tvLevel);
         statusText = findViewById(R.id.tvStatus);
         thresholdValueText = findViewById(R.id.tvThresholdValue);
         intervalValueText = findViewById(R.id.tvIntervalValue);
-        alertModeText = findViewById(R.id.tvAlertMode);
         bipIndicator = findViewById(R.id.tvBipIndicator);
         chargingBolt = findViewById(R.id.tvChargingBolt);
         thresholdSeek = findViewById(R.id.seekThreshold);
@@ -123,7 +121,6 @@ public class MainActivity extends AppCompatActivity {
         setupControls();
         setupAnimations();
 
-        // Listeners
         saveBtn.setOnClickListener(v -> {
             saveSettings();
             isModified = false;
@@ -164,7 +161,6 @@ public class MainActivity extends AppCompatActivity {
 
         btnTestFullMonitoring.setOnClickListener(v -> testFullMonitoring());
 
-        // Broadcasts
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"), Context.RECEIVER_NOT_EXPORTED);
         } else {
@@ -244,8 +240,6 @@ public class MainActivity extends AppCompatActivity {
         boltAnimation.setRepeatCount(Animation.INFINITE);
     }
 
-    // ====================== MASCOTE ======================
-
     private void updateVisualStyle() {
         boolean useMascot = spinnerVisualStyle.getSelectedItemPosition() == 1;
 
@@ -253,13 +247,11 @@ public class MainActivity extends AppCompatActivity {
             batteryFill.setVisibility(View.GONE);
             batteryText.setVisibility(View.GONE);
             chargingBolt.setVisibility(View.GONE);
-            alertModeText.setVisibility(View.GONE);
             ivMascot.setVisibility(View.VISIBLE);
             updateMascotImage();
         } else {
             batteryFill.setVisibility(View.VISIBLE);
             batteryText.setVisibility(View.VISIBLE);
-            alertModeText.setVisibility(View.VISIBLE);
             ivMascot.setVisibility(View.GONE);
         }
     }
@@ -284,20 +276,14 @@ public class MainActivity extends AppCompatActivity {
         ivMascot.setImageResource(resId);
     }
 
-    // ====================== PORCENTAGEM GRANDE ======================
-
     private void updateBigPercentage(int pct) {
         if (tvBigPercentage == null) return;
         tvBigPercentage.setText(pct + "%");
         tvBigPercentage.setTextColor(getBatteryColor(pct));
     }
 
-    // ====================== TESTE COMPLETO ======================
-
     private void testFullMonitoring() {
         boolean beepEnabled = switchBeep.isChecked();
-        boolean ttsEnabled = switchTts.isChecked();
-        boolean voiceEnabled = switchCharacterVoice.isChecked();
 
         Intent batteryStatus = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         int level = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, 50) : 50;
@@ -306,19 +292,13 @@ public class MainActivity extends AppCompatActivity {
 
         updateBigPercentage(pct);
 
-        if (pct <= 10) {
-            if (beepEnabled) triggerVisualBip();
-            if (ttsEnabled) speakSmartAlert(pct);
-            if (voiceEnabled) playCharacterVoice(pct);
-        } else if (pct <= 30) {
-            if (beepEnabled) triggerVisualBip();
-            if (ttsEnabled) speakSmartAlert(pct);
-        } else {
+        if (pct <= 30 && beepEnabled) {
+            triggerVisualBip();
+            Toast.makeText(this, "Teste: Bip disparado (" + pct + "%)", Toast.LENGTH_SHORT).show();
+        } else if (pct > 30) {
             Toast.makeText(this, "Bateria normal (" + pct + "%). Nenhum alerta disparado.", Toast.LENGTH_SHORT).show();
         }
     }
-
-    // ====================== MÉTODOS EXISTENTES ======================
 
     private void stopCurrentAudio() {
         if (currentMediaPlayer != null) {
@@ -482,8 +462,6 @@ public class MainActivity extends AppCompatActivity {
         batteryText.setText(pct + "%");
         int color = getBatteryColor(pct);
         batteryText.setTextColor(color);
-        alertModeText.setText(getAlertLabel(pct, isCharging));
-        alertModeText.setTextColor(color);
         updateBatteryFill(pct);
         updateChargingUI(isCharging);
 
@@ -516,14 +494,6 @@ public class MainActivity extends AppCompatActivity {
             batteryFill.getLayoutParams().height = (int) (totalHeight * Math.max(0.01f, safePct / 100f));
             batteryFill.requestLayout();
         });
-    }
-
-    private String getAlertLabel(int pct, boolean charging) {
-        if (charging && pct >= 100) return "CARGA COMPLETA";
-        if (charging) return "CARREGANDO...";
-        if (pct <= 10) return "CRÍTICO";
-        if (pct <= 30) return "ATENÇÃO";
-        return "NORMAL";
     }
 
     private int getBatteryColor(int pct) {
