@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar thresholdSeek, intervalSeek;
     private Spinner characterSpinner, spinnerVisualStyle;
     private Switch switchBeep, switchTts, switchCharacterVoice;
-    private Button muteBtn, saveBtn, startBtn, stopBtn, playVoiceBtn, btnTestFullMonitoring, testBeepBtn;
+    private Button muteBtn, saveBtn, startBtn, stopBtn, playVoiceBtn, btnTestFullMonitoring, testBeepBtn, btnSobre;
     private ImageView ivMascot;
 
     private SharedPreferences preferences;
@@ -60,7 +60,6 @@ public class MainActivity extends AppCompatActivity {
     private boolean isPlayingPreview = false;
     private boolean isModifiedByCode = false;
 
-    // TTS - versão mais estável
     private TextToSpeech textToSpeech;
     private boolean ttsInitialized = false;
 
@@ -114,6 +113,8 @@ public class MainActivity extends AppCompatActivity {
         muteBtn = findViewById(R.id.btnMute);
         playVoiceBtn = findViewById(R.id.btnPlayVoice);
         testBeepBtn = findViewById(R.id.btnTestBeep);
+        btnTestFullMonitoring = findViewById(R.id.btnTestFullMonitoring);
+        btnSobre = findViewById(R.id.btnSobre);
 
         switchBeep = findViewById(R.id.switchBeep);
         switchTts = findViewById(R.id.switchTts);
@@ -121,7 +122,6 @@ public class MainActivity extends AppCompatActivity {
         spinnerVisualStyle = findViewById(R.id.spinnerVisualStyle);
         ivMascot = findViewById(R.id.ivMascot);
         tvBigPercentage = findViewById(R.id.tvBigPercentage);
-        btnTestFullMonitoring = findViewById(R.id.btnTestFullMonitoring);
 
         setupCharacterSpinner();
         setupVisualStyleSpinner();
@@ -168,6 +168,12 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnTestFullMonitoring.setOnClickListener(v -> testFullMonitoring());
+
+        // ===================== BOTÃO SOBRE =====================
+        btnSobre.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, AboutActivity.class);
+            startActivity(intent);
+        });
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"), Context.RECEIVER_NOT_EXPORTED);
@@ -343,7 +349,6 @@ public class MainActivity extends AppCompatActivity {
     private void speakBatteryStatus(int pct) {
         if (textToSpeech == null || !ttsInitialized) {
             Toast.makeText(this, "TTS não está pronto. Tente novamente em alguns segundos.", Toast.LENGTH_SHORT).show();
-            // Tenta reinicializar uma vez
             initTextToSpeech();
             return;
         }
