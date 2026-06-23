@@ -111,6 +111,53 @@
             android:gravity="center"
             android:layout_marginBottom="16dp"/>
 
+        <!-- ============================================================ -->
+        <!-- BOTÃO MONITOR (ÚNICO)                                         -->
+        <!-- ============================================================ -->
+        <Button
+            android:id="@+id/btnMonitor"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginBottom="12dp"
+            android:text="▶ ATIVAR MONITOR"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:backgroundTint="#22C55E"
+            android:textColor="#FFFFFF"
+            android:stateListAnimator="@null"
+            android:elevation="4dp" />
+
+        <!-- ============================================================ -->
+        <!-- BOTÕES SILENCIAR + SOBRE                                      -->
+        <!-- ============================================================ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <Button
+                android:id="@+id/btnMute"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="🔊 Silenciar"
+                android:backgroundTint="#374151"
+                android:textColor="#FFFFFF" />
+
+            <Button
+                android:id="@+id/btnSobre"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="ℹ️ Sobre"
+                android:backgroundTint="#374151"
+                android:textColor="#FFFFFF" />
+
+        </LinearLayout>
+
         <!-- Configurações -->
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="Configurações" android:textColor="#AAAAAA"
@@ -184,45 +231,49 @@
             android:layout_height="48dp"
             android:layout_marginBottom="24dp"/>
 
-        <!-- Botões de Áudio -->
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="horizontal" android:layout_marginBottom="12dp">
-            <Button android:id="@+id/btnTestBeep"
-                android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:text="Testar Bip"
-                android:layout_marginEnd="8dp"/>
-            <Button android:id="@+id/btnPlayVoice"
-                android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:text="▶"
-                android:layout_marginStart="8dp"/>
-        </LinearLayout>
-
-        <Button android:id="@+id/btnMute"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="🔊 Silenciar" android:layout_marginBottom="16dp"/>
-
-        <!-- Botões de Serviço -->
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <Button android:id="@+id/btnStart"
-                android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:text="Iniciar Monitoramento"
-                android:layout_marginEnd="8dp"/>
-            <Button android:id="@+id/btnStop"
-                android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:text="Parar"
-                android:layout_marginStart="8dp"/>
-        </LinearLayout>
-
-        <!-- ===================== BOTÃO SOBRE ===================== -->
-        <Button
-            android:id="@+id/btnSobre"
+        <!-- ============================================================ -->
+        <!-- BOTÕES DE TESTE (Bip, TTS, Voz)                               -->
+        <!-- ============================================================ -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Sobre"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="16dp"/>
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
 
+            <Button
+                android:id="@+id/btnTestBeep"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:text="🔊 Bip"
+                android:backgroundTint="#374151"
+                android:textColor="#FFFFFF" />
+
+            <Button
+                android:id="@+id/btnTestTTS"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
+                android:text="🗣️ TTS"
+                android:backgroundTint="#374151"
+                android:textColor="#FFFFFF" />
+
+            <Button
+                android:id="@+id/btnTestVoice"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:text="🎭 Voz"
+                android:backgroundTint="#374151"
+                android:textColor="#FFFFFF" />
+
+        </LinearLayout>
+
+        <!-- Botão Salvar (oculto) -->
         <Button android:id="@+id/btnSave"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
