@@ -18,6 +18,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
@@ -35,6 +36,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -56,6 +59,10 @@ public class MainActivity extends AppCompatActivity {
     private MediaPlayer currentMediaPlayer = null;
     private boolean isPlayingPreview = false;
     private boolean isModifiedByCode = false;
+
+    // TTS - versão mais estável
+    private TextToSpeech textToSpeech;
+    private boolean ttsInitialized = false;
 
     public static final String KEY_SERVICE_ENABLED = "service_enabled";
 
@@ -120,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
         setupVisualStyleSpinner();
         setupControls();
         setupAnimations();
+        initTextToSpeech();
 
         saveBtn.setOnClickListener(v -> {
             saveSettings();
@@ -240,6 +248,26 @@ public class MainActivity extends AppCompatActivity {
         boltAnimation.setRepeatCount(Animation.INFINITE);
     }
 
+    private void initTextToSpeech() {
+        if (textToSpeech != null) {
+            textToSpeech.stop();
+            textToSpeech.shutdown();
+        }
+
+        textToSpeech = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS) {
+                int result = textToSpeech.setLanguage(new Locale("pt", "BR"));
+                if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
+                    ttsInitialized = true;
+                } else {
+                    Toast.makeText(this, "Idioma português não disponível no TTS", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Toast.makeText(this, "Erro ao iniciar o TTS", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
     private void updateVisualStyle() {
         boolean useMascot = spinnerVisualStyle.getSelectedItemPosition() == 1;
 
@@ -284,6 +312,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void testFullMonitoring() {
         boolean beepEnabled = switchBeep.isChecked();
+        boolean ttsEnabled = switchTts.isChecked();
+        boolean voiceEnabled = switchCharacterVoice.isChecked();
 
         Intent batteryStatus = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         int level = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, 50) : 50;
@@ -292,11 +322,65 @@ public class MainActivity extends AppCompatActivity {
 
         updateBigPercentage(pct);
 
-        if (pct <= 30 && beepEnabled) {
+        if (beepEnabled) {
             triggerVisualBip();
-            Toast.makeText(this, "Teste: Bip disparado (" + pct + "%)", Toast.LENGTH_SHORT).show();
-        } else if (pct > 30) {
-            Toast.makeText(this, "Bateria normal (" + pct + "%). Nenhum alerta disparado.", Toast.LENGTH_SHORT).show();
+            playTestBeep();
+        }
+
+        if (voiceEnabled) {
+            playCharacterVoiceSample();
+        }
+
+        if (ttsEnabled) {
+            speakBatteryStatus(pct);
+        }
+
+        if (!beepEnabled && !ttsEnabled && !voiceEnabled) {
+            Toast.makeText(this, "Nenhum alerta ativado.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void speakBatteryStatus(int pct) {
+        if (textToSpeech == null || !ttsInitialized) {
+            Toast.makeText(this, "TTS não está pronto. Tente novamente em alguns segundos.", Toast.LENGTH_SHORT).show();
+            // Tenta reinicializar uma vez
+            initTextToSpeech();
+            return;
+        }
+
+        String status;
+        if (pct <= 10) status = "Crítico";
+        else if (pct <= 30) status = "Atenção";
+        else status = "Normal";
+
+        String message = "Monitor de Bateria Pro. Bateria em " + pct + " por cento. Status: " + status + ".";
+        textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, "battery_status");
+    }
+
+    private void playCharacterVoiceSample() {
+        int pos = characterSpinner.getSelectedItemPosition();
+        if (pos < 0 || pos >= characterKeys.length) return;
+
+        String character = characterKeys[pos];
+        if ("none".equals(character)) {
+            Toast.makeText(this, "Nenhum personagem selecionado", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        int resId = getResources().getIdentifier("voice_" + character + "_low", "raw", getPackageName());
+        if (resId == 0) resId = getResources().getIdentifier("voice_" + character + "_charging", "raw", getPackageName());
+
+        if (resId != 0) {
+            try {
+                if (currentMediaPlayer != null) currentMediaPlayer.release();
+                currentMediaPlayer = MediaPlayer.create(this, resId);
+                if (currentMediaPlayer != null) {
+                    currentMediaPlayer.setOnCompletionListener(mp -> currentMediaPlayer = null);
+                    currentMediaPlayer.start();
+                }
+            } catch (Exception e) {
+                Log.e("MainActivity", "Erro ao tocar voz do personagem", e);
+            }
         }
     }
 
@@ -531,6 +615,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        if (textToSpeech != null) {
+            textToSpeech.stop();
+            textToSpeech.shutdown();
+        }
         stopCurrentAudio();
         try { unregisterReceiver(bipReceiver); } catch (Exception ignored) {}
         try { unregisterReceiver(batteryReceiver); } catch (Exception ignored) {}
