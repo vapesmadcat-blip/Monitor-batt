@@ -28,7 +28,7 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="280dp"
-            android:layout_marginBottom="20dp">
+            android:layout_marginBottom="12dp">
 
             <!-- Visual da Pilha Normal -->
             <LinearLayout
@@ -42,13 +42,11 @@
                     android:layout_width="120dp"
                     android:layout_height="220dp">
 
-                    <!-- Borda da bateria -->
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:background="@drawable/battery_shell"/>
 
-                    <!-- Preenchimento da bateria -->
                     <View
                         android:id="@+id/batteryFill"
                         android:layout_width="match_parent"
@@ -56,13 +54,11 @@
                         android:layout_gravity="bottom"
                         android:background="@drawable/battery_fill_high"/>
 
-                    <!-- Brilho -->
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:background="@drawable/battery_gloss"/>
 
-                    <!-- Raio de carregamento -->
                     <TextView
                         android:id="@+id/tvChargingBolt"
                         android:layout_width="wrap_content"
@@ -74,7 +70,6 @@
                         android:visibility="gone"/>
                 </FrameLayout>
 
-                <!-- Porcentagem -->
                 <TextView
                     android:id="@+id/tvLevel"
                     android:layout_width="wrap_content"
@@ -95,7 +90,7 @@
                     android:textStyle="bold"/>
             </LinearLayout>
 
-            <!-- ========== MASCOTE ========== -->
+            <!-- MASCOTE -->
             <ImageView
                 android:id="@+id/ivMascot"
                 android:layout_width="220dp"
@@ -106,6 +101,18 @@
                 android:src="@drawable/battery_mascot_1"/>
 
         </FrameLayout>
+
+        <!-- ========== PORCENTAGEM GRANDE ========== -->
+        <TextView
+            android:id="@+id/tvBigPercentage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="--%"
+            android:textColor="#4ADE80"
+            android:textSize="68sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="20dp"/>
 
         <!-- ========== INDICADOR DE BIP ========== -->
         <TextView
@@ -118,19 +125,15 @@
             android:gravity="center"
             android:layout_marginBottom="16dp"/>
 
-        <!-- ========== ALERT MODE ========== -->
-        <TextView
-            android:id="@+id/tvAlertMode"
+        <!-- Botão Testar Monitoramento Completo -->
+        <Button
+            android:id="@+id/btnTestFullMonitoring"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="NORMAL"
-            android:textColor="#4ADE80"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:gravity="center"
+            android:text="▶ Testar Monitoramento Completo"
             android:layout_marginBottom="24dp"/>
 
-        <!-- ========== CONFIGURAÇÕES ========== -->
+        <!-- Configurações -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -197,7 +200,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"/>
 
-        <!-- Switches Granulares -->
+        <!-- Switches -->
         <Switch
             android:id="@+id/switchBeep"
             android:layout_width="match_parent"
@@ -250,7 +253,7 @@
             android:layout_height="48dp"
             android:layout_marginBottom="24dp"/>
 
-        <!-- Botões -->
+        <!-- Botões de Áudio -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
