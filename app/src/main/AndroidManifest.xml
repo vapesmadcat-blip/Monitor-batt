@@ -19,7 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BatteryMonitor"
         tools:targetApi="31">
-        
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -28,6 +28,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- ==================== TELA SOBRE ==================== -->
+        <activity
+            android:name=".AboutActivity"
+            android:exported="false"
+            android:label="Sobre" />
 
         <service
             android:name=".BatteryService"
