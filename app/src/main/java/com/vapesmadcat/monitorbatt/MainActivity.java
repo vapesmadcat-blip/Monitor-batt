@@ -22,14 +22,14 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.widget.Button;
-import android.widget.ProgressBar;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.AdapterView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -37,43 +37,27 @@ import androidx.core.content.ContextCompat;
 
 public class MainActivity extends AppCompatActivity {
 
+    // Views existentes
     private View batteryFill;
-    private TextView batteryText;
-    private TextView statusText;
-    private TextView thresholdValueText;
-    private TextView intervalValueText;
-    private TextView alertModeText;
-    private TextView bipIndicator;
-    private TextView chargingBolt;
-    private SeekBar thresholdSeek;
-    private SeekBar intervalSeek;
+    private TextView batteryText, statusText, thresholdValueText, intervalValueText;
+    private TextView alertModeText, bipIndicator, chargingBolt;
+    private SeekBar thresholdSeek, intervalSeek;
     private Spinner characterSpinner;
+    private Button muteBtn, saveBtn, startBtn, stopBtn, playVoiceBtn;
+
+    // NOVOS: Switches granulares + Visual Style
+    private Switch switchBeep, switchTts, switchCharacterVoice;
+    private Spinner spinnerVisualStyle;
+
     private SharedPreferences preferences;
-    private Button muteBtn;
-    private Button saveBtn;
-    private Button startBtn;
-    private Button stopBtn;
-    private Button playVoiceBtn;
-    
-    private String[] characters = {
-        "Nenhum", "Lula", "Bolsonaro", "Goku", "Vegeta", 
-        "Faustão", "Silvio Santos", "Homer Simpson",
-        "Rock", "Clássico", "Samba", "Reggae", "Sertanejo"
-    };
-    private String[] characterKeys = {
-        "none", "lula", "bolsonaro", "goku", "vegeta", 
-        "faustao", "silvio", "homer",
-        "rock", "classico", "samba", "reggae", "sertanejo"
-    };
     private boolean isModified = false;
     private boolean isCharging = false;
     private AlphaAnimation boltAnimation;
 
-    // Gerenciamento de Áudio
     private MediaPlayer currentMediaPlayer = null;
     private boolean isPlayingPreview = false;
+    private boolean isModifiedByCode = false;
 
-    // Chave para persistência do estado do serviço
     public static final String KEY_SERVICE_ENABLED = "service_enabled";
 
     private final BroadcastReceiver bipReceiver = new BroadcastReceiver() {
@@ -90,6 +74,17 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private final String[] characters = {
+        "Nenhum", "Lula", "Bolsonaro", "Goku", "Vegeta",
+        "Faustão", "Silvio Santos", "Homer Simpson",
+        "Rock", "Clássico", "Samba", "Reggae", "Sertanejo"
+    };
+    private final String[] characterKeys = {
+        "none", "lula", "bolsonaro", "goku", "vegeta",
+        "faustao", "silvio", "homer",
+        "rock", "classico", "samba", "reggae", "sertanejo"
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
 
         preferences = getSharedPreferences(BatteryService.PREFS_NAME, MODE_PRIVATE);
 
+        // FindViews existentes
         batteryFill = findViewById(R.id.batteryFill);
         batteryText = findViewById(R.id.tvLevel);
         statusText = findViewById(R.id.tvStatus);
@@ -108,7 +104,6 @@ public class MainActivity extends AppCompatActivity {
         thresholdSeek = findViewById(R.id.seekThreshold);
         intervalSeek = findViewById(R.id.seekInterval);
         characterSpinner = findViewById(R.id.spinnerCharacter);
-        
         saveBtn = findViewById(R.id.btnSave);
         startBtn = findViewById(R.id.btnStart);
         stopBtn = findViewById(R.id.btnStop);
@@ -116,13 +111,18 @@ public class MainActivity extends AppCompatActivity {
         playVoiceBtn = findViewById(R.id.btnPlayVoice);
         Button testBeepBtn = findViewById(R.id.btnTestBeep);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, characters);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        characterSpinner.setAdapter(adapter);
+        // NOVOS FINDS
+        switchBeep = findViewById(R.id.switchBeep);
+        switchTts = findViewById(R.id.switchTts);
+        switchCharacterVoice = findViewById(R.id.switchCharacterVoice);
+        spinnerVisualStyle = findViewById(R.id.spinnerVisualStyle);
 
+        setupCharacterSpinner();
+        setupVisualStyleSpinner();
         setupControls();
         setupAnimations();
 
+        // Listeners dos botões (mantidos)
         saveBtn.setOnClickListener(v -> {
             saveSettings();
             isModified = false;
@@ -148,18 +148,12 @@ public class MainActivity extends AppCompatActivity {
             boolean muted = !preferences.getBoolean(BatteryService.KEY_MUTED, false);
             preferences.edit().putBoolean(BatteryService.KEY_MUTED, muted).apply();
             updateMuteButton(muted);
-            // Se silenciar enquanto uma prévia estiver tocando, para imediatamente
-            if (muted && isPlayingPreview) {
-                stopCurrentAudio();
-            }
+            if (muted && isPlayingPreview) stopCurrentAudio();
         });
 
         playVoiceBtn.setOnClickListener(v -> {
-            if (isPlayingPreview) {
-                stopCurrentAudio();
-            } else {
-                playVoicePreview();
-            }
+            if (isPlayingPreview) stopCurrentAudio();
+            else playVoicePreview();
         });
 
         testBeepBtn.setOnClickListener(v -> {
@@ -167,26 +161,74 @@ public class MainActivity extends AppCompatActivity {
             playTestBeep();
         });
 
+        // Registros de Broadcast
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"), Context.RECEIVER_NOT_EXPORTED);
         } else {
             registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"));
         }
-
         registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        
+
         updateMuteButton(preferences.getBoolean(BatteryService.KEY_MUTED, false));
         updateBatteryReadout();
-        
+        loadSettings();
+
         boolean shouldBeRunning = preferences.getBoolean(KEY_SERVICE_ENABLED, false);
         boolean isRunning = isServiceRunning(BatteryService.class);
-        
+
         if (shouldBeRunning && !isRunning) {
             startBatteryService();
             updateServiceButtons(true);
         } else {
             updateServiceButtons(isRunning);
         }
+    }
+
+    private void setupCharacterSpinner() {
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, characters);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        characterSpinner.setAdapter(adapter);
+    }
+
+    private void setupVisualStyleSpinner() {
+        String[] options = {"Pilha Normal", "Mascote"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, options);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerVisualStyle.setAdapter(adapter);
+    }
+
+    private void setupControls() {
+        thresholdSeek.setMax(25);
+        intervalSeek.setMax(11);
+
+        SeekBar.OnSeekBarChangeListener seekListener = new SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(SeekBar s, int p, boolean fromUser) {
+                if (fromUser) { checkChanges(); updateTexts(); }
+            }
+            @Override public void onStartTrackingTouch(SeekBar s) {}
+            @Override public void onStopTrackingTouch(SeekBar s) {}
+        };
+        thresholdSeek.setOnSeekBarChangeListener(seekListener);
+        intervalSeek.setOnSeekBarChangeListener(seekListener);
+
+        characterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
+                if (isModifiedByCode) return;
+                checkChanges();
+                if (isPlayingPreview) stopCurrentAudio();
+            }
+            @Override public void onNothingSelected(AdapterView<?> p) {}
+        });
+
+        // Listeners dos novos switches
+        android.widget.CompoundButton.OnCheckedChangeListener switchListener = (buttonView, isChecked) -> checkChanges();
+        switchBeep.setOnCheckedChangeListener(switchListener);
+        switchTts.setOnCheckedChangeListener(switchListener);
+        switchCharacterVoice.setOnCheckedChangeListener(switchListener);
+        spinnerVisualStyle.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) { checkChanges(); }
+            @Override public void onNothingSelected(AdapterView<?> p) {}
+        });
     }
 
     private void setupAnimations() {
@@ -199,13 +241,9 @@ public class MainActivity extends AppCompatActivity {
     private void stopCurrentAudio() {
         if (currentMediaPlayer != null) {
             try {
-                if (currentMediaPlayer.isPlaying()) {
-                    currentMediaPlayer.stop();
-                }
+                if (currentMediaPlayer.isPlaying()) currentMediaPlayer.stop();
                 currentMediaPlayer.release();
-            } catch (Exception e) {
-                Log.e("MainActivity", "Erro ao parar áudio", e);
-            }
+            } catch (Exception e) { Log.e("MainActivity", "Erro ao parar áudio", e); }
             currentMediaPlayer = null;
         }
         isPlayingPreview = false;
@@ -214,55 +252,44 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void playVoicePreview() {
-        // Verifica se está mutado
         boolean muted = preferences.getBoolean(BatteryService.KEY_MUTED, false);
         if (muted) {
             Toast.makeText(this, "Som silenciado. Desmute para ouvir.", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        // Para qualquer áudio que já esteja tocando
         stopCurrentAudio();
 
         int pos = characterSpinner.getSelectedItemPosition();
         if (pos < 0 || pos >= characterKeys.length) return;
-        
+
         String character = characterKeys[pos];
         if ("none".equals(character)) {
             Toast.makeText(this, "Nenhuma opção selecionada", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Tenta áudio de bateria baixa ou carregamento para o preview
         int resId = getResources().getIdentifier("voice_" + character + "_low", "raw", getPackageName());
         if (resId == 0) resId = getResources().getIdentifier("voice_" + character + "_charging", "raw", getPackageName());
-        
+
         if (resId != 0) {
             try {
                 currentMediaPlayer = MediaPlayer.create(this, resId);
                 if (currentMediaPlayer != null) {
                     isPlayingPreview = true;
-                    playVoiceBtn.setText("■"); // Ícone de Stop
+                    playVoiceBtn.setText("■");
                     playVoiceBtn.setBackgroundTintList(ContextCompat.getColorStateList(this, android.R.color.holo_red_light));
-
-                    currentMediaPlayer.setOnCompletionListener(mp -> {
-                        stopCurrentAudio();
-                    });
+                    currentMediaPlayer.setOnCompletionListener(mp -> stopCurrentAudio());
                     currentMediaPlayer.start();
-                    Toast.makeText(this, "Ouvindo: " + characters[pos], Toast.LENGTH_SHORT).show();
                 }
             } catch (Exception e) {
                 Log.e("MainActivity", "Erro ao tocar preview", e);
                 stopCurrentAudio();
             }
-        } else {
-            Toast.makeText(this, "Áudio de prévia não disponível", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void startBatteryService() {
-        Intent i = new Intent(this, BatteryService.class);
-        ContextCompat.startForegroundService(this, i);
+        ContextCompat.startForegroundService(this, new Intent(this, BatteryService.class));
     }
 
     private void stopBatteryService() {
@@ -273,18 +300,14 @@ public class MainActivity extends AppCompatActivity {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         if (manager == null) return false;
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
+            if (serviceClass.getName().equals(service.service.getClassName())) return true;
         }
         return false;
     }
 
     private void triggerVisualBip() {
         bipIndicator.setTextColor(Color.RED);
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            bipIndicator.setTextColor(Color.WHITE);
-        }, 1000);
+        new Handler(Looper.getMainLooper()).postDelayed(() -> bipIndicator.setTextColor(Color.WHITE), 1000);
     }
 
     private void updateServiceButtons(boolean running) {
@@ -294,41 +317,6 @@ public class MainActivity extends AppCompatActivity {
         stopBtn.setAlpha(running ? 1.0f : 0.5f);
         statusText.setText(running ? "Monitoramento: ATIVO" : "Monitoramento: DESATIVADO");
         statusText.setTextColor(running ? 0xFF4ADE80 : 0xFFFF4D4F);
-    }
-
-    private void setupControls() {
-        thresholdSeek.setMax(25); // 5 to 30
-        intervalSeek.setMax(11); // 5 to 60 (steps of 5)
-
-        AdapterView.OnItemSelectedListener listener = new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
-                if (isModifiedByCode) return;
-                checkChanges();
-                // Se mudar o personagem enquanto ouve, para o áudio anterior
-                if (isPlayingPreview) {
-                    stopCurrentAudio();
-                }
-            }
-            @Override public void onNothingSelected(AdapterView<?> p) {}
-        };
-        characterSpinner.setOnItemSelectedListener(listener);
-
-        SeekBar.OnSeekBarChangeListener seekListener = new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar s, int p, boolean fromUser) {
-                if (fromUser) {
-                    checkChanges();
-                    updateTexts();
-                }
-            }
-            @Override public void onStartTrackingTouch(SeekBar s) {}
-            @Override public void onStopTrackingTouch(SeekBar s) {}
-        };
-        thresholdSeek.setOnSeekBarChangeListener(seekListener);
-        intervalSeek.setOnSeekBarChangeListener(seekListener);
-
-        loadSettings();
     }
 
     private void updateTexts() {
@@ -341,10 +329,9 @@ public class MainActivity extends AppCompatActivity {
         saveBtn.setVisibility(View.VISIBLE);
     }
 
-    private boolean isModifiedByCode = false;
-
     private void loadSettings() {
         isModifiedByCode = true;
+
         int threshold = preferences.getInt(BatteryService.KEY_THRESHOLD, BatteryService.DEFAULT_THRESHOLD);
         int intervalSeconds = preferences.getInt(BatteryService.KEY_BEEP_INTERVAL_SECONDS, BatteryService.DEFAULT_BEEP_INTERVAL_SECONDS);
         String savedChar = preferences.getString(BatteryService.KEY_CHARACTER_VOICE, "none");
@@ -358,6 +345,15 @@ public class MainActivity extends AppCompatActivity {
                 break;
             }
         }
+
+        // NOVOS: Carregar switches e visual
+        switchBeep.setChecked(preferences.getBoolean(BatteryService.KEY_BEEP_ENABLED, true));
+        switchTts.setChecked(preferences.getBoolean(BatteryService.KEY_TTS_ENABLED, true));
+        switchCharacterVoice.setChecked(preferences.getBoolean(BatteryService.KEY_CHARACTER_VOICE_ENABLED, true));
+
+        String visual = preferences.getString(BatteryService.KEY_VISUAL_STYLE, "normal");
+        spinnerVisualStyle.setSelection("mascot".equals(visual) ? 1 : 0);
+
         updateTexts();
         isModified = false;
         saveBtn.setVisibility(View.GONE);
@@ -373,6 +369,11 @@ public class MainActivity extends AppCompatActivity {
                 .putInt(BatteryService.KEY_THRESHOLD, threshold)
                 .putInt(BatteryService.KEY_BEEP_INTERVAL_SECONDS, intervalSeconds)
                 .putString(BatteryService.KEY_CHARACTER_VOICE, selectedChar)
+                // NOVOS
+                .putBoolean(BatteryService.KEY_BEEP_ENABLED, switchBeep.isChecked())
+                .putBoolean(BatteryService.KEY_TTS_ENABLED, switchTts.isChecked())
+                .putBoolean(BatteryService.KEY_CHARACTER_VOICE_ENABLED, switchCharacterVoice.isChecked())
+                .putString(BatteryService.KEY_VISUAL_STYLE, spinnerVisualStyle.getSelectedItemPosition() == 1 ? "mascot" : "normal")
                 .apply();
     }
 
@@ -380,20 +381,19 @@ public class MainActivity extends AppCompatActivity {
         muteBtn.setText(muted ? "🔇 Desmutar" : "🔊 Silenciar");
         muteBtn.setBackgroundTintList(ContextCompat.getColorStateList(this,
                 muted ? android.R.color.holo_red_dark : android.R.color.holo_green_dark));
-        muteBtn.setAlpha(1.0f);
     }
 
     private int getThresholdFromProgress(int progress) { return progress + 5; }
     private int getIntervalFromProgress(int progress) { return (progress + 1) * 5; }
 
     private void updateBatteryReadout() {
-        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = registerReceiver(null, ifilter);
+        Intent batteryStatus = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         if (batteryStatus == null) return;
+
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
         int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        
+
         int pct = (level >= 0 && scale > 0) ? (int) ((level * 100f) / scale) : -1;
         isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
 
@@ -409,9 +409,7 @@ public class MainActivity extends AppCompatActivity {
     private void updateChargingUI(boolean charging) {
         if (charging) {
             chargingBolt.setVisibility(View.VISIBLE);
-            if (chargingBolt.getAnimation() == null) {
-                chargingBolt.startAnimation(boltAnimation);
-            }
+            if (chargingBolt.getAnimation() == null) chargingBolt.startAnimation(boltAnimation);
         } else {
             chargingBolt.clearAnimation();
             chargingBolt.setVisibility(View.GONE);
@@ -420,17 +418,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateBatteryFill(int pct) {
         int safePct = Math.max(0, Math.min(100, pct));
-        Drawable background;
-        if (safePct <= 10) background = ContextCompat.getDrawable(this, R.drawable.battery_fill_low);
-        else if (safePct <= 30) background = ContextCompat.getDrawable(this, R.drawable.battery_fill_mid);
-        else background = ContextCompat.getDrawable(this, R.drawable.battery_fill_high);
-        
+        Drawable background = ContextCompat.getDrawable(this,
+                safePct <= 10 ? R.drawable.battery_fill_low :
+                safePct <= 30 ? R.drawable.battery_fill_mid : R.drawable.battery_fill_high);
+
         batteryFill.setBackground(background);
-        
         batteryFill.post(() -> {
-            int totalHeight = ((View)batteryFill.getParent()).getHeight();
-            float scale = Math.max(0.01f, safePct / 100f);
-            batteryFill.getLayoutParams().height = (int) (totalHeight * scale);
+            int totalHeight = ((View) batteryFill.getParent()).getHeight();
+            batteryFill.getLayoutParams().height = (int) (totalHeight * Math.max(0.01f, safePct / 100f));
             batteryFill.requestLayout();
         });
     }
@@ -452,23 +447,20 @@ public class MainActivity extends AppCompatActivity {
     private void playTestBeep() {
         boolean muted = preferences.getBoolean(BatteryService.KEY_MUTED, false);
         if (muted) {
-            Toast.makeText(this, "Som silenciado. Desmute para testar.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Som silenciado.", Toast.LENGTH_SHORT).show();
             return;
         }
         try {
             ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
             tg.startTone(ToneGenerator.TONE_PROP_BEEP2, 300);
             tg.release();
-        } catch (Exception e) {
-            Toast.makeText(this, "Erro no bip", Toast.LENGTH_SHORT).show();
-        }
+        } catch (Exception ignored) {}
     }
 
     private void requestNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1001);
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1001);
         }
     }
 
@@ -477,13 +469,6 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         updateBatteryReadout();
         updateServiceButtons(isServiceRunning(BatteryService.class));
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        // Opcional: parar o áudio se o usuário sair do app
-        // stopCurrentAudio();
     }
 
     @Override
