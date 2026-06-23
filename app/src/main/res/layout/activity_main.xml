@@ -1,384 +1,316 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:background="#05070A">
+    android:background="#121212"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:paddingStart="24dp"
-        android:paddingTop="28dp"
-        android:paddingEnd="24dp"
-        android:paddingBottom="32dp">
+        android:padding="16dp">
 
-        <!-- Título e Subtítulo -->
+        <!-- Título -->
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Monitor de Bateria Pro"
-            android:textSize="26sp"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
             android:textStyle="bold"
-            android:textColor="#F9FAFB" />
+            android:gravity="center"
+            android:layout_marginBottom="16dp"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Alertas Inteligentes e Vozes"
-            android:textSize="14sp"
-            android:textColor="#8B95A7" />
+        <!-- ========== VISUAL DA BATERIA + MASCOTE ========== -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="280dp"
+            android:layout_marginBottom="20dp">
 
-        <!-- Visual da Bateria (mantido) -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
-
-            <View
-                android:layout_width="72dp"
-                android:layout_height="18dp"
-                android:background="@drawable/battery_cap" />
-
-            <FrameLayout
+            <!-- Visual da Pilha Normal -->
+            <LinearLayout
                 android:id="@+id/batteryContainer"
-                android:layout_width="188dp"
-                android:layout_height="320dp"
-                android:layout_marginTop="-2dp"
-                android:background="@drawable/battery_shell"
-                android:padding="12dp">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
 
-                <View
-                    android:id="@+id/batteryFill"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="bottom"
-                    android:background="@drawable/battery_fill_high" />
+                <FrameLayout
+                    android:layout_width="120dp"
+                    android:layout_height="220dp">
 
-                <View
-                    android:id="@+id/batteryGloss"
-                    android:layout_width="match_parent"
-                    android:layout_height="120dp"
-                    android:layout_gravity="top"
-                    android:background="@drawable/battery_gloss" />
+                    <!-- Borda da bateria -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/battery_shell"/>
 
+                    <!-- Preenchimento da bateria -->
+                    <View
+                        android:id="@+id/batteryFill"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_gravity="bottom"
+                        android:background="@drawable/battery_fill_high"/>
+
+                    <!-- Brilho -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/battery_gloss"/>
+
+                    <!-- Raio de carregamento -->
+                    <TextView
+                        android:id="@+id/tvChargingBolt"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="⚡"
+                        android:textColor="#FFD700"
+                        android:textSize="48sp"
+                        android:visibility="gone"/>
+                </FrameLayout>
+
+                <!-- Porcentagem -->
                 <TextView
-                    android:id="@+id/tvChargingBolt"
+                    android:id="@+id/tvLevel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="⚡"
-                    android:textSize="80sp"
-                    android:textColor="#FACC15"
-                    android:shadowColor="#000000"
-                    android:shadowDx="2"
-                    android:shadowDy="2"
-                    android:shadowRadius="4"
-                    android:visibility="gone" />
-            </FrameLayout>
-        </LinearLayout>
+                    android:layout_marginTop="12dp"
+                    android:text="87%"
+                    android:textColor="#4ADE80"
+                    android:textSize="42sp"
+                    android:textStyle="bold"/>
 
-        <!-- Indicadores -->
+                <TextView
+                    android:id="@+id/tvStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="NORMAL"
+                    android:textColor="#4ADE80"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+            <!-- ========== MASCOTE ========== -->
+            <ImageView
+                android:id="@+id/ivMascot"
+                android:layout_width="220dp"
+                android:layout_height="220dp"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                android:scaleType="fitCenter"
+                android:src="@drawable/battery_mascot_1"/>
+
+        </FrameLayout>
+
+        <!-- ========== INDICADOR DE BIP ========== -->
         <TextView
             android:id="@+id/tvBipIndicator"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="BIP"
-            android:textSize="32sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF" />
+            android:text="●"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:layout_marginBottom="16dp"/>
 
-        <TextView
-            android:id="@+id/tvLevel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="50%"
-            android:textSize="64sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF" />
-
-        <TextView
-            android:id="@+id/tvStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="BATERIA"
-            android:textAllCaps="true"
-            android:letterSpacing="0.18"
-            android:textSize="18sp"
-            android:textColor="#6B7280" />
-
+        <!-- ========== ALERT MODE ========== -->
         <TextView
             android:id="@+id/tvAlertMode"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Normal"
+            android:text="NORMAL"
+            android:textColor="#4ADE80"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="#22C55E" />
+            android:gravity="center"
+            android:layout_marginBottom="24dp"/>
 
-        <!-- ==================== CONFIGURAÇÕES ==================== -->
+        <!-- ========== CONFIGURAÇÕES ========== -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Configurações"
+            android:textColor="#AAAAAA"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp"/>
 
         <!-- Threshold -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:background="#11161C"
-            android:orientation="vertical"
-            android:padding="18dp">
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Avisar abaixo de"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#F3F4F6" />
+                android:layout_weight="1"
+                android:text="Alerta a partir de:"
+                android:textColor="#FFFFFF"/>
 
             <TextView
                 android:id="@+id/tvThresholdValue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="10%"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="#60A5FA" />
-
-            <SeekBar
-                android:id="@+id/seekThreshold"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp" />
+                android:text="15%"
+                android:textColor="#4ADE80"
+                android:textStyle="bold"/>
         </LinearLayout>
+
+        <SeekBar
+            android:id="@+id/seekThreshold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"/>
 
         <!-- Intervalo -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="#11161C"
-            android:orientation="vertical"
-            android:padding="18dp">
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Intervalo do bip"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#F3F4F6" />
+                android:layout_weight="1"
+                android:text="Intervalo do bip:"
+                android:textColor="#FFFFFF"/>
 
             <TextView
                 android:id="@+id/tvIntervalValue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="15 segundos"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="#60A5FA" />
-
-            <SeekBar
-                android:id="@+id/seekInterval"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp" />
+                android:text="30 segundos"
+                android:textColor="#4ADE80"
+                android:textStyle="bold"/>
         </LinearLayout>
 
-        <!-- Personagem de Voz -->
-        <LinearLayout
+        <SeekBar
+            android:id="@+id/seekInterval"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="#11161C"
-            android:orientation="vertical"
-            android:padding="18dp">
+            android:layout_marginBottom="24dp"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Personagem de Voz"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#F3F4F6" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <Spinner
-                    android:id="@+id/spinnerCharacter"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="#1F2937"
-                    android:padding="8dp" />
-
-                <Button
-                    android:id="@+id/btnPlayVoice"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_marginStart="8dp"
-                    android:text="▶"
-                    android:textSize="18sp"
-                    android:padding="0dp"
-                    android:backgroundTint="#60A5FA" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- ==================== NOVOS SWITCHES ==================== -->
-
-        <!-- Ativar Bip -->
-        <LinearLayout
+        <!-- Switches Granulares -->
+        <Switch
+            android:id="@+id/switchBeep"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="#11161C"
-            android:orientation="horizontal"
-            android:padding="18dp">
+            android:text="Ativar Bip"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="8dp"/>
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Ativar Bip"
-                android:textColor="#F3F4F6"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <Switch
-                android:id="@+id/switchBeep"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true" />
-        </LinearLayout>
-
-        <!-- Ativar TTS -->
-        <LinearLayout
+        <Switch
+            android:id="@+id/switchTts"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="#11161C"
-            android:orientation="horizontal"
-            android:padding="18dp">
+            android:text="Ativar TTS (voz)"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="8dp"/>
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Ativar Voz Inteligente (TTS)"
-                android:textColor="#F3F4F6"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <Switch
-                android:id="@+id/switchTts"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true" />
-        </LinearLayout>
-
-        <!-- Ativar Voz do Personagem -->
-        <LinearLayout
+        <Switch
+            android:id="@+id/switchCharacterVoice"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="#11161C"
-            android:orientation="horizontal"
-            android:padding="18dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Ativar Voz do Personagem"
-                android:textColor="#F3F4F6"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <Switch
-                android:id="@+id/switchCharacterVoice"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true" />
-        </LinearLayout>
+            android:text="Ativar Voz do Personagem"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="16dp"/>
 
         <!-- Estilo Visual -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Estilo Visual:"
+            android:textColor="#AAAAAA"
+            android:layout_marginBottom="6dp"/>
+
+        <Spinner
+            android:id="@+id/spinnerVisualStyle"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- Personagem de voz -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Voz do Personagem:"
+            android:textColor="#AAAAAA"
+            android:layout_marginBottom="6dp"/>
+
+        <Spinner
+            android:id="@+id/spinnerCharacter"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- Botões -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="#11161C"
-            android:orientation="vertical"
-            android:padding="18dp">
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <Button
+                android:id="@+id/btnTestBeep"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Estilo Visual"
-                android:textColor="#F3F4F6"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:layout_weight="1"
+                android:text="Testar Bip"
+                android:layout_marginEnd="8dp"/>
 
-            <Spinner
-                android:id="@+id/spinnerVisualStyle"
-                android:layout_width="match_parent"
+            <Button
+                android:id="@+id/btnPlayVoice"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="#1F2937"
-                android:padding="8dp" />
+                android:layout_weight="1"
+                android:text="▶"
+                android:layout_marginStart="8dp"/>
         </LinearLayout>
-
-        <!-- Botões -->
-        <Button
-            android:id="@+id/btnSave"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Salvar Alterações"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/btnStart"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Ativar Monitor" />
-
-        <Button
-            android:id="@+id/btnStop"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Desativar Monitor"
-            android:enabled="false" />
 
         <Button
             android:id="@+id/btnMute"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Silenciar" />
+            android:text="🔊 Silenciar"
+            android:layout_marginBottom="16dp"/>
 
-        <Button
-            android:id="@+id/btnTestBeep"
+        <!-- Botões de Serviço -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Testar bip" />
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnStart"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Iniciar Monitoramento"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnStop"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Parar"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Salvar Configurações"
+            android:visibility="gone"
+            android:layout_marginTop="16dp"/>
 
     </LinearLayout>
 </ScrollView>
