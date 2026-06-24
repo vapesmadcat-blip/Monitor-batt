@@ -17,6 +17,7 @@
     <color name="text_secondary">#FF49454F</color>
     <color name="spinner_background">#FFF5F5F5</color>
     <color name="spinner_dropdown_background">#FFFFFFFF</color>
+    <color name="spinner_dropdown_selected_background">#FFE8DEF8</color>
     <color name="spinner_text">#FF1C1B1F</color>
     <color name="button_secondary_background">#FFE5E7EB</color>
     <color name="button_secondary_text">#FF111827</color>

@@ -5,6 +5,6 @@
         android:drawable="?attr/colorControlHighlight" />
     <item
         android:state_selected="true"
-        android:drawable="?attr/colorControlHighlight" />
+        android:drawable="@color/spinner_dropdown_selected_background" />
     <item android:drawable="@color/spinner_dropdown_background" />
 </selector>
