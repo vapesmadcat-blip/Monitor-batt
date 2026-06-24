@@ -262,7 +262,9 @@ public class MainActivity extends AppCompatActivity {
         switchThemeMode.setChecked(getStoredDarkModeEnabled(preferences));
         switchThemeMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
             preferences.edit().putBoolean(KEY_DARK_MODE, isChecked).apply();
-            applyNightMode(isChecked);
+            if (applyNightMode(isChecked) && !isFinishing()) {
+                recreate();
+            }
         });
     }
 
@@ -278,17 +280,27 @@ public class MainActivity extends AppCompatActivity {
             return sharedPreferences.getBoolean(KEY_DARK_MODE, false);
         }
 
+        int defaultNightMode = AppCompatDelegate.getDefaultNightMode();
+        if (defaultNightMode == AppCompatDelegate.MODE_NIGHT_YES) {
+            return true;
+        }
+        if (defaultNightMode == AppCompatDelegate.MODE_NIGHT_NO) {
+            return false;
+        }
+
         int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
         return currentNightMode == Configuration.UI_MODE_NIGHT_YES;
     }
 
-    private void applyNightMode(boolean darkModeEnabled) {
+    private boolean applyNightMode(boolean darkModeEnabled) {
         int selectedMode = darkModeEnabled
                 ? AppCompatDelegate.MODE_NIGHT_YES
                 : AppCompatDelegate.MODE_NIGHT_NO;
-        if (AppCompatDelegate.getDefaultNightMode() != selectedMode) {
-            AppCompatDelegate.setDefaultNightMode(selectedMode);
+        if (AppCompatDelegate.getDefaultNightMode() == selectedMode) {
+            return false;
         }
+        AppCompatDelegate.setDefaultNightMode(selectedMode);
+        return true;
     }
 
     private void setupControls() {
