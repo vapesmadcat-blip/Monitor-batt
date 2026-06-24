@@ -13,6 +13,35 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="end|center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/theme_light"
+                android:textColor="@color/text_secondary" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switchThemeMode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:contentDescription="@string/theme_toggle_description"
+                app:useMaterialThemeColors="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/theme_dark"
+                android:textColor="@color/text_secondary" />
+        </LinearLayout>
+
         <!-- Título -->
         <TextView
             android:layout_width="match_parent"
@@ -196,20 +225,32 @@
             android:layout_marginBottom="24dp"/>
 
         <!-- Switches -->
-        <Switch android:id="@+id/switchBeep"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="Ativar Bip" android:textColor="@color/text_primary"
-            android:layout_marginBottom="8dp"/>
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switchBeep"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Ativar Bip"
+            android:textColor="@color/text_primary"
+            app:useMaterialThemeColors="true" />
 
-        <Switch android:id="@+id/switchTts"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="Ativar TTS (voz)" android:textColor="@color/text_primary"
-            android:layout_marginBottom="8dp"/>
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switchTts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Ativar TTS (voz)"
+            android:textColor="@color/text_primary"
+            app:useMaterialThemeColors="true" />
 
-        <Switch android:id="@+id/switchCharacterVoice"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="Ativar Voz do Personagem" android:textColor="@color/text_primary"
-            android:layout_marginBottom="16dp"/>
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switchCharacterVoice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="Ativar Voz do Personagem"
+            android:textColor="@color/text_primary"
+            app:useMaterialThemeColors="true" />
 
         <!-- Estilo Visual -->
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
