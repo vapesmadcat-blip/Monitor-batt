@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private TextToSpeech textToSpeech;
     private boolean ttsInitialized = false;
 
+    private static final String PREFS_NAME = "monitor_batt_prefs";
     public static final String KEY_SERVICE_ENABLED = "service_enabled";
     public static final String KEY_DARK_MODE = "dark_mode_enabled";
 
@@ -100,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        preferences = getSharedPreferences(BatteryService.PREFS_NAME, MODE_PRIVATE);
+        preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         applyNightMode(getStoredDarkModeEnabled(preferences));
         setContentView(R.layout.activity_main);
 
@@ -261,7 +262,10 @@ public class MainActivity extends AppCompatActivity {
     private void setupThemeToggle() {
         switchThemeMode.setChecked(getStoredDarkModeEnabled(preferences));
         switchThemeMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            preferences.edit().putBoolean(KEY_DARK_MODE, isChecked).apply();
+            if (!preferences.contains(KEY_DARK_MODE)
+                    || preferences.getBoolean(KEY_DARK_MODE, !isChecked) != isChecked) {
+                preferences.edit().putBoolean(KEY_DARK_MODE, isChecked).apply();
+            }
             if (applyNightMode(isChecked)) {
                 recreate();
             }
