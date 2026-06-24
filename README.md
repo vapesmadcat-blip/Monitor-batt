@@ -17,7 +17,7 @@ Aplicativo Android (Java) que monitora a bateria em background e emite um **bip 
 
 ## Release para Play Store (AAB assinado)
 
-1. Crie um arquivo `/home/runner/work/Monitor-batt/Monitor-batt/keystore.properties` (não versionar) com:
+1. Crie um arquivo `keystore.properties` na raiz do projeto (não versionar) com:
    - `storeFile=/caminho/para/sua-release-keystore.jks`
    - `storePassword=...`
    - `keyAlias=...`
