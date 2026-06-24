@@ -1,0 +1,4 @@
+# Local signing material (never commit)
+keystore.properties
+*.jks
+*.keystore

@@ -1,5 +1,11 @@
 # Changelog - Monitor Bat
 
+## [1.2.1] - 2026-06-24
+
+### Melhorias
+- Preparação do projeto para release na Play Store com assinatura de release via `keystore.properties` ou variáveis de ambiente.
+- Atualização da infraestrutura de build para AGP `8.5.2`.
+
 ## [1.2.0] - 2026-06-23
 
 ### Adicionado

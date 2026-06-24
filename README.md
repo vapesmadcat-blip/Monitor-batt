@@ -3,7 +3,7 @@
 Aplicativo Android (Java) que monitora a bateria em background e emite um **bip a cada 30 segundos** quando a bateria estiver **≤ 5%** e o **carregador não estiver conectado**.
 
 - Package: `com.vapesmadcat.monitorbatt`
-- Versão Atual: `1.2.0`
+- Versão Atual: `1.2.1`
 - minSdk 24 / targetSdk 34 / JDK 17 / AGP 8.5.2
 
 ## Build automático pelo GitHub Actions
@@ -13,7 +13,19 @@ Aplicativo Android (Java) que monitora a bateria em background e emite um **bip 
 3. Quando ficar verde ✅, abra o run → **Artifacts** → baixe **Monitor-Bat-Release-v1.2.0** → dentro está o APK pronto para uso.
 4. Transfira pro celular e instale (precisa autorizar "fontes desconhecidas").
 
-> É um APK **debug**, assinado com a chave de debug do Android. Instala normalmente, mas não serve pra publicação na Play Store. Pra release assinado, é preciso uma keystore sua + ajustes no workflow — me avise se quiser.
+> É um APK **debug**, assinado com a chave de debug do Android. Instala normalmente, mas não serve pra publicação na Play Store.
+
+## Release para Play Store (AAB assinado)
+
+1. Crie um arquivo `/home/runner/work/Monitor-batt/Monitor-batt/keystore.properties` (não versionar) com:
+   - `storeFile=/caminho/para/sua-release-keystore.jks`
+   - `storePassword=...`
+   - `keyAlias=...`
+   - `keyPassword=...`
+2. Gere o bundle com:
+   - `./gradlew bundleRelease`
+3. O arquivo final fica em:
+   - `app/build/outputs/bundle/release/app-release.aab`
 
 ## Build local (Android Studio)
 
