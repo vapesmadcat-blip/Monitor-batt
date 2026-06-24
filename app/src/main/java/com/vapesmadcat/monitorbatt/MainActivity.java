@@ -262,7 +262,7 @@ public class MainActivity extends AppCompatActivity {
         switchThemeMode.setChecked(getStoredDarkModeEnabled(preferences));
         switchThemeMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
             preferences.edit().putBoolean(KEY_DARK_MODE, isChecked).apply();
-            if (applyNightMode(isChecked) && !isFinishing()) {
+            if (applyNightMode(isChecked)) {
                 recreate();
             }
         });
