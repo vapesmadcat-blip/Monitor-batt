@@ -247,8 +247,16 @@ public class BatteryService extends Service {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastVoiceTime < VOICE_COOLDOWN_MS) return;
 
-        String type = (level <= 5 ? "critical" : "low");
-        if (playSpecificVoice(type)) {
+        boolean played;
+        if (level <= getVoiceVeryLowThreshold()) {
+            played = playSpecificVoice("verylow") || playSpecificVoice("critical");
+        } else if (level <= getVoiceCriticalThreshold()) {
+            played = playSpecificVoice("critical");
+        } else {
+            played = playSpecificVoice("low");
+        }
+
+        if (played) {
             lastVoiceTime = currentTime;
         }
     }
@@ -283,9 +291,9 @@ public class BatteryService extends Service {
         if (currentTime - lastVoiceTime < VOICE_COOLDOWN_MS) return;
 
         String message;
-        if (level <= 5) {
+        if (isCriticalOrVeryLowVoiceLevel(level)) {
             message = "Alerta crítico! A bateria está em apenas " + level + " por cento. Conecte o carregador imediatamente.";
-        } else if (level <= 15) {
+        } else if (level <= getVoiceLowThreshold()) {
             message = "Atenção! Bateria baixa em " + level + " por cento. Recomendo conectar o carregador agora.";
         } else {
             message = "Monitor de bateria. Nível atual: " + level + " por cento.";
@@ -302,6 +310,22 @@ public class BatteryService extends Service {
 
     private int getThreshold() {
         return prefs.getInt(KEY_THRESHOLD, DEFAULT_THRESHOLD);
+    }
+
+    private int getVoiceLowThreshold() {
+        return prefs.getInt(KEY_VOICE_LOW_THRESHOLD, DEFAULT_VOICE_LOW_THRESHOLD);
+    }
+
+    private int getVoiceCriticalThreshold() {
+        return prefs.getInt(KEY_VOICE_CRITICAL_THRESHOLD, DEFAULT_VOICE_CRITICAL_THRESHOLD);
+    }
+
+    private int getVoiceVeryLowThreshold() {
+        return prefs.getInt(KEY_VOICE_VERYLOW_THRESHOLD, DEFAULT_VOICE_VERYLOW_THRESHOLD);
+    }
+
+    private boolean isCriticalOrVeryLowVoiceLevel(int level) {
+        return level <= Math.max(getVoiceVeryLowThreshold(), getVoiceCriticalThreshold());
     }
 
     private long getCurrentIntervalMs() {
