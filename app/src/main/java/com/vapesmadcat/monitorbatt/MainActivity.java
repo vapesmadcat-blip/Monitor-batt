@@ -247,15 +247,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupCharacterSpinner() {
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, characters);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item, characters);
+        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
         characterSpinner.setAdapter(adapter);
     }
 
     private void setupVisualStyleSpinner() {
         String[] options = {"Pilha Normal", "Mascote"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, options);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item, options);
+        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
         spinnerVisualStyle.setAdapter(adapter);
     }
 

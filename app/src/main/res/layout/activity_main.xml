@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
+    android:background="@color/screen_background"
     android:fillViewport="true">
 
     <LinearLayout
@@ -18,7 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Monitor de Bateria Pro"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:textSize="22sp"
             android:textStyle="bold"
             android:gravity="center"
@@ -106,7 +106,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="●"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:gravity="center"
             android:layout_marginBottom="16dp"/>
@@ -143,8 +143,8 @@
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
                 android:text="🔊 Silenciar"
-                android:backgroundTint="#374151"
-                android:textColor="#FFFFFF" />
+                android:backgroundTint="@color/button_secondary_background"
+                android:textColor="@color/button_secondary_text" />
 
             <Button
                 android:id="@+id/btnSobre"
@@ -153,14 +153,14 @@
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
                 android:text="ℹ️ Sobre"
-                android:backgroundTint="#374151"
-                android:textColor="#FFFFFF" />
+                android:backgroundTint="@color/button_secondary_background"
+                android:textColor="@color/button_secondary_text" />
 
         </LinearLayout>
 
         <!-- Configurações -->
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="Configurações" android:textColor="#AAAAAA"
+            android:text="Configurações" android:textColor="@color/text_secondary"
             android:textSize="14sp" android:layout_marginBottom="8dp"/>
 
         <!-- Threshold -->
@@ -168,7 +168,7 @@
             android:orientation="horizontal" android:layout_marginBottom="12dp">
             <TextView android:layout_width="0dp" android:layout_height="wrap_content"
                 android:layout_weight="1" android:text="Alerta a partir de:"
-                android:textColor="#FFFFFF"/>
+                android:textColor="@color/text_primary"/>
             <TextView android:id="@+id/tvThresholdValue"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:text="15%" android:textColor="#4ADE80" android:textStyle="bold"/>
@@ -184,7 +184,7 @@
             android:orientation="horizontal" android:layout_marginBottom="12dp">
             <TextView android:layout_width="0dp" android:layout_height="wrap_content"
                 android:layout_weight="1" android:text="Intervalo do bip:"
-                android:textColor="#FFFFFF"/>
+                android:textColor="@color/text_primary"/>
             <TextView android:id="@+id/tvIntervalValue"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:text="30 segundos" android:textColor="#4ADE80" android:textStyle="bold"/>
@@ -198,37 +198,41 @@
         <!-- Switches -->
         <Switch android:id="@+id/switchBeep"
             android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="Ativar Bip" android:textColor="#FFFFFF"
+            android:text="Ativar Bip" android:textColor="@color/text_primary"
             android:layout_marginBottom="8dp"/>
 
         <Switch android:id="@+id/switchTts"
             android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="Ativar TTS (voz)" android:textColor="#FFFFFF"
+            android:text="Ativar TTS (voz)" android:textColor="@color/text_primary"
             android:layout_marginBottom="8dp"/>
 
         <Switch android:id="@+id/switchCharacterVoice"
             android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="Ativar Voz do Personagem" android:textColor="#FFFFFF"
+            android:text="Ativar Voz do Personagem" android:textColor="@color/text_primary"
             android:layout_marginBottom="16dp"/>
 
         <!-- Estilo Visual -->
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="Estilo Visual:" android:textColor="#AAAAAA"
+            android:text="Estilo Visual:" android:textColor="@color/text_secondary"
             android:layout_marginBottom="6dp"/>
 
         <Spinner android:id="@+id/spinnerVisualStyle"
             android:layout_width="match_parent"
             android:layout_height="48dp"
+            android:background="@drawable/spinner_box_background"
+            android:popupBackground="@color/spinner_dropdown_background"
             android:layout_marginBottom="24dp"/>
 
         <!-- Personagem de voz -->
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="Voz do Personagem:" android:textColor="#AAAAAA"
+            android:text="Voz do Personagem:" android:textColor="@color/text_secondary"
             android:layout_marginBottom="6dp"/>
 
         <Spinner android:id="@+id/spinnerCharacter"
             android:layout_width="match_parent"
             android:layout_height="48dp"
+            android:background="@drawable/spinner_box_background"
+            android:popupBackground="@color/spinner_dropdown_background"
             android:layout_marginBottom="24dp"/>
 
         <!-- ============================================================ -->
@@ -247,8 +251,8 @@
                 android:layout_weight="1"
                 android:layout_marginEnd="6dp"
                 android:text="🔊 Bip"
-                android:backgroundTint="#374151"
-                android:textColor="#FFFFFF" />
+                android:backgroundTint="@color/button_secondary_background"
+                android:textColor="@color/button_secondary_text" />
 
             <Button
                 android:id="@+id/btnTestTTS"
@@ -258,8 +262,8 @@
                 android:layout_marginStart="6dp"
                 android:layout_marginEnd="6dp"
                 android:text="🗣️ TTS"
-                android:backgroundTint="#374151"
-                android:textColor="#FFFFFF" />
+                android:backgroundTint="@color/button_secondary_background"
+                android:textColor="@color/button_secondary_text" />
 
             <Button
                 android:id="@+id/btnTestVoice"
@@ -268,8 +272,8 @@
                 android:layout_weight="1"
                 android:layout_marginStart="6dp"
                 android:text="🎭 Voz"
-                android:backgroundTint="#374151"
-                android:textColor="#FFFFFF" />
+                android:backgroundTint="@color/button_secondary_background"
+                android:textColor="@color/button_secondary_text" />
 
         </LinearLayout>
 
