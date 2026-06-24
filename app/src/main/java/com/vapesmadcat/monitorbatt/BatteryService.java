@@ -290,11 +290,12 @@ public class BatteryService extends Service {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastVoiceTime < VOICE_COOLDOWN_MS) return;
 
+        String criticalMessage = "Alerta crítico! A bateria está em apenas " + level + " por cento. Conecte o carregador imediatamente.";
         String message;
         if (level <= getVoiceVeryLowThreshold()) {
-            message = "Alerta crítico! A bateria está em apenas " + level + " por cento. Conecte o carregador imediatamente.";
+            message = criticalMessage;
         } else if (level <= getVoiceCriticalThreshold()) {
-            message = "Alerta crítico! A bateria está em apenas " + level + " por cento. Conecte o carregador imediatamente.";
+            message = criticalMessage;
         } else if (level <= getVoiceLowThreshold()) {
             message = "Atenção! Bateria baixa em " + level + " por cento. Recomendo conectar o carregador agora.";
         } else {
