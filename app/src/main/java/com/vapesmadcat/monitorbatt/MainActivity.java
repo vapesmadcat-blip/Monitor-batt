@@ -99,11 +99,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        applyNightMode(getStoredDarkModeEnabled());
+        preferences = getSharedPreferences(BatteryService.PREFS_NAME, MODE_PRIVATE);
+        applyNightMode(getStoredDarkModeEnabled(preferences));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        preferences = getSharedPreferences(BatteryService.PREFS_NAME, MODE_PRIVATE);
 
         batteryFill = findViewById(R.id.batteryFill);
         batteryText = findViewById(R.id.tvLevel);
@@ -260,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupThemeToggle() {
-        switchThemeMode.setChecked(getStoredDarkModeEnabled());
+        switchThemeMode.setChecked(getStoredDarkModeEnabled(preferences));
         switchThemeMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
             preferences.edit().putBoolean(KEY_DARK_MODE, isChecked).apply();
             applyNightMode(isChecked);
@@ -274,10 +273,7 @@ public class MainActivity extends AppCompatActivity {
         spinnerVisualStyle.setAdapter(adapter);
     }
 
-    private boolean getStoredDarkModeEnabled() {
-        SharedPreferences sharedPreferences = preferences != null
-                ? preferences
-                : getSharedPreferences(BatteryService.PREFS_NAME, MODE_PRIVATE);
+    private boolean getStoredDarkModeEnabled(SharedPreferences sharedPreferences) {
         if (sharedPreferences.contains(KEY_DARK_MODE)) {
             return sharedPreferences.getBoolean(KEY_DARK_MODE, false);
         }
