@@ -50,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView bipIndicator, chargingBolt;
     private TextView tvBigPercentage;
     private SeekBar thresholdSeek, intervalSeek;
+    private SeekBar voiceLowSeek, voiceCriticalSeek, voiceVeryLowSeek;
+    private TextView voiceLowValueText, voiceCriticalValueText, voiceVeryLowValueText;
     private Spinner characterSpinner, spinnerVisualStyle;
     private SwitchMaterial switchThemeMode, switchBeep, switchTts, switchCharacterVoice;
     private Button muteBtn, saveBtn, btnMonitor, btnSobre;
@@ -131,10 +133,16 @@ public class MainActivity extends AppCompatActivity {
         ivMascot = findViewById(R.id.ivMascot);
         tvBigPercentage = findViewById(R.id.tvBigPercentage);
         batteryContainer = findViewById(R.id.batteryContainer);
+        voiceLowSeek = findViewById(R.id.seekVoiceLow);
+        voiceCriticalSeek = findViewById(R.id.seekVoiceCritical);
+        voiceVeryLowSeek = findViewById(R.id.seekVoiceVeryLow);
+        voiceLowValueText = findViewById(R.id.tvVoiceLowValue);
+        voiceCriticalValueText = findViewById(R.id.tvVoiceCriticalValue);
+        voiceVeryLowValueText = findViewById(R.id.tvVoiceVeryLowValue);
 
         setupCharacterSpinner();
         setupVisualStyleSpinner();
-        
+
         // Listener do Spinner de Estilo Visual
         spinnerVisualStyle.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -146,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
         });
-        
+
         setupThemeToggle();
         setupControls();
         setupAnimations();
@@ -165,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
         // ============================================================
         btnMonitor.setOnClickListener(v -> {
             boolean isRunning = isServiceRunning(BatteryService.class);
-            
+
             if (isRunning) {
                 // PARA O MONITOR
                 preferences.edit().putBoolean(KEY_SERVICE_ENABLED, false).apply();
@@ -310,16 +318,26 @@ public class MainActivity extends AppCompatActivity {
     private void setupControls() {
         thresholdSeek.setMax(25);
         intervalSeek.setMax(11);
+        voiceLowSeek.setMax(80);
+        voiceCriticalSeek.setMax(80);
+        voiceVeryLowSeek.setMax(80);
 
         SeekBar.OnSeekBarChangeListener seekListener = new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar s, int p, boolean fromUser) {
-                if (fromUser) { checkChanges(); updateTexts(); }
+                if (fromUser) {
+                    checkChanges();
+                    clampVoiceThresholds(s);
+                    updateTexts();
+                }
             }
             @Override public void onStartTrackingTouch(SeekBar s) {}
             @Override public void onStopTrackingTouch(SeekBar s) {}
         };
         thresholdSeek.setOnSeekBarChangeListener(seekListener);
         intervalSeek.setOnSeekBarChangeListener(seekListener);
+        voiceLowSeek.setOnSeekBarChangeListener(seekListener);
+        voiceCriticalSeek.setOnSeekBarChangeListener(seekListener);
+        voiceVeryLowSeek.setOnSeekBarChangeListener(seekListener);
 
         characterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
@@ -357,6 +375,30 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "🎭 Voz do personagem testada!", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void clampVoiceThresholds(SeekBar changedSeek) {
+        int low = voiceLowSeek.getProgress();
+        int critical = voiceCriticalSeek.getProgress();
+        int veryLow = voiceVeryLowSeek.getProgress();
+
+        if (changedSeek == voiceLowSeek) {
+            if (critical > low) {
+                voiceCriticalSeek.setProgress(low);
+            }
+            if (veryLow > voiceCriticalSeek.getProgress()) {
+                voiceVeryLowSeek.setProgress(voiceCriticalSeek.getProgress());
+            }
+        } else if (changedSeek == voiceCriticalSeek) {
+            if (critical > low) {
+                voiceCriticalSeek.setProgress(low);
+            }
+            if (veryLow > critical) {
+                voiceVeryLowSeek.setProgress(critical);
+            }
+        } else if (changedSeek == voiceVeryLowSeek && veryLow > critical) {
+            voiceVeryLowSeek.setProgress(critical);
+        }
     }
 
     private void setupAnimations() {
@@ -442,7 +484,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void playCharacterVoiceSample() {
         stopCurrentAudio();
-        
+
         int pos = characterSpinner.getSelectedItemPosition();
         if (pos < 0 || pos >= characterKeys.length) return;
 
@@ -523,6 +565,9 @@ public class MainActivity extends AppCompatActivity {
     private void updateTexts() {
         thresholdValueText.setText(getThresholdFromProgress(thresholdSeek.getProgress()) + "%");
         intervalValueText.setText(getIntervalFromProgress(intervalSeek.getProgress()) + " segundos");
+        voiceLowValueText.setText(voiceLowSeek.getProgress() + "%");
+        voiceCriticalValueText.setText(voiceCriticalSeek.getProgress() + "%");
+        voiceVeryLowValueText.setText(voiceVeryLowSeek.getProgress() + "%");
     }
 
     private void checkChanges() {
@@ -536,9 +581,15 @@ public class MainActivity extends AppCompatActivity {
         int threshold = preferences.getInt(BatteryService.KEY_THRESHOLD, BatteryService.DEFAULT_THRESHOLD);
         int intervalSeconds = preferences.getInt(BatteryService.KEY_BEEP_INTERVAL_SECONDS, BatteryService.DEFAULT_BEEP_INTERVAL_SECONDS);
         String savedChar = preferences.getString(BatteryService.KEY_CHARACTER_VOICE, "none");
+        int voiceLow = preferences.getInt(BatteryService.KEY_VOICE_LOW_THRESHOLD, BatteryService.DEFAULT_VOICE_LOW_THRESHOLD);
+        int voiceCritical = preferences.getInt(BatteryService.KEY_VOICE_CRITICAL_THRESHOLD, BatteryService.DEFAULT_VOICE_CRITICAL_THRESHOLD);
+        int voiceVeryLow = preferences.getInt(BatteryService.KEY_VOICE_VERYLOW_THRESHOLD, BatteryService.DEFAULT_VOICE_VERYLOW_THRESHOLD);
 
         thresholdSeek.setProgress(Math.max(0, threshold - 5));
         intervalSeek.setProgress(Math.max(0, (intervalSeconds / 5) - 1));
+        voiceLowSeek.setProgress(Math.min(80, voiceLow));
+        voiceCriticalSeek.setProgress(Math.min(80, voiceCritical));
+        voiceVeryLowSeek.setProgress(Math.min(80, voiceVeryLow));
 
         for (int i = 0; i < characterKeys.length; i++) {
             if (characterKeys[i].equals(savedChar)) {
@@ -566,11 +617,17 @@ public class MainActivity extends AppCompatActivity {
         int threshold = getThresholdFromProgress(thresholdSeek.getProgress());
         int intervalSeconds = getIntervalFromProgress(intervalSeek.getProgress());
         String selectedChar = characterKeys[characterSpinner.getSelectedItemPosition()];
+        int voiceLow = voiceLowSeek.getProgress();
+        int voiceCritical = Math.min(voiceCriticalSeek.getProgress(), voiceLow);
+        int voiceVeryLow = Math.min(voiceVeryLowSeek.getProgress(), voiceCritical);
 
         preferences.edit()
                 .putInt(BatteryService.KEY_THRESHOLD, threshold)
                 .putInt(BatteryService.KEY_BEEP_INTERVAL_SECONDS, intervalSeconds)
                 .putString(BatteryService.KEY_CHARACTER_VOICE, selectedChar)
+                .putInt(BatteryService.KEY_VOICE_LOW_THRESHOLD, voiceLow)
+                .putInt(BatteryService.KEY_VOICE_CRITICAL_THRESHOLD, voiceCritical)
+                .putInt(BatteryService.KEY_VOICE_VERYLOW_THRESHOLD, voiceVeryLow)
                 .putBoolean(BatteryService.KEY_BEEP_ENABLED, switchBeep.isChecked())
                 .putBoolean(BatteryService.KEY_TTS_ENABLED, switchTts.isChecked())
                 .putBoolean(BatteryService.KEY_CHARACTER_VOICE_ENABLED, switchCharacterVoice.isChecked())
@@ -665,10 +722,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         updateBatteryReadout();
-        
+
         boolean isRunning = isServiceRunning(BatteryService.class);
         updateMonitorButton(isRunning);
-        
+
         if (isRunning) {
             statusText.setText("Monitoramento: ATIVO");
             statusText.setTextColor(0xFF4ADE80);

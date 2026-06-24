@@ -42,10 +42,16 @@ public class BatteryService extends Service {
     public static final String KEY_TTS_ENABLED = "tts_enabled";        // Ligar/desligar TextToSpeech
     public static final String KEY_CHARACTER_VOICE_ENABLED = "character_voice_enabled"; // Ligar/desligar vozes pré-gravadas
     public static final String KEY_CHARACTER_VOICE = "character_voice"; // Qual personagem ("none", "default", "male", etc.)
+    public static final String KEY_VOICE_LOW_THRESHOLD = "voice_low_threshold";
+    public static final String KEY_VOICE_CRITICAL_THRESHOLD = "voice_critical_threshold";
+    public static final String KEY_VOICE_VERYLOW_THRESHOLD = "voice_verylow_threshold";
     public static final String KEY_VISUAL_STYLE = "visual_style";      // "normal" ou "mascot"
 
     public static final int DEFAULT_THRESHOLD = 10;
     public static final int DEFAULT_BEEP_INTERVAL_SECONDS = 15;
+    public static final int DEFAULT_VOICE_LOW_THRESHOLD = 10;
+    public static final int DEFAULT_VOICE_CRITICAL_THRESHOLD = 5;
+    public static final int DEFAULT_VOICE_VERYLOW_THRESHOLD = 2;
 
     private Handler handler;
     private Runnable beepRunnable;
@@ -192,7 +198,7 @@ public class BatteryService extends Service {
     private ToneGenerator createToneGenerator() {
         int[] streams = {AudioManager.STREAM_ALARM, AudioManager.STREAM_NOTIFICATION, AudioManager.STREAM_MUSIC};
         for (int stream : streams) {
-            try { 
+            try {
                 ToneGenerator tg = new ToneGenerator(stream, 100);
                 if (tg != null) return tg;
             } catch (Exception ignored) {}
@@ -320,12 +326,12 @@ public class BatteryService extends Service {
             String statusText = charging ? "🔌 Carregando" : "📱 Descarregando";
             String text = "Bateria " + currentLevel + "% • " + statusText;
             String title = alerting ? "⚠️ ALERTA ATIVO" : "✅ Monitorando";
-            
+
             // Adicionar informações extras
             if (isMuted()) {
                 text += " 🔇";
             }
-            
+
             nm.notify(NOTIF_ID, buildNotification(title, text));
         }
     }
@@ -378,35 +384,35 @@ public class BatteryService extends Service {
 
     @Override
     public void onDestroy() {
-        try { 
-            unregisterReceiver(batteryReceiver); 
+        try {
+            unregisterReceiver(batteryReceiver);
         } catch (Exception ignored) { }
-        
+
         if (handler != null) {
             handler.removeCallbacks(beepRunnable);
         }
-        
-        if (toneGenerator != null) { 
-            toneGenerator.release(); 
-            toneGenerator = null; 
+
+        if (toneGenerator != null) {
+            toneGenerator.release();
+            toneGenerator = null;
         }
-        
+
         if (tts != null) {
             tts.stop();
             tts.shutdown();
             tts = null;
         }
-        
+
         if (wakeLock != null && wakeLock.isHeld()) {
             wakeLock.release();
         }
-        
+
         showToast("Serviço de monitoramento encerrado");
         super.onDestroy();
     }
 
     @Override
-    public IBinder onBind(Intent intent) { 
-        return null; 
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 }

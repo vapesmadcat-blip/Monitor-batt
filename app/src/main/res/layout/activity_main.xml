@@ -276,6 +276,55 @@
             android:popupBackground="@color/spinner_dropdown_background"
             android:layout_marginBottom="24dp"/>
 
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Alertas de voz:" android:textColor="@color/text_secondary"
+            android:layout_marginBottom="6dp"/>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginBottom="12dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Voz baixa:"
+                android:textColor="@color/text_primary"/>
+            <TextView android:id="@+id/tvVoiceLowValue"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="10%" android:textColor="#4ADE80" android:textStyle="bold"/>
+        </LinearLayout>
+
+        <SeekBar android:id="@+id/seekVoiceLow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"/>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginBottom="12dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Voz crítica:"
+                android:textColor="@color/text_primary"/>
+            <TextView android:id="@+id/tvVoiceCriticalValue"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="5%" android:textColor="#F59E0B" android:textStyle="bold"/>
+        </LinearLayout>
+
+        <SeekBar android:id="@+id/seekVoiceCritical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"/>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginBottom="12dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Voz quase acabando:"
+                android:textColor="@color/text_primary"/>
+            <TextView android:id="@+id/tvVoiceVeryLowValue"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="2%" android:textColor="#EF4444" android:textStyle="bold"/>
+        </LinearLayout>
+
+        <SeekBar android:id="@+id/seekVoiceVeryLow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"/>
+
         <!-- ============================================================ -->
         <!-- BOTÕES DE TESTE (Bip, TTS, Voz)                               -->
         <!-- ============================================================ -->
