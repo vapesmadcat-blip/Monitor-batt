@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="screen_background">#FF121212</color>
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#FFAAAAAA</color>
+    <color name="spinner_background">#FF1F1F1F</color>
+    <color name="spinner_dropdown_background">#FF1F1F1F</color>
+    <color name="spinner_text">#FFFFFFFF</color>
+    <color name="button_secondary_background">#FF374151</color>
+    <color name="button_secondary_text">#FFFFFFFF</color>
+</resources>
