@@ -5,7 +5,7 @@
     android:ellipsize="end"
     android:gravity="center_vertical"
     android:maxLines="1"
-    android:minHeight="?android:attr/listPreferredItemHeightSmall"
+    android:minHeight="?android:attr/listPreferredItemHeight"
     android:paddingStart="12dp"
     android:paddingEnd="12dp"
     android:textColor="@color/spinner_text"

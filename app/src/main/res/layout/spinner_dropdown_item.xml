@@ -5,7 +5,7 @@
     android:background="@color/spinner_dropdown_background"
     android:ellipsize="end"
     android:maxLines="1"
-    android:minHeight="?android:attr/listPreferredItemHeightSmall"
+    android:minHeight="?android:attr/listPreferredItemHeight"
     android:padding="12dp"
     android:textColor="@color/spinner_text"
     android:textSize="16sp" />
