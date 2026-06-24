@@ -325,7 +325,7 @@ public class BatteryService extends Service {
     }
 
     private boolean isCriticalOrVeryLowVoiceLevel(int level) {
-        return level <= getVoiceVeryLowThreshold() || level <= getVoiceCriticalThreshold();
+        return level <= Math.max(getVoiceVeryLowThreshold(), getVoiceCriticalThreshold());
     }
 
     private long getCurrentIntervalMs() {
