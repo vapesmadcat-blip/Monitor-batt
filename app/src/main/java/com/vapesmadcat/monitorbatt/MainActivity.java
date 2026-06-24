@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
@@ -30,13 +31,15 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import java.util.Locale;
 
@@ -48,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvBigPercentage;
     private SeekBar thresholdSeek, intervalSeek;
     private Spinner characterSpinner, spinnerVisualStyle;
-    private Switch switchBeep, switchTts, switchCharacterVoice;
+    private SwitchMaterial switchThemeMode, switchBeep, switchTts, switchCharacterVoice;
     private Button muteBtn, saveBtn, btnMonitor, btnSobre;
     private Button btnTestBeep, btnTestTTS, btnTestVoice;
     private ImageView ivMascot;
@@ -66,7 +69,9 @@ public class MainActivity extends AppCompatActivity {
     private TextToSpeech textToSpeech;
     private boolean ttsInitialized = false;
 
+    private static final String PREFS_NAME = "monitor_batt_prefs";
     public static final String KEY_SERVICE_ENABLED = "service_enabled";
+    public static final String KEY_DARK_MODE = "dark_mode_enabled";
 
     private final BroadcastReceiver bipReceiver = new BroadcastReceiver() {
         @Override
@@ -96,9 +101,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        applyNightMode(getStoredDarkModeEnabled(preferences));
         setContentView(R.layout.activity_main);
-
-        preferences = getSharedPreferences(BatteryService.PREFS_NAME, MODE_PRIVATE);
 
         batteryFill = findViewById(R.id.batteryFill);
         batteryText = findViewById(R.id.tvLevel);
@@ -118,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
         btnTestTTS = findViewById(R.id.btnTestTTS);
         btnTestVoice = findViewById(R.id.btnTestVoice);
 
+        switchThemeMode = findViewById(R.id.switchThemeMode);
         switchBeep = findViewById(R.id.switchBeep);
         switchTts = findViewById(R.id.switchTts);
         switchCharacterVoice = findViewById(R.id.switchCharacterVoice);
@@ -141,6 +147,7 @@ public class MainActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {}
         });
         
+        setupThemeToggle();
         setupControls();
         setupAnimations();
         initTextToSpeech();
@@ -252,11 +259,52 @@ public class MainActivity extends AppCompatActivity {
         characterSpinner.setAdapter(adapter);
     }
 
+    private void setupThemeToggle() {
+        switchThemeMode.setChecked(getStoredDarkModeEnabled(preferences));
+        switchThemeMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (!preferences.contains(KEY_DARK_MODE)
+                    || preferences.getBoolean(KEY_DARK_MODE, !isChecked) != isChecked) {
+                preferences.edit().putBoolean(KEY_DARK_MODE, isChecked).apply();
+            }
+            if (applyNightMode(isChecked)) {
+                recreate();
+            }
+        });
+    }
+
     private void setupVisualStyleSpinner() {
         String[] options = {"Pilha Normal", "Mascote"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item, options);
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
         spinnerVisualStyle.setAdapter(adapter);
+    }
+
+    private boolean getStoredDarkModeEnabled(SharedPreferences sharedPreferences) {
+        if (sharedPreferences.contains(KEY_DARK_MODE)) {
+            return sharedPreferences.getBoolean(KEY_DARK_MODE, false);
+        }
+
+        int defaultNightMode = AppCompatDelegate.getDefaultNightMode();
+        if (defaultNightMode == AppCompatDelegate.MODE_NIGHT_YES) {
+            return true;
+        }
+        if (defaultNightMode == AppCompatDelegate.MODE_NIGHT_NO) {
+            return false;
+        }
+
+        int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        return currentNightMode == Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    private boolean applyNightMode(boolean darkModeEnabled) {
+        int selectedMode = darkModeEnabled
+                ? AppCompatDelegate.MODE_NIGHT_YES
+                : AppCompatDelegate.MODE_NIGHT_NO;
+        if (AppCompatDelegate.getDefaultNightMode() == selectedMode) {
+            return false;
+        }
+        AppCompatDelegate.setDefaultNightMode(selectedMode);
+        return true;
     }
 
     private void setupControls() {
@@ -453,7 +501,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void triggerVisualBip() {
         bipIndicator.setTextColor(Color.RED);
-        new Handler(Looper.getMainLooper()).postDelayed(() -> bipIndicator.setTextColor(Color.WHITE), 1000);
+        new Handler(Looper.getMainLooper()).postDelayed(
+                () -> bipIndicator.setTextColor(ContextCompat.getColor(this, R.color.text_primary)),
+                1000
+        );
     }
 
     // ============================================================
