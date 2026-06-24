@@ -15,17 +15,33 @@ Aplicativo Android (Java) que monitora a bateria em background e emite um **bip 
 
 > É um APK **debug**, assinado com a chave de debug do Android. Instala normalmente, mas não serve pra publicação na Play Store.
 
-## Release para Play Store (AAB assinado)
+## Release & Play Store
 
-1. Crie um arquivo `keystore.properties` na raiz do projeto (não versionar) com:
-   - `storeFile=/caminho/para/sua-release-keystore.jks`
-   - `storePassword=...`
-   - `keyAlias=...`
-   - `keyPassword=...`
-2. Gere o bundle com:
-   - `./gradlew bundleRelease`
-3. O arquivo final fica em:
-   - `app/build/outputs/bundle/release/app-release.aab`
+O repositório possui workflow automático em `.github/workflows/release.yml` para gerar **AAB assinado** e enviar para a Play Store (track `internal`) ao publicar uma tag `v*.*.*` (ex: `v1.2.1`) ou via `workflow_dispatch`.
+
+1. Gere sua keystore de release (uma vez):
+   ```bash
+   keytool -genkey -v -keystore monitor-batt.jks \
+     -keyalg RSA -keysize 2048 -validity 10000 \
+     -alias monitor-batt
+   ```
+2. Converta a keystore para base64 (uma linha) e cadastre os secrets em **Settings → Secrets and variables → Actions**:
+   ```bash
+   base64 -i monitor-batt.jks | tr -d '\n'
+   ```
+   Secrets obrigatórios:
+   - `RELEASE_STORE_FILE` — `.jks` em base64
+   - `RELEASE_STORE_PASSWORD` — senha da keystore
+   - `RELEASE_KEY_ALIAS` — alias da chave
+   - `RELEASE_KEY_PASSWORD` — senha da chave
+   - `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` — JSON da service account do Google Play (texto puro)
+3. No Google Play Console, crie uma **service account** com acesso de release e baixe o arquivo JSON da chave para usar no secret `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`.
+4. Dispare release automatizada criando e enviando uma tag de versão:
+   ```bash
+   git tag v1.2.1
+   git push origin v1.2.1
+   ```
+5. A primeira versão do app precisa ser enviada manualmente no Play Console para criar o listing. Depois disso, os próximos envios podem ser automatizados pelo workflow.
 
 ## Build local (Android Studio)
 
