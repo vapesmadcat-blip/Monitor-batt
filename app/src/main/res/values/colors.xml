@@ -1,19 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Cores fixas -->
-    <color name="white">#FFFFFFFF</color>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
     <color name="primary">#FF3F9EF0</color>
     <color name="primary_dark">#FF0B1A2F</color>
     <color name="accent_blue">#FF3F9EF0</color>
-
-    <!-- Light Mode -->
     <color name="background_light">#FFF8FAFC</color>
     <color name="surface_light">#FFFFFFFF</color>
     <color name="text_primary_light">#FF1E293B</color>
-
-    <!-- Dark Mode (seu visual atual) -->
     <color name="background_dark">#FF0B1A2F</color>
     <color name="surface_dark">#FF122B3F</color>
     <color name="text_primary_dark">#FFE0F0FF</color>
+
+    <!-- CORES ADICIONADAS PARA O BOTÃO MONITOR -->
+    <color name="green">#22C55E</color>
+    <color name="red">#EF4444</color>
+
+    <color name="screen_background">#FFFFFFFF</color>
+    <color name="text_primary">#FF1C1B1F</color>
+    <color name="text_secondary">#FF49454F</color>
+    <color name="spinner_background">#FFF5F5F5</color>
+    <color name="spinner_dropdown_background">#FFFFFFFF</color>
+    <color name="spinner_dropdown_pressed_background">#FFD0BCFF</color>
+    <color name="spinner_dropdown_selected_background">#FFE8DEF8</color>
+    <color name="spinner_text">#FF1C1B1F</color>
+    <color name="button_secondary_background">#FFE5E7EB</color>
+    <color name="button_secondary_text">#FF111827</color>
 </resources>

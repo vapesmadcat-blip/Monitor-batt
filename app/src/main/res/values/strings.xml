@@ -27,4 +27,7 @@
     <string name="alert_level_attention">Atenção</string>
     <string name="alert_level_critical">Crítico</string>
     <string name="battery_title">BATERIA</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_toggle_description">Alternar manualmente entre os temas Light e Dark</string>
 </resources>
