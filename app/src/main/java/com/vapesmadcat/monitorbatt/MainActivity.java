@@ -99,9 +99,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         preferences = getSharedPreferences(BatteryService.PREFS_NAME, MODE_PRIVATE);
         applyNightMode(getStoredDarkModeEnabled(preferences));
-        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         batteryFill = findViewById(R.id.batteryFill);
