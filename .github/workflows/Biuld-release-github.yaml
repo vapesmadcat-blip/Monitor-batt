@@ -1,4 +1,4 @@
-name: Build and Publish APK
+name: Build Release APK
 
 on:
   push:
@@ -7,14 +7,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -26,6 +26,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      # 🔐 Se você NÃO estiver assinando, pode apagar esse bloco inteiro
       - name: Decode keystore
         run: |
           echo "${{ secrets.RELEASE_STORE_FILE }}" | base64 --decode > "$RUNNER_TEMP/release.jks"
@@ -39,16 +40,8 @@ jobs:
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: ./gradlew assembleRelease
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
-          files: app/build/outputs/apk/release/*.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-         , name: release-apk
+          name: release-apk
           path: app/build/outputs/apk/release/*.apk
