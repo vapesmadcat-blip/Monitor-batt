@@ -29,6 +29,18 @@
                 android:orientation="vertical"
                 android:gravity="center_horizontal">
 
+                <!-- Status Explícito (Carregando/Descarregando) -->
+                <TextView
+                    android:id="@+id/tvExplicitStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="STATUS"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp"
+                    android:visibility="visible"/>
+
                 <!-- Ícone de velocidade -->
                 <ImageView
                     android:id="@+id/ivChargingSpeedIcon"
@@ -61,8 +73,8 @@
                 <ProgressBar
                     android:id="@+id/pbChargingSpeed"
                     style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="60dp"
-                    android:layout_height="6dp"
+                    android:layout_width="120dp"
+                    android:layout_height="8dp"
                     android:max="100"
                     android:progress="50"
                     android:progressDrawable="@drawable/charging_gauge"
@@ -233,8 +245,8 @@
             </LinearLayout>
 
             <ImageView android:id="@+id/ivMascot"
-                android:layout_width="220dp"
-                android:layout_height="220dp"
+                android:layout_width="320dp"
+                android:layout_height="320dp"
                 android:layout_gravity="center"
                 android:visibility="gone"
                 android:scaleType="fitCenter"
