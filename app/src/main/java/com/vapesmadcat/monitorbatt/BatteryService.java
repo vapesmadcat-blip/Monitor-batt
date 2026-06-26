@@ -58,10 +58,10 @@ public class BatteryService extends Service {
     public static final int DEFAULT_VOICE_VOLUME = 80;
 
     // ----------------------------------------------------------------
-    // Detecção de mau contato: 3 eventos plug/unplug em < 3 segundos
+    // Detecção de mau contato: 4 eventos plug/unplug em < 10 segundos
     // ----------------------------------------------------------------
-    private static final int BAD_CONTACT_EVENT_COUNT = 3;
-    private static final long BAD_CONTACT_WINDOW_MS = 3000L;
+    private static final int BAD_CONTACT_EVENT_COUNT = 4;
+    private static final long BAD_CONTACT_WINDOW_MS = 10000L;
     private final List<Long> chargerEventTimestamps = new ArrayList<>();
     private boolean badContactAlertShown = false;
 
