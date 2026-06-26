@@ -156,7 +156,7 @@
         <!-- ============================================================ -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="280dp"
+            android:layout_height="350dp"
             android:layout_marginBottom="12dp">
 
             <LinearLayout
@@ -167,8 +167,8 @@
                 android:orientation="vertical">
 
                 <FrameLayout
-                    android:layout_width="120dp"
-                    android:layout_height="220dp">
+                    android:layout_width="160dp"
+                    android:layout_height="300dp">
 
                     <View android:layout_width="match_parent" android:layout_height="match_parent"
                         android:background="@drawable/battery_shell"/>
