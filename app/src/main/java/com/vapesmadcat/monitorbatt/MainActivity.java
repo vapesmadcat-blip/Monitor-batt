@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     
     // Gauge de carregamento
     private ImageView ivChargingSpeedIcon;
-    private TextView tvChargingRate, tvChargingTimeRemaining, tvChargingSpeedLabel, tvExplicitStatus;
+    private TextView tvChargingRate, tvChargingTimeRemaining, tvChargingSpeedLabel, tvVisualIndicator;
     private ProgressBar pbChargingSpeed;
     private int lastBatteryLevel = -1;
     private long lastBatteryCheckTime = 0;
@@ -179,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
         tvChargingRate = findViewById(R.id.tvChargingRate);
         tvChargingTimeRemaining = findViewById(R.id.tvChargingTimeRemaining);
         tvChargingSpeedLabel = findViewById(R.id.tvChargingSpeedLabel);
-        tvExplicitStatus = findViewById(R.id.tvExplicitStatus);
+        tvVisualIndicator = findViewById(R.id.tvVisualIndicator);
         pbChargingSpeed = findViewById(R.id.pbChargingSpeed);
 
         setupCharacterSpinner();
@@ -901,9 +901,9 @@ public class MainActivity extends AppCompatActivity {
         pbChargingSpeed.getProgressDrawable().setTint(gaugeColor);
         ivChargingSpeedIcon.setImageResource(iconResource);
 
-        if (tvExplicitStatus != null) {
-            tvExplicitStatus.setText("CARREGANDO");
-            tvExplicitStatus.setTextColor(0xFF4ADE80); // Verde
+        if (tvVisualIndicator != null) {
+            tvVisualIndicator.setText("⚡");
+            tvVisualIndicator.setTextColor(0xFF4ADE80); // Verde
         }
     }
 
@@ -959,9 +959,9 @@ public class MainActivity extends AppCompatActivity {
         pbChargingSpeed.getProgressDrawable().setTint(gaugeColor);
         ivChargingSpeedIcon.setImageResource(iconResource);
 
-        if (tvExplicitStatus != null) {
-            tvExplicitStatus.setText("DESCARREGANDO");
-            tvExplicitStatus.setTextColor(0xFFEF4444); // Vermelho
+        if (tvVisualIndicator != null) {
+            tvVisualIndicator.setText("⬇️");
+            tvVisualIndicator.setTextColor(0xFFEF4444); // Vermelho
         }
     }
 

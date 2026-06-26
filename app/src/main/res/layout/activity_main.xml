@@ -29,17 +29,26 @@
                 android:orientation="vertical"
                 android:gravity="center_horizontal">
 
-                <!-- Status Explícito (Carregando/Descarregando) -->
+                <!-- Título fixo "STATUS" -->
                 <TextView
-                    android:id="@+id/tvExplicitStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="STATUS"
-                    android:textColor="@color/text_primary"
-                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="10sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="4dp"
-                    android:visibility="visible"/>
+                    android:layout_marginBottom="2dp"/>
+
+                <!-- Indicador Visual (Raio ⚡ ou Seta ⬇️) -->
+                <TextView
+                    android:id="@+id/tvVisualIndicator"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="--"
+                    android:textColor="@color/text_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp"/>
 
                 <!-- Ícone de velocidade -->
                 <ImageView
