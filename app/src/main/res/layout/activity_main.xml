@@ -29,7 +29,8 @@
                 android:orientation="vertical"
                 android:background="@drawable/stat_card_background"
                 android:padding="12dp"
-                android:elevation="2dp">
+                android:elevation="2dp"
+                android:clipToOutline="true">
 
                 <!-- Cabeçalho: ícone + título "STATUS" + badge de velocidade -->
                 <LinearLayout
@@ -52,14 +53,19 @@
 
                     <!-- Título fixo "STATUS" -->
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:text="STATUS"
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold"
-                        android:letterSpacing="0.08"/>
+                        android:maxLines="1"/>
+
+                    <!-- Espaçador para empurrar o badge à direita -->
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1"/>
 
                     <!-- Badge de velocidade (Lento / Normal / Rápido) -->
                     <TextView
