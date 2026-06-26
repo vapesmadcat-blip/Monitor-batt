@@ -67,9 +67,13 @@ public class MainActivity extends AppCompatActivity {
     // Gauge de carregamento
     private ImageView ivChargingSpeedIcon;
     private TextView tvChargingRate, tvChargingTimeRemaining, tvChargingSpeedLabel, tvVisualIndicator;
+    private TextView tvBatteryCurrent, tvBatteryPower, tvBatteryTemp, tvBatteryVoltage;
     private ProgressBar pbChargingSpeed;
+    private BatteryManager batteryManager;
     private int lastBatteryLevel = -1;
     private long lastBatteryCheckTime = 0;
+    private double smoothedRatePerMin = -1;
+    private Boolean wasCharging = null;
 
     private SharedPreferences preferences;
     private boolean isModified = false;
@@ -181,6 +185,11 @@ public class MainActivity extends AppCompatActivity {
         tvChargingSpeedLabel = findViewById(R.id.tvChargingSpeedLabel);
         tvVisualIndicator = findViewById(R.id.tvVisualIndicator);
         pbChargingSpeed = findViewById(R.id.pbChargingSpeed);
+        tvBatteryCurrent = findViewById(R.id.tvBatteryCurrent);
+        tvBatteryPower = findViewById(R.id.tvBatteryPower);
+        tvBatteryTemp = findViewById(R.id.tvBatteryTemp);
+        tvBatteryVoltage = findViewById(R.id.tvBatteryVoltage);
+        batteryManager = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
 
         setupCharacterSpinner();
         setupVisualStyleSpinner();
@@ -735,7 +744,7 @@ public class MainActivity extends AppCompatActivity {
         updateBatteryFill(pct);
         updateChargingUI(isCharging);
         updateBigPercentage(pct);
-        updateChargingGauge(pct, isCharging);
+        updateChargingGauge(batteryStatus, pct, isCharging);
 
         if (ivMascot != null && ivMascot.getVisibility() == View.VISIBLE) {
             updateMascotImage();
@@ -812,40 +821,123 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Atualiza o Gauge de carregamento com:
-     * - Taxa de carga (%/min)
-     * - Tempo estimado para 100%
+     * Atualiza o painel de estatísticas com:
+     * - Corrente (mA), potência (W), temperatura (°C) e tensão (V) instantâneas
+     * - Taxa de carga/descarga (%/min) e tempo estimado
      * - Ícone e cor do Gauge (Lento/Normal/Rápido)
      */
-    private void updateChargingGauge(int currentLevel, boolean isCharging) {
-        long currentTime = System.currentTimeMillis();
+    private void updateChargingGauge(Intent batteryStatus, int currentLevel, boolean isCharging) {
+        // Ao trocar entre carregando/descarregando, zera o histórico para não
+        // arrastar uma taxa antiga (que distorceria o tempo estimado).
+        if (wasCharging == null || wasCharging != isCharging) {
+            smoothedRatePerMin = -1;
+            lastBatteryLevel = -1;
+            lastBatteryCheckTime = 0;
+            wasCharging = isCharging;
+        }
 
-        // Primeira leitura: apenas registrar
-        if (lastBatteryLevel == -1) {
-            lastBatteryLevel = currentLevel;
-            lastBatteryCheckTime = currentTime;
+        // ---- Estatísticas instantâneas ----
+        int currentNowUa = readCurrentNowMicroAmps();
+        double currentMa = Math.abs(currentNowUa) / 1000.0;
+        int voltageMv = batteryStatus.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
+        double voltageV = voltageMv > 0 ? voltageMv / 1000.0 : -1;
+        int tempTenths = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Integer.MIN_VALUE);
+        double tempC = tempTenths != Integer.MIN_VALUE ? tempTenths / 10.0 : Double.NaN;
+        double powerW = (voltageV > 0 && currentMa > 0) ? voltageV * (currentMa / 1000.0) : -1;
+        updateStatTexts(currentMa, powerW, tempC, voltageV);
+
+        // ---- Taxa (%/min): corrente + capacidade (instantâneo) com fallback ----
+        double ratePerMin = computeRateFromCurrent(currentNowUa, currentLevel);
+        if (Double.isNaN(ratePerMin)) {
+            ratePerMin = computeRateFromLevelDelta(currentLevel);
+        }
+        if (Double.isNaN(ratePerMin)) {
+            // Ainda sem dados suficientes para estimar
             tvChargingRate.setText("--");
             tvChargingTimeRemaining.setText("--");
             return;
         }
 
-        // Calcular taxa
-        long timeDiffMs = currentTime - lastBatteryCheckTime;
-        if (timeDiffMs < 1000) return; // Esperar pelo menos 1 segundo
+        // Suavização (média móvel exponencial) para evitar saltos bruscos
+        double absRate = Math.abs(ratePerMin);
+        if (smoothedRatePerMin < 0) smoothedRatePerMin = absRate;
+        else smoothedRatePerMin = smoothedRatePerMin * 0.7 + absRate * 0.3;
 
-        int levelDiff = currentLevel - lastBatteryLevel;
-        double timeDiffMinutes = timeDiffMs / 60000.0;
-        double ratePerMin = levelDiff / timeDiffMinutes;
-
-        // Atualizar última leitura
-        lastBatteryLevel = currentLevel;
-        lastBatteryCheckTime = currentTime;
-
-        // Determinar se está carregando ou descarregando
         if (isCharging) {
-            updateChargingIndicators(currentLevel, ratePerMin);
+            updateChargingIndicators(currentLevel, smoothedRatePerMin);
         } else {
-            updateDischargingIndicators(currentLevel, ratePerMin);
+            updateDischargingIndicators(currentLevel, smoothedRatePerMin);
+        }
+    }
+
+    /** Corrente instantânea da bateria em microampères (0 se não suportado). */
+    private int readCurrentNowMicroAmps() {
+        if (batteryManager == null) return 0;
+        int value = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
+        return value == Integer.MIN_VALUE ? 0 : value;
+    }
+
+    /**
+     * Calcula a taxa (%/min) a partir da corrente instantânea e da capacidade
+     * total estimada da bateria. Retorna NaN quando o dispositivo não expõe
+     * esses dados.
+     */
+    private double computeRateFromCurrent(int currentNowUa, int level) {
+        if (batteryManager == null || currentNowUa == 0 || level <= 0) return Double.NaN;
+        long chargeCounterUah = batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
+        if (chargeCounterUah <= 0) return Double.NaN;
+        double fullCapacityUah = chargeCounterUah / (level / 100.0);
+        if (fullCapacityUah <= 0) return Double.NaN;
+        double rate = (Math.abs((double) currentNowUa) / fullCapacityUah) * 100.0 / 60.0;
+        if (rate <= 0 || Double.isInfinite(rate)) return Double.NaN;
+        return rate;
+    }
+
+    /**
+     * Fallback: estima a taxa pela variação do nível (%) ao longo do tempo.
+     * Acumula o tempo até que o nível realmente mude, evitando taxas falsas de
+     * 0%/min quando duas leituras consecutivas têm o mesmo percentual.
+     */
+    private double computeRateFromLevelDelta(int currentLevel) {
+        long now = System.currentTimeMillis();
+        if (lastBatteryLevel == -1) {
+            lastBatteryLevel = currentLevel;
+            lastBatteryCheckTime = now;
+            return Double.NaN;
+        }
+        int levelDiff = currentLevel - lastBatteryLevel;
+        if (levelDiff == 0) return Double.NaN;
+        long timeDiffMs = now - lastBatteryCheckTime;
+        if (timeDiffMs < 1000) return Double.NaN;
+        double rate = levelDiff / (timeDiffMs / 60000.0);
+        lastBatteryLevel = currentLevel;
+        lastBatteryCheckTime = now;
+        return rate;
+    }
+
+    private void updateStatTexts(double currentMa, double powerW, double tempC, double voltageV) {
+        if (tvBatteryCurrent != null) {
+            tvBatteryCurrent.setText(currentMa > 0
+                    ? String.format(Locale.getDefault(), "%.0f mA", currentMa) : "--");
+        }
+        if (tvBatteryPower != null) {
+            tvBatteryPower.setText(powerW > 0
+                    ? String.format(Locale.getDefault(), "%.1f W", powerW) : "--");
+        }
+        if (tvBatteryTemp != null) {
+            if (!Double.isNaN(tempC)) {
+                tvBatteryTemp.setText(String.format(Locale.getDefault(), "%.1f°C", tempC));
+                tvBatteryTemp.setTextColor(tempC >= 40 ? 0xFFEF4444
+                        : tempC >= 38 ? 0xFFF59E0B
+                        : ContextCompat.getColor(this, R.color.text_primary));
+            } else {
+                tvBatteryTemp.setText("--");
+                tvBatteryTemp.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
+            }
+        }
+        if (tvBatteryVoltage != null) {
+            tvBatteryVoltage.setText(voltageV > 0
+                    ? String.format(Locale.getDefault(), "%.2f V", voltageV) : "--");
         }
     }
 
