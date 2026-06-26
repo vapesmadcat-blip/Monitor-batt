@@ -73,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
     private int lastBatteryLevel = -1;
     private long lastBatteryCheckTime = 0;
     private double smoothedRatePerMin = -1;
+    private Boolean wasCharging = null;
 
     private SharedPreferences preferences;
     private boolean isModified = false;
@@ -826,6 +827,15 @@ public class MainActivity extends AppCompatActivity {
      * - Ícone e cor do Gauge (Lento/Normal/Rápido)
      */
     private void updateChargingGauge(Intent batteryStatus, int currentLevel, boolean isCharging) {
+        // Ao trocar entre carregando/descarregando, zera o histórico para não
+        // arrastar uma taxa antiga (que distorceria o tempo estimado).
+        if (wasCharging == null || wasCharging != isCharging) {
+            smoothedRatePerMin = -1;
+            lastBatteryLevel = -1;
+            lastBatteryCheckTime = 0;
+            wasCharging = isCharging;
+        }
+
         // ---- Estatísticas instantâneas ----
         int currentNowUa = readCurrentNowMicroAmps();
         double currentMa = Math.abs(currentNowUa) / 1000.0;
