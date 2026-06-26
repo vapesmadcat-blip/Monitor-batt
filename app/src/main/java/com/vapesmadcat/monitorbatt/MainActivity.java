@@ -817,45 +817,41 @@ public class MainActivity extends AppCompatActivity {
      * - Ícone e cor do Gauge (Lento/Normal/Rápido)
      */
     private void updateChargingGauge(int currentLevel, boolean isCharging) {
-        if (!isCharging) {
-            // Se não está carregando, limpar o gauge
-            tvChargingRate.setText("--");
-            tvChargingTimeRemaining.setText("--");
-            tvChargingSpeedLabel.setText("Descarregando");
-            tvChargingSpeedLabel.setTextColor(0xFF6B7280);
-            pbChargingSpeed.setProgress(0);
-            ivChargingSpeedIcon.setImageResource(android.R.drawable.ic_media_pause);
-            lastBatteryLevel = -1;
-            lastBatteryCheckTime = 0;
-            return;
-        }
-
         long currentTime = System.currentTimeMillis();
 
         // Primeira leitura: apenas registrar
         if (lastBatteryLevel == -1) {
             lastBatteryLevel = currentLevel;
             lastBatteryCheckTime = currentTime;
-            tvChargingRate.setText("Calculando...");
-            tvChargingTimeRemaining.setText("Calculando...");
+            tvChargingRate.setText("--");
+            tvChargingTimeRemaining.setText("--");
             return;
         }
 
-        // Calcular taxa de carregamento
+        // Calcular taxa
         long timeDiffMs = currentTime - lastBatteryCheckTime;
         if (timeDiffMs < 1000) return; // Esperar pelo menos 1 segundo
 
         int levelDiff = currentLevel - lastBatteryLevel;
         double timeDiffMinutes = timeDiffMs / 60000.0;
-        double chargeRatePerMin = levelDiff / timeDiffMinutes;
+        double ratePerMin = levelDiff / timeDiffMinutes;
 
         // Atualizar última leitura
         lastBatteryLevel = currentLevel;
         lastBatteryCheckTime = currentTime;
 
+        // Determinar se está carregando ou descarregando
+        if (isCharging) {
+            updateChargingIndicators(currentLevel, ratePerMin);
+        } else {
+            updateDischargingIndicators(currentLevel, ratePerMin);
+        }
+    }
+
+    private void updateChargingIndicators(int currentLevel, double chargeRatePerMin) {
         // Calcular tempo estimado para 100%
         int remainingPercent = 100 - currentLevel;
-        double estimatedMinutes = remainingPercent / Math.max(chargeRatePerMin, 0.1);
+        double estimatedMinutes = remainingPercent / Math.max(Math.abs(chargeRatePerMin), 0.1);
 
         // Formatar taxa de carregamento
         String rateText = String.format(Locale.getDefault(), "%.2f%%/min", chargeRatePerMin);
@@ -872,10 +868,10 @@ public class MainActivity extends AppCompatActivity {
         }
         tvChargingTimeRemaining.setText(timeText);
 
-        // Determinar velocidade e atualizar Gauge
-        // Limites: < 0.3%/min = Lento (Vermelho/Tartaruga)
-        //          0.3 - 0.7%/min = Normal (Amarelo)
-        //          > 0.7%/min = Rápido (Verde/Raio)
+        // Determinar velocidade de carga
+        // < 0.3%/min = Lento (Vermelho/Tartaruga)
+        // 0.3 - 0.7%/min = Normal (Verde)
+        // > 0.7%/min = Rápido (Amarelo/Raio)
         String speedLabel;
         int gaugeColor;
         int iconResource;
@@ -888,12 +884,64 @@ public class MainActivity extends AppCompatActivity {
             gaugeProgress = 25;
         } else if (chargeRatePerMin < 0.7) {
             speedLabel = "Normal";
-            gaugeColor = 0xFFF59E0B; // Amarelo
+            gaugeColor = 0xFF22C55E; // Verde
             iconResource = android.R.drawable.ic_media_play; // Ícone neutro
             gaugeProgress = 50;
         } else {
             speedLabel = "Rápido";
+            gaugeColor = 0xFFFCD34D; // Amarelo
+            iconResource = R.drawable.ic_charging_fast; // Raio
+            gaugeProgress = 100;
+        }
+
+        tvChargingSpeedLabel.setText(speedLabel);
+        tvChargingSpeedLabel.setTextColor(gaugeColor);
+        pbChargingSpeed.setProgress(gaugeProgress);
+        ivChargingSpeedIcon.setImageResource(iconResource);
+    }
+
+    private void updateDischargingIndicators(int currentLevel, double dischargeRatePerMin) {
+        // Calcular tempo estimado para 0%
+        double estimatedMinutes = currentLevel / Math.max(Math.abs(dischargeRatePerMin), 0.1);
+
+        // Formatar taxa de descarregamento
+        String rateText = String.format(Locale.getDefault(), "%.2f%%/min", Math.abs(dischargeRatePerMin));
+        tvChargingRate.setText(rateText);
+
+        // Formatar tempo estimado
+        String timeText;
+        if (estimatedMinutes > 60) {
+            int hours = (int) (estimatedMinutes / 60);
+            int minutes = (int) (estimatedMinutes % 60);
+            timeText = String.format(Locale.getDefault(), "~%dh %dmin", hours, minutes);
+        } else {
+            timeText = String.format(Locale.getDefault(), "~%dmin", (int) estimatedMinutes);
+        }
+        tvChargingTimeRemaining.setText(timeText);
+
+        // Determinar velocidade de descarregamento
+        // < 0.3%/min = Lento (Verde/Tartaruga)
+        // 0.3 - 0.7%/min = Normal (Branco)
+        // > 0.7%/min = Rápido (Vermelho/Raio)
+        String speedLabel;
+        int gaugeColor;
+        int iconResource;
+        int gaugeProgress;
+        double absRate = Math.abs(dischargeRatePerMin);
+
+        if (absRate < 0.3) {
+            speedLabel = "Lento";
             gaugeColor = 0xFF22C55E; // Verde
+            iconResource = R.drawable.ic_charging_slow; // Tartaruga
+            gaugeProgress = 25;
+        } else if (absRate < 0.7) {
+            speedLabel = "Normal";
+            gaugeColor = 0xFFFFFFFF; // Branco
+            iconResource = android.R.drawable.ic_media_play; // Ícone neutro
+            gaugeProgress = 50;
+        } else {
+            speedLabel = "Rápido";
+            gaugeColor = 0xFFEF4444; // Vermelho
             iconResource = R.drawable.ic_charging_fast; // Raio
             gaugeProgress = 100;
         }

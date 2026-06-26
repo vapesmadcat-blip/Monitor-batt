@@ -168,8 +168,8 @@
                 </LinearLayout>
 
                 <ImageView android:id="@+id/ivMascot"
-                    android:layout_width="320dp"
-                    android:layout_height="320dp"
+                    android:layout_width="220dp"
+                    android:layout_height="220dp"
                     android:layout_gravity="center"
                     android:visibility="gone"
                     android:scaleType="fitCenter"
