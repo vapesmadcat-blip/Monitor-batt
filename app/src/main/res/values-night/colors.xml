@@ -10,6 +10,10 @@
     <color name="spinner_text">#FFFFFFFF</color>
     <color name="button_secondary_background">#FF374151</color>
     <color name="button_secondary_text">#FFFFFFFF</color>
-    <color name="stats_card_background">#FF15212F</color>
-    <color name="stats_card_stroke">#FF2A3A4A</color>
+
+    <!-- Card de estatística (STATUS / gauge de carregamento) -->
+    <color name="stat_card_background">#FF1B2430</color>
+    <color name="stat_card_stroke">#FF2C3A4A</color>
+    <color name="stat_card_track">#FF2C3A4A</color>
+    <color name="stat_card_badge_background">#FF2C3A4A</color>
 </resources>
