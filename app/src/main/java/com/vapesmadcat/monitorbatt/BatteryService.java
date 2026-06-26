@@ -26,6 +26,8 @@ import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class BatteryService extends Service {
@@ -34,24 +36,34 @@ public class BatteryService extends Service {
     public static final int NOTIF_ID = 1;
     public static final String PREFS_NAME = "monitor_batt_prefs";
 
-    // Chaves de configuração (granulares)
+    // Chaves de configuração
     public static final String KEY_THRESHOLD = "threshold";
     public static final String KEY_BEEP_INTERVAL_SECONDS = "beep_interval_seconds";
-    public static final String KEY_MUTED = "muted";                    // Master mute (desliga tudo)
-    public static final String KEY_BEEP_ENABLED = "beep_enabled";      // Ligar/desligar só o bip
-    public static final String KEY_TTS_ENABLED = "tts_enabled";        // Ligar/desligar TextToSpeech
-    public static final String KEY_CHARACTER_VOICE_ENABLED = "character_voice_enabled"; // Ligar/desligar vozes pré-gravadas
-    public static final String KEY_CHARACTER_VOICE = "character_voice"; // Qual personagem ("none", "default", "male", etc.)
+    public static final String KEY_MUTED = "muted";
+    public static final String KEY_BEEP_ENABLED = "beep_enabled";
+    public static final String KEY_TTS_ENABLED = "tts_enabled";
+    public static final String KEY_CHARACTER_VOICE_ENABLED = "character_voice_enabled";
+    public static final String KEY_CHARACTER_VOICE = "character_voice";
     public static final String KEY_VOICE_LOW_THRESHOLD = "voice_low_threshold";
     public static final String KEY_VOICE_CRITICAL_THRESHOLD = "voice_critical_threshold";
     public static final String KEY_VOICE_VERYLOW_THRESHOLD = "voice_verylow_threshold";
-    public static final String KEY_VISUAL_STYLE = "visual_style";      // "normal" ou "mascot"
+    public static final String KEY_VISUAL_STYLE = "visual_style";
+    public static final String KEY_VOICE_VOLUME = "voice_volume"; // 0-100
 
     public static final int DEFAULT_THRESHOLD = 10;
     public static final int DEFAULT_BEEP_INTERVAL_SECONDS = 15;
     public static final int DEFAULT_VOICE_LOW_THRESHOLD = 10;
     public static final int DEFAULT_VOICE_CRITICAL_THRESHOLD = 5;
     public static final int DEFAULT_VOICE_VERYLOW_THRESHOLD = 2;
+    public static final int DEFAULT_VOICE_VOLUME = 80;
+
+    // ----------------------------------------------------------------
+    // Detecção de mau contato: 3 eventos plug/unplug em < 3 segundos
+    // ----------------------------------------------------------------
+    private static final int BAD_CONTACT_EVENT_COUNT = 3;
+    private static final long BAD_CONTACT_WINDOW_MS = 3000L;
+    private final List<Long> chargerEventTimestamps = new ArrayList<>();
+    private boolean badContactAlertShown = false;
 
     private Handler handler;
     private Runnable beepRunnable;
@@ -79,8 +91,9 @@ public class BatteryService extends Service {
             int newLevel = (level >= 0 && scale > 0) ? (int) ((level * 100f) / scale) : -1;
             boolean newCharging = plugged != 0;
 
-            if (newCharging && !charging) {
-                onChargerConnected();
+            // Detectar qualquer mudança de estado do carregador (plug OU unplug)
+            if (newCharging != charging) {
+                onChargerStateChanged(newCharging);
             }
 
             if (newLevel >= 100 && !fullNotified) {
@@ -140,15 +153,61 @@ public class BatteryService extends Service {
         checkInitialBatteryStatus();
     }
 
+    // ----------------------------------------------------------------
+    // Gerenciamento de estado do carregador + detecção de mau contato
+    // ----------------------------------------------------------------
+    private void onChargerStateChanged(boolean nowCharging) {
+        long now = System.currentTimeMillis();
+
+        // Registrar timestamp deste evento
+        chargerEventTimestamps.add(now);
+
+        // Remover eventos fora da janela de 3 segundos
+        chargerEventTimestamps.removeIf(t -> (now - t) > BAD_CONTACT_WINDOW_MS);
+
+        Log.d("BatteryService", "Evento carregador: " + (nowCharging ? "CONECTADO" : "DESCONECTADO")
+                + " | eventos na janela: " + chargerEventTimestamps.size());
+
+        // Verificar se atingiu o limiar de mau contato
+        if (!badContactAlertShown && chargerEventTimestamps.size() >= BAD_CONTACT_EVENT_COUNT) {
+            badContactAlertShown = true;
+            chargerEventTimestamps.clear();
+            triggerBadContactAlert();
+            return; // Não processar como conexão/desconexão normal
+        }
+
+        // Processamento normal
+        if (nowCharging) {
+            onChargerConnected();
+        }
+        // Reset do flag após 10 segundos de estabilidade
+        handler.removeCallbacksAndMessages("bad_contact_reset");
+        handler.postDelayed(() -> badContactAlertShown = false, 10000L);
+    }
+
+    private void triggerBadContactAlert() {
+        Log.w("BatteryService", "MAU CONTATO DETECTADO!");
+
+        // Enviar broadcast para a MainActivity mostrar alerta visual
+        Intent alertIntent = new Intent("com.vapesmadcat.monitorbatt.BAD_CONTACT_DETECTED");
+        sendBroadcast(alertIntent);
+
+        // Falar via TTS (tem prioridade sobre tudo)
+        if (tts != null && !isMuted()) {
+            String msg = "Atenção! Possível problema no cabo. Detectada possibilidade de mau contato.";
+            tts.speak(msg, TextToSpeech.QUEUE_FLUSH, null, "bad_contact");
+        }
+
+        showToast("⚠️ Possível mau contato no cabo detectado!");
+    }
+
     private void onChargerConnected() {
         Log.d("BatteryService", "Carregador conectado!");
         if (isCharacterVoiceEnabled() && !isMuted()) {
             playSpecificVoice("charging");
-        }
-        if (isTtsEnabled() && !isMuted() && tts != null) {
+        } else if (isTtsEnabled() && !isMuted() && tts != null) {
             tts.speak("Carregador conectado. Monitoramento pausado.", TextToSpeech.QUEUE_FLUSH, null, "charging");
         }
-        // Mostrar toast de confirmação
         showToast("Carregador conectado - Monitoramento pausado");
     }
 
@@ -156,8 +215,7 @@ public class BatteryService extends Service {
         Log.d("BatteryService", "Bateria cheia! 100%");
         if (isCharacterVoiceEnabled() && !isMuted()) {
             playSpecificVoice("full");
-        }
-        if (isTtsEnabled() && !isMuted() && tts != null) {
+        } else if (isTtsEnabled() && !isMuted() && tts != null) {
             tts.speak("Bateria cheia! 100%. Muito bem!", TextToSpeech.QUEUE_FLUSH, null, "full");
         }
         showToast("Bateria cheia! 100%");
@@ -188,11 +246,15 @@ public class BatteryService extends Service {
     }
 
     private boolean isTtsEnabled() {
-        return prefs.getBoolean(KEY_TTS_ENABLED, true);
+        return prefs.getBoolean(KEY_TTS_ENABLED, false);
     }
 
     private boolean isCharacterVoiceEnabled() {
-        return prefs.getBoolean(KEY_CHARACTER_VOICE_ENABLED, true);
+        return prefs.getBoolean(KEY_CHARACTER_VOICE_ENABLED, false);
+    }
+
+    private int getVoiceVolume() {
+        return prefs.getInt(KEY_VOICE_VOLUME, DEFAULT_VOICE_VOLUME);
     }
 
     private ToneGenerator createToneGenerator() {
@@ -270,9 +332,12 @@ public class BatteryService extends Service {
             try {
                 MediaPlayer mp = MediaPlayer.create(this, resId);
                 if (mp != null) {
+                    // Aplicar volume configurado
+                    float vol = getVoiceVolume() / 100f;
+                    mp.setVolume(vol, vol);
                     mp.setOnCompletionListener(MediaPlayer::release);
                     mp.start();
-                    Log.d("BatteryService", "Tocando voz: " + character + "_" + type);
+                    Log.d("BatteryService", "Tocando voz: " + character + "_" + type + " vol=" + vol);
                     return true;
                 }
             } catch (Exception e) {
@@ -351,7 +416,6 @@ public class BatteryService extends Service {
             String text = "Bateria " + currentLevel + "% • " + statusText;
             String title = alerting ? "⚠️ ALERTA ATIVO" : "✅ Monitorando";
 
-            // Adicionar informações extras
             if (isMuted()) {
                 text += " 🔇";
             }
@@ -366,10 +430,8 @@ public class BatteryService extends Service {
 
         int smallIcon = android.R.drawable.ic_lock_idle_low_battery;
 
-        // Verificar estilo visual
         String style = prefs.getString(KEY_VISUAL_STYLE, "normal");
         if ("mascot".equals(style)) {
-            // Tentar usar ícone do mascote se existir
             int mascotIcon = getResources().getIdentifier("ic_mascot_battery", "drawable", getPackageName());
             if (mascotIcon != 0) {
                 smallIcon = mascotIcon;
@@ -396,14 +458,7 @@ public class BatteryService extends Service {
     }
 
     private void showToast(String message) {
-        // Mostrar toast apenas se não estiver mudo (ou mostrar mesmo assim?)
-        // Vamos mostrar sempre para feedback do usuário
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Usar Handler para mostrar na UI thread
-            handler.post(() -> Toast.makeText(BatteryService.this, message, Toast.LENGTH_SHORT).show());
-        } else {
-            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-        }
+        handler.post(() -> Toast.makeText(BatteryService.this, message, Toast.LENGTH_SHORT).show());
     }
 
     @Override
@@ -413,7 +468,7 @@ public class BatteryService extends Service {
         } catch (Exception ignored) { }
 
         if (handler != null) {
-            handler.removeCallbacks(beepRunnable);
+            handler.removeCallbacksAndMessages(null);
         }
 
         if (toneGenerator != null) {

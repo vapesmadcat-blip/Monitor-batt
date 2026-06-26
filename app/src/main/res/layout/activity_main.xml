@@ -13,6 +13,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- Toggle de tema -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -52,6 +53,50 @@
             android:textStyle="bold"
             android:gravity="center"
             android:layout_marginBottom="16dp"/>
+
+        <!-- ============================================================ -->
+        <!-- ALERTA DE MAU CONTATO (oculto por padrão)                    -->
+        <!-- ============================================================ -->
+        <LinearLayout
+            android:id="@+id/layoutBadContactAlert"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#FFFF3B30"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="⚠️ POSSÍVEL PROBLEMA NO CABO"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:gravity="center"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Detectada possibilidade de mau contato"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:layout_marginTop="4dp"/>
+
+            <Button
+                android:id="@+id/btnDismissBadContact"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="8dp"
+                android:text="OK"
+                android:textColor="#FF3B30"
+                android:backgroundTint="#FFFFFF"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"/>
+        </LinearLayout>
 
         <!-- Visual da Bateria + Mascote -->
         <FrameLayout
@@ -224,33 +269,72 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"/>
 
-        <!-- Switches -->
+        <!-- ============================================================ -->
+        <!-- SWITCHES DE ÁUDIO                                             -->
+        <!-- Nota: TTS, Voz do Personagem são mutuamente exclusivos.       -->
+        <!-- O Bip pode coexistir com qualquer um.                         -->
+        <!-- ============================================================ -->
+
+        <!-- Switch Bip (independente) -->
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/switchBeep"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:text="Ativar Bip"
+            android:checked="false"
             android:textColor="@color/text_primary"
             app:useMaterialThemeColors="true" />
 
+        <!-- Separador de grupo exclusivo -->
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Modo de voz (escolha um):"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:layout_marginBottom="4dp"
+            android:layout_marginTop="8dp"/>
+
+        <!-- Switch TTS (exclusivo com Personagem) -->
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/switchTts"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:text="Ativar TTS (voz)"
+            android:text="Ativar TTS (síntese de voz)"
+            android:checked="false"
             android:textColor="@color/text_primary"
             app:useMaterialThemeColors="true" />
 
+        <!-- Switch Personagem (exclusivo com TTS) -->
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/switchCharacterVoice"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:text="Ativar Voz do Personagem"
+            android:checked="false"
             android:textColor="@color/text_primary"
             app:useMaterialThemeColors="true" />
+
+        <!-- ============================================================ -->
+        <!-- VOLUME DA VOZ                                                  -->
+        <!-- ============================================================ -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginBottom="8dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Volume da voz:"
+                android:textColor="@color/text_primary"/>
+            <TextView android:id="@+id/tvVoiceVolumeValue"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="80%" android:textColor="#4ADE80" android:textStyle="bold"/>
+        </LinearLayout>
+
+        <SeekBar android:id="@+id/seekVoiceVolume"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100"
+            android:progress="80"
+            android:layout_marginBottom="24dp"/>
 
         <!-- Estilo Visual -->
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -276,6 +360,7 @@
             android:popupBackground="@color/spinner_dropdown_background"
             android:layout_marginBottom="24dp"/>
 
+        <!-- Alertas de voz (thresholds) -->
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="Alertas de voz:" android:textColor="@color/text_secondary"
             android:layout_marginBottom="6dp"/>
