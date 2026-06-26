@@ -21,84 +21,115 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <!-- Gauge Compacto (Esquerda) -->
+            <!-- Card de Estatística / Gauge Compacto (Esquerda) -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:gravity="center_horizontal">
+                android:background="@drawable/stat_card_background"
+                android:padding="12dp"
+                android:elevation="2dp">
 
-                <!-- Título fixo "STATUS" -->
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- Cabeçalho: ícone + título "STATUS" + badge de velocidade -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="STATUS"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="2dp"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="10dp">
 
-                <!-- Indicador Visual (Raio ⚡ ou Seta ⬇️) -->
-                <TextView
-                    android:id="@+id/tvVisualIndicator"
-                    android:layout_width="wrap_content"
+                    <!-- Indicador Visual (Raio ⚡ ou Seta ⬇️) -->
+                    <TextView
+                        android:id="@+id/tvVisualIndicator"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="--"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginEnd="6dp"/>
+
+                    <!-- Título fixo "STATUS" -->
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="STATUS"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.08"/>
+
+                    <!-- Badge de velocidade (Lento / Normal / Rápido) -->
+                    <TextView
+                        android:id="@+id/tvChargingSpeedLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Normal"
+                        android:textColor="#F59E0B"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:background="@drawable/stat_badge_background"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp"/>
+                </LinearLayout>
+
+                <!-- Linha principal: ícone de velocidade + taxa/tempo -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="--"
-                    android:textColor="@color/text_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="4dp"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="10dp">
 
-                <!-- Ícone de velocidade -->
-                <ImageView
-                    android:id="@+id/ivChargingSpeedIcon"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginBottom="4dp"
-                    android:src="@drawable/ic_charging_fast"
-                    android:scaleType="fitCenter"/>
+                    <!-- Ícone de velocidade -->
+                    <ImageView
+                        android:id="@+id/ivChargingSpeedIcon"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginEnd="10dp"
+                        android:src="@drawable/ic_charging_fast"
+                        android:scaleType="fitCenter"/>
 
-                <!-- Taxa de carregamento (%/min) -->
-                <TextView
-                    android:id="@+id/tvChargingRate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0.5%/min"
-                    android:textColor="@color/text_primary"
-                    android:textSize="11sp"
-                    android:textStyle="bold"/>
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-                <!-- Tempo estimado -->
-                <TextView
-                    android:id="@+id/tvChargingTimeRemaining"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="~3h 20min"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="10sp"/>
+                        <!-- Taxa de carregamento (%/min) -->
+                        <TextView
+                            android:id="@+id/tvChargingRate"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0.5%/min"
+                            android:textColor="@color/text_primary"
+                            android:textSize="15sp"
+                            android:textStyle="bold"/>
+
+                        <!-- Tempo estimado -->
+                        <TextView
+                            android:id="@+id/tvChargingTimeRemaining"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="~3h 20min"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp"/>
+                    </LinearLayout>
+                </LinearLayout>
 
                 <!-- Gauge visual (ProgressBar horizontal) -->
                 <ProgressBar
                     android:id="@+id/pbChargingSpeed"
                     style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="120dp"
+                    android:layout_width="match_parent"
                     android:layout_height="8dp"
                     android:max="100"
                     android:progress="50"
-                    android:progressDrawable="@drawable/charging_gauge"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginBottom="2dp"/>
-
-                <!-- Label de velocidade -->
-                <TextView
-                    android:id="@+id/tvChargingSpeedLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Normal"
-                    android:textColor="#F59E0B"
-                    android:textSize="9sp"
-                    android:textStyle="bold"/>
+                    android:progressDrawable="@drawable/charging_gauge"/>
             </LinearLayout>
 
             <!-- Spacer -->
