@@ -31,4 +31,6 @@
     <color name="spinner_text">#FF1C1B1F</color>
     <color name="button_secondary_background">#FFE5E7EB</color>
     <color name="button_secondary_text">#FF111827</color>
+    <color name="stats_card_background">#FFF5F7FA</color>
+    <color name="stats_card_stroke">#FFE2E8F0</color>
 </resources>

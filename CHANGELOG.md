@@ -1,5 +1,11 @@
 # Changelog - Monitor Bat
 
+## [Não lançado]
+
+### Melhorias
+- Painel de estatísticas (canto superior esquerdo) reformulado: taxa de carga/descarga (%/min) e tempo estimado agora usam corrente e capacidade instantâneas (`BatteryManager`), com suavização para acabar com os valores que ficavam saltando ou travados em `0.00%/min`.
+- Novas estatísticas no painel: corrente (mA), potência (W), temperatura (°C, com alerta de cor) e tensão (V) da bateria.
+
 ## [1.2.1] - 2026-06-24
 
 ### Melhorias
