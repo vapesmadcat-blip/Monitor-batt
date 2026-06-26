@@ -13,34 +13,87 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Toggle de tema -->
+        <!-- Topo: Gauge (esquerda) + Toggle de tema (direita) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:gravity="end|center_vertical"
+            android:layout_marginBottom="16dp"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- Gauge Compacto (Esquerda) -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="@string/theme_light"
-                android:textColor="@color/text_secondary" />
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
 
-            <com.google.android.material.switchmaterial.SwitchMaterial
-                android:id="@+id/switchThemeMode"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:contentDescription="@string/theme_toggle_description"
-                app:useMaterialThemeColors="true" />
+                <!-- Ícone de velocidade -->
+                <ImageView
+                    android:id="@+id/ivChargingSpeedIcon"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginBottom="4dp"
+                    android:src="@drawable/ic_charging_fast"
+                    android:scaleType="fitCenter"/>
 
-            <TextView
+                <!-- Taxa de carregamento (%/min) -->
+                <TextView
+                    android:id="@+id/tvChargingRate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0.5%/min"
+                    android:textColor="@color/text_primary"
+                    android:textSize="11sp"
+                    android:textStyle="bold"/>
+
+                <!-- Tempo estimado -->
+                <TextView
+                    android:id="@+id/tvChargingTimeRemaining"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="~3h 20min"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="10sp"/>
+            </LinearLayout>
+
+            <!-- Spacer -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"/>
+
+            <!-- Toggle de tema (Direita) -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/theme_dark"
-                android:textColor="@color/text_secondary" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/theme_light"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switchThemeMode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp"
+                    android:contentDescription="@string/theme_toggle_description"
+                    app:useMaterialThemeColors="true" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/theme_dark"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- Título -->
@@ -99,147 +152,72 @@
         </LinearLayout>
 
         <!-- ============================================================ -->
-        <!-- BATERIA + GAUGE DE CARREGAMENTO (lado a lado)                -->
+        <!-- BATERIA + MASCOTE (Centralizado)                             -->
         <!-- ============================================================ -->
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="280dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="12dp"
-            android:padding="8dp">
+            android:layout_marginBottom="12dp">
 
-            <!-- Bateria -->
-            <FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="280dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="12dp">
-
-                <LinearLayout
-                    android:id="@+id/batteryContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <FrameLayout
-                        android:layout_width="120dp"
-                        android:layout_height="220dp">
-
-                        <View android:layout_width="match_parent" android:layout_height="match_parent"
-                            android:background="@drawable/battery_shell"/>
-
-                        <View android:id="@+id/batteryFill"
-                            android:layout_width="match_parent"
-                            android:layout_height="0dp"
-                            android:layout_gravity="bottom"
-                            android:background="@drawable/battery_fill_high"/>
-
-                        <View android:layout_width="match_parent" android:layout_height="match_parent"
-                            android:background="@drawable/battery_gloss"/>
-
-                        <TextView android:id="@+id/tvChargingBolt"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:text="⚡"
-                            android:textColor="#FFD700"
-                            android:textSize="48sp"
-                            android:visibility="gone"/>
-                    </FrameLayout>
-
-                    <TextView android:id="@+id/tvLevel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="87%"
-                        android:textColor="#4ADE80"
-                        android:textSize="42sp"
-                        android:textStyle="bold"/>
-
-                    <TextView android:id="@+id/tvStatus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="NORMAL"
-                        android:textColor="#4ADE80"
-                        android:textSize="16sp"
-                        android:textStyle="bold"/>
-                </LinearLayout>
-
-                <ImageView android:id="@+id/ivMascot"
-                    android:layout_width="220dp"
-                    android:layout_height="220dp"
-                    android:layout_gravity="center"
-                    android:visibility="gone"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/battery_mascot_1"/>
-            </FrameLayout>
-
-            <!-- Gauge de Carregamento -->
             <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="280dp"
-                android:layout_weight="1"
-                android:orientation="vertical"
+                android:id="@+id/batteryContainer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:gravity="center"
-                android:padding="12dp">
+                android:orientation="vertical">
 
-                <!-- Ícone de velocidade -->
-                <ImageView
-                    android:id="@+id/ivChargingSpeedIcon"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_marginBottom="12dp"
-                    android:src="@drawable/ic_charging_fast"
-                    android:scaleType="fitCenter"/>
+                <FrameLayout
+                    android:layout_width="120dp"
+                    android:layout_height="220dp">
 
-                <!-- Taxa de carregamento (%/min) -->
-                <TextView
-                    android:id="@+id/tvChargingRate"
-                    android:layout_width="match_parent"
+                    <View android:layout_width="match_parent" android:layout_height="match_parent"
+                        android:background="@drawable/battery_shell"/>
+
+                    <View android:id="@+id/batteryFill"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_gravity="bottom"
+                        android:background="@drawable/battery_fill_high"/>
+
+                    <View android:layout_width="match_parent" android:layout_height="match_parent"
+                        android:background="@drawable/battery_gloss"/>
+
+                    <TextView android:id="@+id/tvChargingBolt"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="⚡"
+                        android:textColor="#FFD700"
+                        android:textSize="48sp"
+                        android:visibility="gone"/>
+                </FrameLayout>
+
+                <TextView android:id="@+id/tvLevel"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="0.5%/min"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:gravity="center"
-                    android:layout_marginBottom="8dp"/>
+                    android:layout_marginTop="12dp"
+                    android:text="87%"
+                    android:textColor="#4ADE80"
+                    android:textSize="42sp"
+                    android:textStyle="bold"/>
 
-                <!-- Tempo estimado -->
-                <TextView
-                    android:id="@+id/tvChargingTimeRemaining"
-                    android:layout_width="match_parent"
+                <TextView android:id="@+id/tvStatus"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="~3h 20min"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    android:gravity="center"
-                    android:layout_marginBottom="16dp"/>
-
-                <!-- Gauge visual (ProgressBar horizontal) -->
-                <ProgressBar
-                    android:id="@+id/pbChargingSpeed"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="12dp"
-                    android:max="100"
-                    android:progress="50"
-                    android:progressDrawable="@drawable/charging_gauge"
-                    android:layout_marginBottom="12dp"/>
-
-                <!-- Label de velocidade -->
-                <TextView
-                    android:id="@+id/tvChargingSpeedLabel"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Normal"
-                    android:textColor="#F59E0B"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:gravity="center"/>
+                    android:text="NORMAL"
+                    android:textColor="#4ADE80"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
             </LinearLayout>
-        </LinearLayout>
+
+            <ImageView android:id="@+id/ivMascot"
+                android:layout_width="220dp"
+                android:layout_height="220dp"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                android:scaleType="fitCenter"
+                android:src="@drawable/battery_mascot_1"/>
+        </FrameLayout>
 
         <!-- Porcentagem Grande -->
         <TextView android:id="@+id/tvBigPercentage"
@@ -348,8 +326,6 @@
 
         <!-- ============================================================ -->
         <!-- SWITCHES DE ÁUDIO                                             -->
-        <!-- Nota: TTS, Voz do Personagem são mutuamente exclusivos.       -->
-        <!-- O Bip pode coexistir com qualquer um.                         -->
         <!-- ============================================================ -->
 
         <!-- Switch Bip (independente) -->
