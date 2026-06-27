@@ -130,22 +130,13 @@
             android:gravity="center"
             android:layout_marginBottom="20dp"/>
 
-        <!-- Indicador de Bip (feedback visual) -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="🔊 BIP (pisca quando toca)"
-            android:textColor="@color/text_secondary"
-            android:textSize="11sp"
-            android:gravity="center"
-            android:layout_marginBottom="2dp"/>
-
+        <!-- Bip Indicator -->
         <TextView android:id="@+id/tvBipIndicator"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="🔊"
+            android:text="●"
             android:textColor="@color/text_primary"
-            android:textSize="24sp"
+            android:textSize="14sp"
             android:gravity="center"
             android:layout_marginBottom="16dp"/>
 

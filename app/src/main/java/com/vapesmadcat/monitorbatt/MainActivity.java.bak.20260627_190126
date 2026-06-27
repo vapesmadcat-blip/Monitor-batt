@@ -542,19 +542,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void triggerVisualBip() {
-        if (bipIndicator == null) return;
-
-        // Feedback forte e claro
-        bipIndicator.setText("🔊");
         bipIndicator.setTextColor(Color.RED);
-        bipIndicator.setTextSize(32);
-
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            if (bipIndicator != null) {
-                bipIndicator.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
-                bipIndicator.setTextSize(24);
-            }
-        }, 1200);
+        new Handler(Looper.getMainLooper()).postDelayed(
+                () -> bipIndicator.setTextColor(ContextCompat.getColor(this, R.color.text_primary)),
+                1000
+        );
     }
 
     // ============================================================
