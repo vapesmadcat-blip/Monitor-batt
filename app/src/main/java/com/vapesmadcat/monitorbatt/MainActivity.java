@@ -29,6 +29,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -51,13 +52,28 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvBigPercentage;
     private SeekBar thresholdSeek, intervalSeek;
     private SeekBar voiceLowSeek, voiceCriticalSeek, voiceVeryLowSeek;
+    private SeekBar seekVoiceVolume;
     private TextView voiceLowValueText, voiceCriticalValueText, voiceVeryLowValueText;
+    private TextView tvVoiceVolumeValue;
     private Spinner characterSpinner, spinnerVisualStyle;
     private SwitchMaterial switchThemeMode, switchBeep, switchTts, switchCharacterVoice;
     private Button muteBtn, saveBtn, btnMonitor, btnSobre;
     private Button btnTestBeep, btnTestTTS, btnTestVoice;
     private ImageView ivMascot;
     private LinearLayout batteryContainer;
+    private LinearLayout layoutBadContactAlert;
+    private Button btnDismissBadContact;
+    
+    // Gauge de carregamento
+    private ImageView ivChargingSpeedIcon;
+    private TextView tvChargingRate, tvChargingTimeRemaining, tvChargingSpeedLabel, tvVisualIndicator;
+    private TextView tvBatteryCurrent, tvBatteryPower, tvBatteryTemp, tvBatteryVoltage;
+    private ProgressBar pbChargingSpeed;
+    private BatteryManager batteryManager;
+    private int lastBatteryLevel = -1;
+    private long lastBatteryCheckTime = 0;
+    private double smoothedRatePerMin = -1;
+    private Boolean wasCharging = null;
 
     private SharedPreferences preferences;
     private boolean isModified = false;
@@ -66,7 +82,8 @@ public class MainActivity extends AppCompatActivity {
 
     private MediaPlayer currentMediaPlayer = null;
     private boolean isPlayingPreview = false;
-    private boolean isModifiedByCode = false;
+    // Flag para evitar que os listeners de switch disparem uns aos outros
+    private boolean isSwitchUpdatingByCode = false;
 
     private TextToSpeech textToSpeech;
     private boolean ttsInitialized = false;
@@ -75,6 +92,9 @@ public class MainActivity extends AppCompatActivity {
     public static final String KEY_SERVICE_ENABLED = "service_enabled";
     public static final String KEY_DARK_MODE = "dark_mode_enabled";
 
+    // ----------------------------------------------------------------
+    // Receiver para piscar o indicador de bip
+    // ----------------------------------------------------------------
     private final BroadcastReceiver bipReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -82,10 +102,23 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    // ----------------------------------------------------------------
+    // Receiver para atualizar leitura de bateria
+    // ----------------------------------------------------------------
     private final BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             updateBatteryReadout();
+        }
+    };
+
+    // ----------------------------------------------------------------
+    // Receiver para alerta de mau contato vindo do BatteryService
+    // ----------------------------------------------------------------
+    private final BroadcastReceiver badContactReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            showBadContactAlert();
         }
     };
 
@@ -107,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
         applyNightMode(getStoredDarkModeEnabled(preferences));
         setContentView(R.layout.activity_main);
 
+        // Vincular views
         batteryFill = findViewById(R.id.batteryFill);
         batteryText = findViewById(R.id.tvLevel);
         statusText = findViewById(R.id.tvStatus);
@@ -139,18 +173,33 @@ public class MainActivity extends AppCompatActivity {
         voiceLowValueText = findViewById(R.id.tvVoiceLowValue);
         voiceCriticalValueText = findViewById(R.id.tvVoiceCriticalValue);
         voiceVeryLowValueText = findViewById(R.id.tvVoiceVeryLowValue);
+        seekVoiceVolume = findViewById(R.id.seekVoiceVolume);
+        tvVoiceVolumeValue = findViewById(R.id.tvVoiceVolumeValue);
+        layoutBadContactAlert = findViewById(R.id.layoutBadContactAlert);
+        btnDismissBadContact = findViewById(R.id.btnDismissBadContact);
+        
+        // Gauge de carregamento
+        ivChargingSpeedIcon = findViewById(R.id.ivChargingSpeedIcon);
+        tvChargingRate = findViewById(R.id.tvChargingRate);
+        tvChargingTimeRemaining = findViewById(R.id.tvChargingTimeRemaining);
+        tvChargingSpeedLabel = findViewById(R.id.tvChargingSpeedLabel);
+        tvVisualIndicator = findViewById(R.id.tvVisualIndicator);
+        pbChargingSpeed = findViewById(R.id.pbChargingSpeed);
+        tvBatteryCurrent = findViewById(R.id.tvBatteryCurrent);
+        tvBatteryPower = findViewById(R.id.tvBatteryPower);
+        tvBatteryTemp = findViewById(R.id.tvBatteryTemp);
+        tvBatteryVoltage = findViewById(R.id.tvBatteryVoltage);
+        batteryManager = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
 
         setupCharacterSpinner();
         setupVisualStyleSpinner();
 
-        // Listener do Spinner de Estilo Visual
         spinnerVisualStyle.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 updateVisualStyle();
                 checkChanges();
             }
-
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
         });
@@ -168,14 +217,10 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Configurações salvas!", Toast.LENGTH_SHORT).show();
         });
 
-        // ============================================================
-        // BOTÃO ÚNICO: ATIVAR / PARAR MONITOR
-        // ============================================================
+        // Botão Monitor
         btnMonitor.setOnClickListener(v -> {
             boolean isRunning = isServiceRunning(BatteryService.class);
-
             if (isRunning) {
-                // PARA O MONITOR
                 preferences.edit().putBoolean(KEY_SERVICE_ENABLED, false).apply();
                 stopBatteryService();
                 updateMonitorButton(false);
@@ -183,7 +228,6 @@ public class MainActivity extends AppCompatActivity {
                 statusText.setTextColor(0xFFFF4D4F);
                 Toast.makeText(this, "Monitor desativado", Toast.LENGTH_SHORT).show();
             } else {
-                // INICIA O MONITOR
                 requestNotificationPermissionIfNeeded();
                 saveSettings();
                 preferences.edit().putBoolean(KEY_SERVICE_ENABLED, true).apply();
@@ -204,14 +248,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Botão Sobre
-        btnSobre.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, AboutActivity.class);
-            startActivity(intent);
-        });
+        btnSobre.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, AboutActivity.class)));
 
-        // ============================================================
-        // BOTÕES DE TESTE
-        // ============================================================
+        // Botões de teste
         btnTestBeep.setOnClickListener(v -> {
             playTestBeep();
             triggerVisualBip();
@@ -228,11 +267,20 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "🎭 Testando Voz do Personagem...", Toast.LENGTH_SHORT).show();
         });
 
+        // Botão fechar alerta de mau contato
+        btnDismissBadContact.setOnClickListener(v -> {
+            layoutBadContactAlert.setVisibility(View.GONE);
+        });
+
         // Registro de Broadcasts
+        IntentFilter bipFilter = new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED");
+        IntentFilter badContactFilter = new IntentFilter("com.vapesmadcat.monitorbatt.BAD_CONTACT_DETECTED");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"), Context.RECEIVER_NOT_EXPORTED);
+            registerReceiver(bipReceiver, bipFilter, Context.RECEIVER_NOT_EXPORTED);
+            registerReceiver(badContactReceiver, badContactFilter, Context.RECEIVER_NOT_EXPORTED);
         } else {
-            registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"));
+            registerReceiver(bipReceiver, bipFilter);
+            registerReceiver(badContactReceiver, badContactFilter);
         }
         registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
@@ -258,6 +306,21 @@ public class MainActivity extends AppCompatActivity {
                 statusText.setText("Monitoramento: DESATIVADO");
                 statusText.setTextColor(0xFFFF4D4F);
             }
+        }
+    }
+
+    // ----------------------------------------------------------------
+    // Exibir alerta visual de mau contato
+    // ----------------------------------------------------------------
+    private void showBadContactAlert() {
+        if (layoutBadContactAlert != null) {
+            layoutBadContactAlert.setVisibility(View.VISIBLE);
+            // Auto-dismiss após 15 segundos
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (layoutBadContactAlert != null) {
+                    layoutBadContactAlert.setVisibility(View.GONE);
+                }
+            }, 15000);
         }
     }
 
@@ -291,26 +354,16 @@ public class MainActivity extends AppCompatActivity {
         if (sharedPreferences.contains(KEY_DARK_MODE)) {
             return sharedPreferences.getBoolean(KEY_DARK_MODE, false);
         }
-
         int defaultNightMode = AppCompatDelegate.getDefaultNightMode();
-        if (defaultNightMode == AppCompatDelegate.MODE_NIGHT_YES) {
-            return true;
-        }
-        if (defaultNightMode == AppCompatDelegate.MODE_NIGHT_NO) {
-            return false;
-        }
-
+        if (defaultNightMode == AppCompatDelegate.MODE_NIGHT_YES) return true;
+        if (defaultNightMode == AppCompatDelegate.MODE_NIGHT_NO) return false;
         int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
         return currentNightMode == Configuration.UI_MODE_NIGHT_YES;
     }
 
     private boolean applyNightMode(boolean darkModeEnabled) {
-        int selectedMode = darkModeEnabled
-                ? AppCompatDelegate.MODE_NIGHT_YES
-                : AppCompatDelegate.MODE_NIGHT_NO;
-        if (AppCompatDelegate.getDefaultNightMode() == selectedMode) {
-            return false;
-        }
+        int selectedMode = darkModeEnabled ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO;
+        if (AppCompatDelegate.getDefaultNightMode() == selectedMode) return false;
         AppCompatDelegate.setDefaultNightMode(selectedMode);
         return true;
     }
@@ -321,6 +374,7 @@ public class MainActivity extends AppCompatActivity {
         voiceLowSeek.setMax(80);
         voiceCriticalSeek.setMax(80);
         voiceVeryLowSeek.setMax(80);
+        seekVoiceVolume.setMax(100);
 
         SeekBar.OnSeekBarChangeListener seekListener = new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar s, int p, boolean fromUser) {
@@ -339,40 +393,73 @@ public class MainActivity extends AppCompatActivity {
         voiceCriticalSeek.setOnSeekBarChangeListener(seekListener);
         voiceVeryLowSeek.setOnSeekBarChangeListener(seekListener);
 
+        // SeekBar de volume
+        seekVoiceVolume.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(SeekBar s, int p, boolean fromUser) {
+                if (fromUser) {
+                    tvVoiceVolumeValue.setText(p + "%");
+                    checkChanges();
+                }
+            }
+            @Override public void onStartTrackingTouch(SeekBar s) {}
+            @Override public void onStopTrackingTouch(SeekBar s) {}
+        });
+
         characterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
-                if (isModifiedByCode) return;
+                if (isSwitchUpdatingByCode) return;
                 checkChanges();
                 if (isPlayingPreview) stopCurrentAudio();
             }
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
 
-        // Switch do BIP
+        // ----------------------------------------------------------------
+        // Switch do BIP — independente, pode coexistir com qualquer voz
+        // ----------------------------------------------------------------
         switchBeep.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isSwitchUpdatingByCode) return;
             checkChanges();
             if (isChecked) {
                 triggerVisualBip();
                 playTestBeep();
-                Toast.makeText(this, "🔊 Bip testado!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "🔊 Bip ativado!", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Switch do TTS
+        // ----------------------------------------------------------------
+        // Switch do TTS — exclusivo com Personagem
+        // ----------------------------------------------------------------
         switchTts.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isSwitchUpdatingByCode) return;
             checkChanges();
             if (isChecked) {
+                // Desligar Personagem se estiver ligado
+                if (switchCharacterVoice.isChecked()) {
+                    isSwitchUpdatingByCode = true;
+                    switchCharacterVoice.setChecked(false);
+                    isSwitchUpdatingByCode = false;
+                }
                 speakBatteryStatusExample();
-                Toast.makeText(this, "🗣️ Teste de voz TTS ativado!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "🗣️ TTS ativado!", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Switch do Personagem
+        // ----------------------------------------------------------------
+        // Switch do Personagem — exclusivo com TTS
+        // ----------------------------------------------------------------
         switchCharacterVoice.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isSwitchUpdatingByCode) return;
             checkChanges();
             if (isChecked) {
+                // Desligar TTS se estiver ligado
+                if (switchTts.isChecked()) {
+                    isSwitchUpdatingByCode = true;
+                    switchTts.setChecked(false);
+                    isSwitchUpdatingByCode = false;
+                }
                 playCharacterVoiceSample();
-                Toast.makeText(this, "🎭 Voz do personagem testada!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "🎭 Voz do personagem ativada!", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -383,19 +470,11 @@ public class MainActivity extends AppCompatActivity {
         int veryLow = voiceVeryLowSeek.getProgress();
 
         if (changedSeek == voiceLowSeek) {
-            if (critical > low) {
-                voiceCriticalSeek.setProgress(low);
-            }
-            if (veryLow > voiceCriticalSeek.getProgress()) {
-                voiceVeryLowSeek.setProgress(voiceCriticalSeek.getProgress());
-            }
+            if (critical > low) voiceCriticalSeek.setProgress(low);
+            if (veryLow > voiceCriticalSeek.getProgress()) voiceVeryLowSeek.setProgress(voiceCriticalSeek.getProgress());
         } else if (changedSeek == voiceCriticalSeek) {
-            if (critical > low) {
-                voiceCriticalSeek.setProgress(low);
-            }
-            if (veryLow > critical) {
-                voiceVeryLowSeek.setProgress(critical);
-            }
+            if (critical > low) voiceCriticalSeek.setProgress(low);
+            if (veryLow > critical) voiceVeryLowSeek.setProgress(critical);
         } else if (changedSeek == voiceVeryLowSeek && veryLow > critical) {
             voiceVeryLowSeek.setProgress(critical);
         }
@@ -413,7 +492,6 @@ public class MainActivity extends AppCompatActivity {
             textToSpeech.stop();
             textToSpeech.shutdown();
         }
-
         textToSpeech = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
                 int result = textToSpeech.setLanguage(new Locale("pt", "BR"));
@@ -429,12 +507,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateVisualStyle() {
-        if (spinnerVisualStyle == null || batteryContainer == null || ivMascot == null) {
-            return;
-        }
-
+        if (spinnerVisualStyle == null || batteryContainer == null || ivMascot == null) return;
         boolean useMascot = spinnerVisualStyle.getSelectedItemPosition() == 1;
-
         if (useMascot) {
             batteryContainer.setVisibility(View.GONE);
             ivMascot.setVisibility(View.VISIBLE);
@@ -447,21 +521,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateMascotImage() {
         if (ivMascot == null || ivMascot.getVisibility() != View.VISIBLE) return;
-
         Intent batteryStatus = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         if (batteryStatus == null) return;
-
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
         int pct = (level >= 0 && scale > 0) ? (int) ((level * 100f) / scale) : 50;
-
         int resId;
         if (pct >= 80) resId = R.drawable.battery_mascot_1;
         else if (pct >= 60) resId = R.drawable.battery_mascot_2;
         else if (pct >= 40) resId = R.drawable.battery_mascot_3;
         else if (pct >= 20) resId = R.drawable.battery_mascot_4;
         else resId = R.drawable.battery_mascot_5;
-
         ivMascot.setImageResource(resId);
     }
 
@@ -477,34 +547,30 @@ public class MainActivity extends AppCompatActivity {
             initTextToSpeech();
             return;
         }
-
         String message = "Monitor de Bateria Pro. Bateria em 87 por cento. Status: Normal.";
         textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, "battery_example");
     }
 
     private void playCharacterVoiceSample() {
         stopCurrentAudio();
-
         int pos = characterSpinner.getSelectedItemPosition();
         if (pos < 0 || pos >= characterKeys.length) return;
-
         String character = characterKeys[pos];
         if ("none".equals(character)) {
             Toast.makeText(this, "Nenhum personagem selecionado", Toast.LENGTH_SHORT).show();
             return;
         }
-
         int resId = getResources().getIdentifier("voice_" + character + "_low", "raw", getPackageName());
         if (resId == 0) resId = getResources().getIdentifier("voice_" + character + "_charging", "raw", getPackageName());
-
         if (resId != 0) {
             try {
                 if (currentMediaPlayer != null) currentMediaPlayer.release();
                 currentMediaPlayer = MediaPlayer.create(this, resId);
                 if (currentMediaPlayer != null) {
-                    currentMediaPlayer.setOnCompletionListener(mp -> {
-                        currentMediaPlayer = null;
-                    });
+                    // Aplicar volume configurado
+                    float vol = seekVoiceVolume.getProgress() / 100f;
+                    currentMediaPlayer.setVolume(vol, vol);
+                    currentMediaPlayer.setOnCompletionListener(mp -> currentMediaPlayer = null);
                     currentMediaPlayer.start();
                 }
             } catch (Exception e) {
@@ -557,9 +623,6 @@ public class MainActivity extends AppCompatActivity {
         }, 1200);
     }
 
-    // ============================================================
-    // MÉTODO PARA ATUALIZAR O BOTÃO MONITOR
-    // ============================================================
     private void updateMonitorButton(boolean isRunning) {
         if (isRunning) {
             btnMonitor.setText("⏹ PARAR MONITOR");
@@ -576,6 +639,7 @@ public class MainActivity extends AppCompatActivity {
         voiceLowValueText.setText(voiceLowSeek.getProgress() + "%");
         voiceCriticalValueText.setText(voiceCriticalSeek.getProgress() + "%");
         voiceVeryLowValueText.setText(voiceVeryLowSeek.getProgress() + "%");
+        tvVoiceVolumeValue.setText(seekVoiceVolume.getProgress() + "%");
     }
 
     private void checkChanges() {
@@ -584,7 +648,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadSettings() {
-        isModifiedByCode = true;
+        isSwitchUpdatingByCode = true;
 
         int threshold = preferences.getInt(BatteryService.KEY_THRESHOLD, BatteryService.DEFAULT_THRESHOLD);
         int intervalSeconds = preferences.getInt(BatteryService.KEY_BEEP_INTERVAL_SECONDS, BatteryService.DEFAULT_BEEP_INTERVAL_SECONDS);
@@ -592,12 +656,14 @@ public class MainActivity extends AppCompatActivity {
         int voiceLow = preferences.getInt(BatteryService.KEY_VOICE_LOW_THRESHOLD, BatteryService.DEFAULT_VOICE_LOW_THRESHOLD);
         int voiceCritical = preferences.getInt(BatteryService.KEY_VOICE_CRITICAL_THRESHOLD, BatteryService.DEFAULT_VOICE_CRITICAL_THRESHOLD);
         int voiceVeryLow = preferences.getInt(BatteryService.KEY_VOICE_VERYLOW_THRESHOLD, BatteryService.DEFAULT_VOICE_VERYLOW_THRESHOLD);
+        int voiceVolume = preferences.getInt(BatteryService.KEY_VOICE_VOLUME, BatteryService.DEFAULT_VOICE_VOLUME);
 
         thresholdSeek.setProgress(Math.max(0, threshold - 5));
         intervalSeek.setProgress(Math.max(0, (intervalSeconds / 5) - 1));
         voiceLowSeek.setProgress(Math.min(80, voiceLow));
         voiceCriticalSeek.setProgress(Math.min(80, voiceCritical));
         voiceVeryLowSeek.setProgress(Math.min(80, voiceVeryLow));
+        seekVoiceVolume.setProgress(Math.min(100, voiceVolume));
 
         for (int i = 0; i < characterKeys.length; i++) {
             if (characterKeys[i].equals(savedChar)) {
@@ -606,9 +672,19 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        switchBeep.setChecked(preferences.getBoolean(BatteryService.KEY_BEEP_ENABLED, false));
-        switchTts.setChecked(preferences.getBoolean(BatteryService.KEY_TTS_ENABLED, false));
-        switchCharacterVoice.setChecked(preferences.getBoolean(BatteryService.KEY_CHARACTER_VOICE_ENABLED, false));
+        // Carregar estado dos switches (padrão = false = desligado)
+        boolean beepEnabled = preferences.getBoolean(BatteryService.KEY_BEEP_ENABLED, false);
+        boolean ttsEnabled = preferences.getBoolean(BatteryService.KEY_TTS_ENABLED, false);
+        boolean charVoiceEnabled = preferences.getBoolean(BatteryService.KEY_CHARACTER_VOICE_ENABLED, false);
+
+        // Garantir exclusividade ao carregar: se ambos estiverem salvos como true, priorizar TTS
+        if (ttsEnabled && charVoiceEnabled) {
+            charVoiceEnabled = false;
+        }
+
+        switchBeep.setChecked(beepEnabled);
+        switchTts.setChecked(ttsEnabled);
+        switchCharacterVoice.setChecked(charVoiceEnabled);
 
         String visual = preferences.getString(BatteryService.KEY_VISUAL_STYLE, "normal");
         spinnerVisualStyle.setSelection("mascot".equals(visual) ? 1 : 0);
@@ -616,7 +692,7 @@ public class MainActivity extends AppCompatActivity {
         updateTexts();
         isModified = false;
         saveBtn.setVisibility(View.GONE);
-        isModifiedByCode = false;
+        isSwitchUpdatingByCode = false;
 
         updateVisualStyle();
     }
@@ -628,6 +704,12 @@ public class MainActivity extends AppCompatActivity {
         int voiceLow = voiceLowSeek.getProgress();
         int voiceCritical = Math.min(voiceCriticalSeek.getProgress(), voiceLow);
         int voiceVeryLow = Math.min(voiceVeryLowSeek.getProgress(), voiceCritical);
+        int voiceVolume = seekVoiceVolume.getProgress();
+
+        // Garantir exclusividade ao salvar
+        boolean ttsOn = switchTts.isChecked();
+        boolean charVoiceOn = switchCharacterVoice.isChecked();
+        if (ttsOn && charVoiceOn) charVoiceOn = false;
 
         preferences.edit()
                 .putInt(BatteryService.KEY_THRESHOLD, threshold)
@@ -636,9 +718,10 @@ public class MainActivity extends AppCompatActivity {
                 .putInt(BatteryService.KEY_VOICE_LOW_THRESHOLD, voiceLow)
                 .putInt(BatteryService.KEY_VOICE_CRITICAL_THRESHOLD, voiceCritical)
                 .putInt(BatteryService.KEY_VOICE_VERYLOW_THRESHOLD, voiceVeryLow)
+                .putInt(BatteryService.KEY_VOICE_VOLUME, voiceVolume)
                 .putBoolean(BatteryService.KEY_BEEP_ENABLED, switchBeep.isChecked())
-                .putBoolean(BatteryService.KEY_TTS_ENABLED, switchTts.isChecked())
-                .putBoolean(BatteryService.KEY_CHARACTER_VOICE_ENABLED, switchCharacterVoice.isChecked())
+                .putBoolean(BatteryService.KEY_TTS_ENABLED, ttsOn)
+                .putBoolean(BatteryService.KEY_CHARACTER_VOICE_ENABLED, charVoiceOn)
                 .putString(BatteryService.KEY_VISUAL_STYLE, spinnerVisualStyle.getSelectedItemPosition() == 1 ? "mascot" : "normal")
                 .apply();
     }
@@ -668,8 +751,8 @@ public class MainActivity extends AppCompatActivity {
         batteryText.setTextColor(color);
         updateBatteryFill(pct);
         updateChargingUI(isCharging);
-
         updateBigPercentage(pct);
+        updateChargingGauge(batteryStatus, pct, isCharging);
 
         if (ivMascot != null && ivMascot.getVisibility() == View.VISIBLE) {
             updateMascotImage();
@@ -691,7 +774,6 @@ public class MainActivity extends AppCompatActivity {
         Drawable background = ContextCompat.getDrawable(this,
                 safePct <= 10 ? R.drawable.battery_fill_low :
                 safePct <= 30 ? R.drawable.battery_fill_mid : R.drawable.battery_fill_high);
-
         batteryFill.setBackground(background);
         batteryFill.post(() -> {
             int totalHeight = ((View) batteryFill.getParent()).getHeight();
@@ -716,13 +798,18 @@ public class MainActivity extends AppCompatActivity {
             ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
             tg.startTone(ToneGenerator.TONE_PROP_BEEP2, 300);
             tg.release();
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.e("MainActivity", "Erro ao tocar bip de teste", e);
+        }
     }
 
     private void requestNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1001);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1001);
+            }
         }
     }
 
@@ -730,10 +817,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         updateBatteryReadout();
-
         boolean isRunning = isServiceRunning(BatteryService.class);
         updateMonitorButton(isRunning);
-
         if (isRunning) {
             statusText.setText("Monitoramento: ATIVO");
             statusText.setTextColor(0xFF4ADE80);
@@ -743,15 +828,254 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Atualiza o painel de estatísticas com:
+     * - Corrente (mA), potência (W), temperatura (°C) e tensão (V) instantâneas
+     * - Taxa de carga/descarga (%/min) e tempo estimado
+     * - Ícone e cor do Gauge (Lento/Normal/Rápido)
+     */
+    private void updateChargingGauge(Intent batteryStatus, int currentLevel, boolean isCharging) {
+        // Ao trocar entre carregando/descarregando, zera o histórico para não
+        // arrastar uma taxa antiga (que distorceria o tempo estimado).
+        if (wasCharging == null || wasCharging != isCharging) {
+            smoothedRatePerMin = -1;
+            lastBatteryLevel = -1;
+            lastBatteryCheckTime = 0;
+            wasCharging = isCharging;
+        }
+
+        // ---- Estatísticas instantâneas ----
+        int currentNowUa = readCurrentNowMicroAmps();
+        double currentMa = Math.abs(currentNowUa) / 1000.0;
+        int voltageMv = batteryStatus.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
+        double voltageV = voltageMv > 0 ? voltageMv / 1000.0 : -1;
+        int tempTenths = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Integer.MIN_VALUE);
+        double tempC = tempTenths != Integer.MIN_VALUE ? tempTenths / 10.0 : Double.NaN;
+        double powerW = (voltageV > 0 && currentMa > 0) ? voltageV * (currentMa / 1000.0) : -1;
+        updateStatTexts(currentMa, powerW, tempC, voltageV);
+
+        // ---- Taxa (%/min): corrente + capacidade (instantâneo) com fallback ----
+        double ratePerMin = computeRateFromCurrent(currentNowUa, currentLevel);
+        if (Double.isNaN(ratePerMin)) {
+            ratePerMin = computeRateFromLevelDelta(currentLevel);
+        }
+        if (Double.isNaN(ratePerMin)) {
+            // Ainda sem dados suficientes para estimar
+            tvChargingRate.setText("--");
+            tvChargingTimeRemaining.setText("--");
+            return;
+        }
+
+        // Suavização (média móvel exponencial) para evitar saltos bruscos
+        double absRate = Math.abs(ratePerMin);
+        if (smoothedRatePerMin < 0) smoothedRatePerMin = absRate;
+        else smoothedRatePerMin = smoothedRatePerMin * 0.7 + absRate * 0.3;
+
+        if (isCharging) {
+            updateChargingIndicators(currentLevel, smoothedRatePerMin);
+        } else {
+            updateDischargingIndicators(currentLevel, smoothedRatePerMin);
+        }
+    }
+
+    /** Corrente instantânea da bateria em microampères (0 se não suportado). */
+    private int readCurrentNowMicroAmps() {
+        if (batteryManager == null) return 0;
+        int value = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
+        return value == Integer.MIN_VALUE ? 0 : value;
+    }
+
+    /**
+     * Calcula a taxa (%/min) a partir da corrente instantânea e da capacidade
+     * total estimada da bateria. Retorna NaN quando o dispositivo não expõe
+     * esses dados.
+     */
+    private double computeRateFromCurrent(int currentNowUa, int level) {
+        if (batteryManager == null || currentNowUa == 0 || level <= 0) return Double.NaN;
+        long chargeCounterUah = batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
+        if (chargeCounterUah <= 0) return Double.NaN;
+        double fullCapacityUah = chargeCounterUah / (level / 100.0);
+        if (fullCapacityUah <= 0) return Double.NaN;
+        double rate = (Math.abs((double) currentNowUa) / fullCapacityUah) * 100.0 / 60.0;
+        if (rate <= 0 || Double.isInfinite(rate)) return Double.NaN;
+        return rate;
+    }
+
+    /**
+     * Fallback: estima a taxa pela variação do nível (%) ao longo do tempo.
+     * Acumula o tempo até que o nível realmente mude, evitando taxas falsas de
+     * 0%/min quando duas leituras consecutivas têm o mesmo percentual.
+     */
+    private double computeRateFromLevelDelta(int currentLevel) {
+        long now = System.currentTimeMillis();
+        if (lastBatteryLevel == -1) {
+            lastBatteryLevel = currentLevel;
+            lastBatteryCheckTime = now;
+            return Double.NaN;
+        }
+        int levelDiff = currentLevel - lastBatteryLevel;
+        if (levelDiff == 0) return Double.NaN;
+        long timeDiffMs = now - lastBatteryCheckTime;
+        if (timeDiffMs < 1000) return Double.NaN;
+        double rate = levelDiff / (timeDiffMs / 60000.0);
+        lastBatteryLevel = currentLevel;
+        lastBatteryCheckTime = now;
+        return rate;
+    }
+
+    private void updateStatTexts(double currentMa, double powerW, double tempC, double voltageV) {
+        if (tvBatteryCurrent != null) {
+            tvBatteryCurrent.setText(currentMa > 0
+                    ? String.format(Locale.getDefault(), "%.0f mA", currentMa) : "--");
+        }
+        if (tvBatteryPower != null) {
+            tvBatteryPower.setText(powerW > 0
+                    ? String.format(Locale.getDefault(), "%.1f W", powerW) : "--");
+        }
+        if (tvBatteryTemp != null) {
+            if (!Double.isNaN(tempC)) {
+                tvBatteryTemp.setText(String.format(Locale.getDefault(), "%.1f°C", tempC));
+                tvBatteryTemp.setTextColor(tempC >= 40 ? 0xFFEF4444
+                        : tempC >= 38 ? 0xFFF59E0B
+                        : ContextCompat.getColor(this, R.color.text_primary));
+            } else {
+                tvBatteryTemp.setText("--");
+                tvBatteryTemp.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
+            }
+        }
+        if (tvBatteryVoltage != null) {
+            tvBatteryVoltage.setText(voltageV > 0
+                    ? String.format(Locale.getDefault(), "%.2f V", voltageV) : "--");
+        }
+    }
+
+    private void updateChargingIndicators(int currentLevel, double chargeRatePerMin) {
+        // Calcular tempo estimado para 100%
+        int remainingPercent = 100 - currentLevel;
+        double estimatedMinutes = remainingPercent / Math.max(Math.abs(chargeRatePerMin), 0.1);
+
+        // Formatar taxa de carregamento
+        String rateText = String.format(Locale.getDefault(), "%.2f%%/min", chargeRatePerMin);
+        tvChargingRate.setText(rateText);
+
+        // Formatar tempo estimado
+        String timeText;
+        if (estimatedMinutes > 60) {
+            int hours = (int) (estimatedMinutes / 60);
+            int minutes = (int) (estimatedMinutes % 60);
+            timeText = String.format(Locale.getDefault(), "~%dh %dmin", hours, minutes);
+        } else {
+            timeText = String.format(Locale.getDefault(), "~%dmin", (int) estimatedMinutes);
+        }
+        tvChargingTimeRemaining.setText(timeText);
+
+        // Determinar velocidade de carga
+        // < 0.3%/min = Lento (Vermelho/Tartaruga)
+        // 0.3 - 0.7%/min = Normal (Verde)
+        // > 0.7%/min = Rápido (Amarelo/Raio)
+        String speedLabel;
+        int gaugeColor;
+        int iconResource;
+        int gaugeProgress;
+
+        if (chargeRatePerMin < 0.3) {
+            speedLabel = "Lento";
+            gaugeColor = 0xFFEF4444; // Vermelho
+            iconResource = R.drawable.ic_charging_slow; // Tartaruga
+            gaugeProgress = 25;
+        } else if (chargeRatePerMin < 0.7) {
+            speedLabel = "Normal";
+            gaugeColor = 0xFF22C55E; // Verde
+            iconResource = android.R.drawable.ic_media_play; // Ícone neutro
+            gaugeProgress = 50;
+        } else {
+            speedLabel = "Rápido";
+            gaugeColor = 0xFFFCD34D; // Amarelo
+            iconResource = R.drawable.ic_charging_fast; // Raio
+            gaugeProgress = 100;
+        }
+
+        tvChargingSpeedLabel.setText(speedLabel);
+        tvChargingSpeedLabel.setTextColor(gaugeColor);
+        pbChargingSpeed.setProgress(gaugeProgress);
+        pbChargingSpeed.getProgressDrawable().setTint(gaugeColor);
+        ivChargingSpeedIcon.setImageResource(iconResource);
+
+        if (tvVisualIndicator != null) {
+            tvVisualIndicator.setText("⚡");
+            tvVisualIndicator.setTextColor(0xFF4ADE80); // Verde
+        }
+    }
+
+    private void updateDischargingIndicators(int currentLevel, double dischargeRatePerMin) {
+        // Calcular tempo estimado para 0%
+        double estimatedMinutes = currentLevel / Math.max(Math.abs(dischargeRatePerMin), 0.1);
+
+        // Formatar taxa de descarregamento
+        String rateText = String.format(Locale.getDefault(), "%.2f%%/min", Math.abs(dischargeRatePerMin));
+        tvChargingRate.setText(rateText);
+
+        // Formatar tempo estimado
+        String timeText;
+        if (estimatedMinutes > 60) {
+            int hours = (int) (estimatedMinutes / 60);
+            int minutes = (int) (estimatedMinutes % 60);
+            timeText = String.format(Locale.getDefault(), "~%dh %dmin", hours, minutes);
+        } else {
+            timeText = String.format(Locale.getDefault(), "~%dmin", (int) estimatedMinutes);
+        }
+        tvChargingTimeRemaining.setText(timeText);
+
+        // Determinar velocidade de descarregamento
+        // < 0.3%/min = Lento (Verde/Tartaruga)
+        // 0.3 - 0.7%/min = Normal (Branco)
+        // > 0.7%/min = Rápido (Vermelho/Raio)
+        String speedLabel;
+        int gaugeColor;
+        int iconResource;
+        int gaugeProgress;
+        double absRate = Math.abs(dischargeRatePerMin);
+
+        if (absRate < 0.3) {
+            speedLabel = "Lento";
+            gaugeColor = 0xFF22C55E; // Verde
+            iconResource = R.drawable.ic_charging_slow; // Tartaruga
+            gaugeProgress = 25;
+        } else if (absRate < 0.7) {
+            speedLabel = "Normal";
+            gaugeColor = 0xFFFFFFFF; // Branco
+            iconResource = android.R.drawable.ic_media_play; // Ícone neutro
+            gaugeProgress = 50;
+        } else {
+            speedLabel = "Rápido";
+            gaugeColor = 0xFFEF4444; // Vermelho
+            iconResource = R.drawable.ic_charging_fast; // Raio
+            gaugeProgress = 100;
+        }
+
+        tvChargingSpeedLabel.setText(speedLabel);
+        tvChargingSpeedLabel.setTextColor(gaugeColor);
+        pbChargingSpeed.setProgress(gaugeProgress);
+        pbChargingSpeed.getProgressDrawable().setTint(gaugeColor);
+        ivChargingSpeedIcon.setImageResource(iconResource);
+
+        if (tvVisualIndicator != null) {
+            tvVisualIndicator.setText("⬇️");
+            tvVisualIndicator.setTextColor(0xFFEF4444); // Vermelho
+        }
+    }
+
     @Override
     protected void onDestroy() {
+        try { unregisterReceiver(bipReceiver); } catch (Exception ignored) {}
+        try { unregisterReceiver(batteryReceiver); } catch (Exception ignored) {}
+        try { unregisterReceiver(badContactReceiver); } catch (Exception ignored) {}
         if (textToSpeech != null) {
             textToSpeech.stop();
             textToSpeech.shutdown();
+            textToSpeech = null;
         }
         stopCurrentAudio();
-        try { unregisterReceiver(bipReceiver); } catch (Exception ignored) {}
-        try { unregisterReceiver(batteryReceiver); } catch (Exception ignored) {}
         super.onDestroy();
     }
 }

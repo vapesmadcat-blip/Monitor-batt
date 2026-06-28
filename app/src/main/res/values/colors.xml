@@ -31,4 +31,10 @@
     <color name="spinner_text">#FF1C1B1F</color>
     <color name="button_secondary_background">#FFE5E7EB</color>
     <color name="button_secondary_text">#FF111827</color>
+
+    <!-- Card de estatística (STATUS / gauge de carregamento) -->
+    <color name="stat_card_background">#FFF1F5F9</color>
+    <color name="stat_card_stroke">#FFD9E2EC</color>
+    <color name="stat_card_track">#FFE2E8F0</color>
+    <color name="stat_card_badge_background">#FFE2E8F0</color>
 </resources>
