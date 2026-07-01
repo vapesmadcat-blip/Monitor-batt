@@ -163,7 +163,7 @@ public class BatteryService extends Service {
         // Registrar timestamp deste evento
         chargerEventTimestamps.add(now);
 
-        // Remover eventos fora da janela de 3 segundos
+        // Remover eventos fora da janela de 10 segundos
         chargerEventTimestamps.removeIf(t -> (now - t) > BAD_CONTACT_WINDOW_MS);
 
         Log.d("BatteryService", "Evento carregador: " + (nowCharging ? "CONECTADO" : "DESCONECTADO")
