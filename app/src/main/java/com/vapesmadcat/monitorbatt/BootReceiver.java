@@ -13,8 +13,9 @@ public class BootReceiver extends BroadcastReceiver {
         if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
             SharedPreferences prefs = context.getSharedPreferences(BatteryService.PREFS_NAME, Context.MODE_PRIVATE);
             boolean isEnabled = prefs.getBoolean(MainActivity.KEY_SERVICE_ENABLED, false);
+            boolean autoStart = prefs.getBoolean(MainActivity.KEY_AUTO_START_ON_BOOT, false);
             
-            if (isEnabled) {
+            if (isEnabled && autoStart) {
                 Intent svc = new Intent(context, BatteryService.class);
                 ContextCompat.startForegroundService(context, svc);
             }
