@@ -2,3 +2,12 @@
 keystore.properties
 *.jks
 *.keystore
+
+# Gradle and build outputs
+.gradle/
+build/
+app/build/
+
+# Android Studio / local environment
+local.properties
+*.iml

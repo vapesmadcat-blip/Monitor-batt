@@ -27,6 +27,8 @@ Aplicativo Android (Java) que monitora a bateria em background e emite um **bip 
 3. O arquivo final fica em:
    - `app/build/outputs/bundle/release/app-release.aab`
 
+> Sem `keystore.properties` (ou variáveis `RELEASE_*`), o build `release` é gerado unsigned e não usa assinatura de debug.
+
 ## Build local (Android Studio)
 
 1. `File → Open` → selecione a pasta `Monitor-batt`.
