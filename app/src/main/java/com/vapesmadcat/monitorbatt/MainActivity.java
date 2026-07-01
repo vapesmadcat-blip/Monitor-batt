@@ -96,6 +96,9 @@ public class MainActivity extends AppCompatActivity {
     // Flag para evitar que os listeners de switch disparem uns aos outros
     private boolean isSwitchUpdatingByCode = false;
 
+    private final Handler volumePreviewHandler = new Handler(Looper.getMainLooper());
+    private Runnable volumePreviewRunnable = null;
+
     private TextToSpeech textToSpeech;
     private boolean ttsInitialized = false;
 
@@ -468,7 +471,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             @Override public void onStartTrackingTouch(SeekBar s) {}
-            @Override public void onStopTrackingTouch(SeekBar s) {}
+            @Override public void onStopTrackingTouch(SeekBar s) {
+                scheduleVolumePreviewBeep();
+            }
         });
 
         characterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -897,6 +902,11 @@ public class MainActivity extends AppCompatActivity {
         int currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         int volumePercent = Math.round((currentVolume * 100f) / maxVolume);
         seekVoiceVolume.setProgress(volumePercent);
+        if (tvVoiceVolumeValue != null) {
+            tvVoiceVolumeValue.setText(volumePercent + "%");
+        }
+        preferences.edit().putInt(BatteryService.KEY_VOICE_VOLUME, volumePercent).apply();
+        scheduleVolumePreviewBeep();
     }
 
     @Override
@@ -952,10 +962,30 @@ public class MainActivity extends AppCompatActivity {
         try {
             ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
             tg.startTone(ToneGenerator.TONE_PROP_BEEP2, 300);
-            tg.release();
+            new Handler(Looper.getMainLooper()).postDelayed(tg::release, 500);
         } catch (Exception e) {
             Log.e("MainActivity", "Erro ao tocar bip de teste", e);
         }
+    }
+
+    private void scheduleVolumePreviewBeep() {
+        if (volumePreviewRunnable != null) {
+            volumePreviewHandler.removeCallbacks(volumePreviewRunnable);
+        }
+        volumePreviewRunnable = () -> {
+            boolean muted = preferences.getBoolean(BatteryService.KEY_MUTED, false);
+            if (!muted) {
+                try {
+                    ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
+                    tg.startTone(ToneGenerator.TONE_PROP_BEEP, 250);
+                    new Handler(Looper.getMainLooper()).postDelayed(tg::release, 450);
+                } catch (Exception e) {
+                    Log.e("MainActivity", "Erro ao tocar preview de volume", e);
+                }
+            }
+            volumePreviewRunnable = null;
+        };
+        volumePreviewHandler.postDelayed(volumePreviewRunnable, 150);
     }
 
     private void requestNotificationPermissionIfNeeded() {
