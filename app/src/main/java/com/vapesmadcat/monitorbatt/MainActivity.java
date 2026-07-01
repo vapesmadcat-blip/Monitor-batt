@@ -962,7 +962,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
             tg.startTone(ToneGenerator.TONE_PROP_BEEP2, 300);
-            new Handler(Looper.getMainLooper()).postDelayed(tg::release, 500);
+            volumePreviewHandler.postDelayed(tg::release, 500);
         } catch (Exception e) {
             Log.e("MainActivity", "Erro ao tocar bip de teste", e);
         }
@@ -978,7 +978,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
                     tg.startTone(ToneGenerator.TONE_PROP_BEEP, 250);
-                    new Handler(Looper.getMainLooper()).postDelayed(tg::release, 450);
+                    volumePreviewHandler.postDelayed(tg::release, 450);
                 } catch (Exception e) {
                     Log.e("MainActivity", "Erro ao tocar preview de volume", e);
                 }
@@ -1267,6 +1267,7 @@ public class MainActivity extends AppCompatActivity {
             textToSpeech.shutdown();
             textToSpeech = null;
         }
+        volumePreviewHandler.removeCallbacksAndMessages(null);
         stopCurrentAudio();
         super.onDestroy();
     }
