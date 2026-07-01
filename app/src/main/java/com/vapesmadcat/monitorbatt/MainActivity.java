@@ -715,6 +715,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkChanges() {
+        isModified = true;
+        saveBtn.setVisibility(View.VISIBLE);
+        autoPersistSettings();
+    }
+
+    private void autoPersistSettings() {
         saveSettings();
         isModified = false;
         saveBtn.setVisibility(View.GONE);
