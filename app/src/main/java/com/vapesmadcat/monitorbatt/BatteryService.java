@@ -120,7 +120,8 @@ public class BatteryService extends Service {
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MonitorBatt::wl");
         wakeLock.setReferenceCounted(false);
-        wakeLock.acquire();
+        // Timeout de 12 horas para evitar wake lock eterno em caso de falha
+        wakeLock.acquire(12 * 60 * 60 * 1000L);
 
         createChannel();
         registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
