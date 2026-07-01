@@ -21,6 +21,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -35,6 +36,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -42,12 +44,19 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
+import java.util.Queue;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
     private View batteryFill;
-    private TextView batteryText, statusText, thresholdValueText, intervalValueText;
+    private TextView statusText, thresholdValueText, intervalValueText;
     private TextView bipIndicator, chargingBolt;
     private TextView tvBigPercentage;
     private SeekBar thresholdSeek, intervalSeek;
@@ -57,11 +66,13 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvVoiceVolumeValue;
     private Spinner characterSpinner, spinnerVisualStyle;
     private SwitchMaterial switchThemeMode, switchBeep, switchTts, switchCharacterVoice;
+    private SwitchMaterial switchAutoStart;
     private Button muteBtn, saveBtn, btnMonitor, btnSobre;
     private Button btnTestBeep, btnTestTTS, btnTestVoice;
     private ImageView ivMascot;
     private LinearLayout batteryContainer;
     private LinearLayout layoutBadContactAlert;
+    private LinearLayout layoutStatsCard;
     private Button btnDismissBadContact;
     
     // Gauge de carregamento
@@ -91,6 +102,55 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREFS_NAME = "monitor_batt_prefs";
     public static final String KEY_SERVICE_ENABLED = "service_enabled";
     public static final String KEY_DARK_MODE = "dark_mode_enabled";
+    public static final String KEY_AUTO_START_ON_BOOT = "auto_start_on_boot";
+
+    private final Random random = new Random();
+    private final Queue<String> dischargingTipsQueue = new ArrayDeque<>();
+    private final Queue<String> chargingTipsQueue = new ArrayDeque<>();
+    private static final List<String> DISCHARGING_TIPS = Arrays.asList(
+            "Reduza o brilho da tela para economizar bateria rapidamente.",
+            "Prefira Wi-Fi estável ao invés de sinal móvel fraco.",
+            "Desative Bluetooth, GPS e NFC quando não estiver usando.",
+            "Feche apps em segundo plano que fazem sincronização contínua.",
+            "Ative o modo de economia de energia em níveis críticos.",
+            "Evite vídeos longos em brilho máximo fora da tomada.",
+            "Use tema escuro em telas OLED para reduzir consumo.",
+            "Configure bloqueio automático da tela em tempo curto.",
+            "Desative atualização automática de apps fora do carregador.",
+            "Baixe músicas e mapas antes de sair de casa.",
+            "Evite widgets em excesso atualizando toda hora.",
+            "Mantenha apps e sistema atualizados para melhor eficiência.",
+            "Use carregadores certificados para reduzir perdas de energia.",
+            "Remova capas muito quentes durante uso pesado.",
+            "Evite deixar muitos apps com permissão de localização constante.",
+            "Reduza vibração e feedback tátil quando a bateria estiver baixa.",
+            "Limite notificações de apps que não são essenciais.",
+            "Quando possível, prefira mensagens de texto a chamadas de vídeo longas.",
+            "Se não houver rede, ative modo avião temporariamente.",
+            "Economizar bateria também aumenta a vida útil do aparelho."
+    );
+    private static final List<String> CHARGING_TIPS = Arrays.asList(
+            "Prefira manter a carga entre 20% e 80% no uso diário.",
+            "Evite usar o aparelho em jogos pesados enquanto carrega.",
+            "Carregue em local ventilado para reduzir aquecimento.",
+            "Use carregador e cabo de boa qualidade e certificados.",
+            "Desconecte após carga completa para reduzir estresse térmico.",
+            "Se possível, retire capas grossas durante carregamento intenso.",
+            "Evite deixar o celular descarregar até 0% com frequência.",
+            "Cargas curtas ao longo do dia podem ser melhores que ciclos extremos.",
+            "Mantenha a porta USB limpa para evitar mau contato e perdas.",
+            "Evite exposição direta ao sol durante o carregamento.",
+            "Carregamento noturno é mais seguro com carregador original.",
+            "Evite dobrar o cabo próximo ao conector para aumentar durabilidade.",
+            "Não cubra o aparelho enquanto carrega para não acumular calor.",
+            "Uma bateria mais fria tende a durar mais ciclos.",
+            "Desative recursos pesados durante carga para ganhar eficiência.",
+            "Sustentabilidade: carregue fora de horários de pico quando possível.",
+            "Economia de energia: retire da tomada ao terminar de carregar.",
+            "Acompanhe temperatura: calor excessivo acelera desgaste da bateria.",
+            "Prefira tomadas estáveis e evite adaptadores ruins.",
+            "Boa prática: mantenha o sistema atualizado para gestão térmica melhor."
+    );
 
     // ----------------------------------------------------------------
     // Receiver para piscar o indicador de bip
@@ -139,10 +199,10 @@ public class MainActivity extends AppCompatActivity {
         preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         applyNightMode(getStoredDarkModeEnabled(preferences));
         setContentView(R.layout.activity_main);
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         // Vincular views
         batteryFill = findViewById(R.id.batteryFill);
-        batteryText = findViewById(R.id.tvLevel);
         statusText = findViewById(R.id.tvStatus);
         thresholdValueText = findViewById(R.id.tvThresholdValue);
         intervalValueText = findViewById(R.id.tvIntervalValue);
@@ -163,6 +223,7 @@ public class MainActivity extends AppCompatActivity {
         switchBeep = findViewById(R.id.switchBeep);
         switchTts = findViewById(R.id.switchTts);
         switchCharacterVoice = findViewById(R.id.switchCharacterVoice);
+        switchAutoStart = findViewById(R.id.switchAutoStart);
         spinnerVisualStyle = findViewById(R.id.spinnerVisualStyle);
         ivMascot = findViewById(R.id.ivMascot);
         tvBigPercentage = findViewById(R.id.tvBigPercentage);
@@ -176,6 +237,7 @@ public class MainActivity extends AppCompatActivity {
         seekVoiceVolume = findViewById(R.id.seekVoiceVolume);
         tvVoiceVolumeValue = findViewById(R.id.tvVoiceVolumeValue);
         layoutBadContactAlert = findViewById(R.id.layoutBadContactAlert);
+        layoutStatsCard = findViewById(R.id.layoutStatsCard);
         btnDismissBadContact = findViewById(R.id.btnDismissBadContact);
         
         // Gauge de carregamento
@@ -271,6 +333,10 @@ public class MainActivity extends AppCompatActivity {
         btnDismissBadContact.setOnClickListener(v -> {
             layoutBadContactAlert.setVisibility(View.GONE);
         });
+
+        if (layoutStatsCard != null) {
+            layoutStatsCard.setOnClickListener(v -> showRandomTipsPanel());
+        }
 
         // Registro de Broadcasts
         IntentFilter bipFilter = new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED");
@@ -462,6 +528,12 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "🎭 Voz do personagem ativada!", Toast.LENGTH_SHORT).show();
             }
         });
+
+        switchAutoStart.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isSwitchUpdatingByCode) return;
+            checkChanges();
+            preferences.edit().putBoolean(KEY_AUTO_START_ON_BOOT, isChecked).apply();
+        });
     }
 
     private void clampVoiceThresholds(SeekBar changedSeek) {
@@ -643,8 +715,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkChanges() {
-        isModified = true;
-        saveBtn.setVisibility(View.VISIBLE);
+        saveSettings();
+        isModified = false;
+        saveBtn.setVisibility(View.GONE);
     }
 
     private void loadSettings() {
@@ -676,6 +749,7 @@ public class MainActivity extends AppCompatActivity {
         boolean beepEnabled = preferences.getBoolean(BatteryService.KEY_BEEP_ENABLED, false);
         boolean ttsEnabled = preferences.getBoolean(BatteryService.KEY_TTS_ENABLED, false);
         boolean charVoiceEnabled = preferences.getBoolean(BatteryService.KEY_CHARACTER_VOICE_ENABLED, false);
+        boolean autoStartEnabled = preferences.getBoolean(KEY_AUTO_START_ON_BOOT, false);
 
         // Garantir exclusividade ao carregar: se ambos estiverem salvos como true, priorizar TTS
         if (ttsEnabled && charVoiceEnabled) {
@@ -685,6 +759,7 @@ public class MainActivity extends AppCompatActivity {
         switchBeep.setChecked(beepEnabled);
         switchTts.setChecked(ttsEnabled);
         switchCharacterVoice.setChecked(charVoiceEnabled);
+        switchAutoStart.setChecked(autoStartEnabled);
 
         String visual = preferences.getString(BatteryService.KEY_VISUAL_STYLE, "normal");
         spinnerVisualStyle.setSelection("mascot".equals(visual) ? 1 : 0);
@@ -722,6 +797,7 @@ public class MainActivity extends AppCompatActivity {
                 .putBoolean(BatteryService.KEY_BEEP_ENABLED, switchBeep.isChecked())
                 .putBoolean(BatteryService.KEY_TTS_ENABLED, ttsOn)
                 .putBoolean(BatteryService.KEY_CHARACTER_VOICE_ENABLED, charVoiceOn)
+                .putBoolean(KEY_AUTO_START_ON_BOOT, switchAutoStart.isChecked())
                 .putString(BatteryService.KEY_VISUAL_STYLE, spinnerVisualStyle.getSelectedItemPosition() == 1 ? "mascot" : "normal")
                 .apply();
     }
@@ -746,9 +822,7 @@ public class MainActivity extends AppCompatActivity {
         int pct = (level >= 0 && scale > 0) ? (int) ((level * 100f) / scale) : -1;
         isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
 
-        batteryText.setText(pct + "%");
         int color = getBatteryColor(pct);
-        batteryText.setTextColor(color);
         updateBatteryFill(pct);
         updateChargingUI(isCharging);
         updateBigPercentage(pct);
@@ -757,6 +831,81 @@ public class MainActivity extends AppCompatActivity {
         if (ivMascot != null && ivMascot.getVisibility() == View.VISIBLE) {
             updateMascotImage();
         }
+    }
+
+    private void showRandomTipsPanel() {
+        List<String> tips = getRandomTips(isCharging, 4);
+        StringBuilder message = new StringBuilder();
+        for (int i = 0; i < tips.size(); i++) {
+            message.append("• ").append(tips.get(i));
+            if (i < tips.size() - 1) message.append("\n\n");
+        }
+
+        String title = isCharging
+                ? "Dicas de carregamento inteligente"
+                : "Dicas para economizar bateria";
+
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message.toString())
+                .setPositiveButton("Fechar", null)
+                .show();
+    }
+
+    private List<String> getRandomTips(boolean chargingNow, int count) {
+        Queue<String> queue = chargingNow ? chargingTipsQueue : dischargingTipsQueue;
+        List<String> source = chargingNow ? CHARGING_TIPS : DISCHARGING_TIPS;
+        List<String> tips = new ArrayList<>();
+
+        while (tips.size() < count) {
+            if (queue.isEmpty()) refillTipsQueue(queue, source);
+            String tip = queue.poll();
+            if (tip == null) break;
+            tips.add(tip);
+        }
+        return tips;
+    }
+
+    private void refillTipsQueue(Queue<String> queue, List<String> source) {
+        List<String> shuffled = new ArrayList<>(source);
+        Collections.shuffle(shuffled, random);
+        queue.addAll(shuffled);
+    }
+
+    private void persistCurrentState() {
+        saveSettings();
+        preferences.edit()
+                .putBoolean(KEY_AUTO_START_ON_BOOT, switchAutoStart != null && switchAutoStart.isChecked())
+                .apply();
+    }
+
+    private void adjustAppVolume(int direction) {
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (audioManager == null) return;
+
+        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, AudioManager.FLAG_SHOW_UI);
+        audioManager.adjustStreamVolume(AudioManager.STREAM_ALARM, direction, AudioManager.FLAG_SHOW_UI);
+
+        int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        if (maxVolume <= 0 || seekVoiceVolume == null) return;
+        int currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        int volumePercent = Math.round((currentVolume * 100f) / maxVolume);
+        seekVoiceVolume.setProgress(volumePercent);
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+            if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP) {
+                adjustAppVolume(AudioManager.ADJUST_RAISE);
+                return true;
+            }
+            if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
+                adjustAppVolume(AudioManager.ADJUST_LOWER);
+                return true;
+            }
+        }
+        return super.dispatchKeyEvent(event);
     }
 
     private void updateChargingUI(boolean charging) {
@@ -826,6 +975,12 @@ public class MainActivity extends AppCompatActivity {
             statusText.setText("Monitoramento: DESATIVADO");
             statusText.setTextColor(0xFFFF4D4F);
         }
+    }
+
+    @Override
+    protected void onPause() {
+        persistCurrentState();
+        super.onPause();
     }
 
     /**
@@ -1067,6 +1222,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        persistCurrentState();
         try { unregisterReceiver(bipReceiver); } catch (Exception ignored) {}
         try { unregisterReceiver(batteryReceiver); } catch (Exception ignored) {}
         try { unregisterReceiver(badContactReceiver); } catch (Exception ignored) {}
