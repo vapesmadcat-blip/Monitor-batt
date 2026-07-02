@@ -23,13 +23,17 @@
 
             <!-- Card de Estatística (Esquerda) -->
             <LinearLayout
+                android:id="@+id/layoutStatsCard"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:background="@drawable/stat_card_background"
                 android:padding="12dp"
-                android:elevation="2dp">
+                android:elevation="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
 
                 <!-- Cabeçalho: indicador + STATUS + badge de velocidade -->
                 <LinearLayout
@@ -326,7 +330,7 @@
         <!-- ============================================================ -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="350dp"
+            android:layout_height="510dp"
             android:layout_marginBottom="12dp">
 
             <LinearLayout
@@ -337,8 +341,8 @@
                 android:orientation="vertical">
 
                 <FrameLayout
-                    android:layout_width="160dp"
-                    android:layout_height="300dp">
+                    android:layout_width="232dp"
+                    android:layout_height="435dp">
 
                     <View android:layout_width="match_parent" android:layout_height="match_parent"
                         android:background="@drawable/battery_shell"/>
@@ -362,18 +366,10 @@
                         android:visibility="gone"/>
                 </FrameLayout>
 
-                <TextView android:id="@+id/tvLevel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="87%"
-                    android:textColor="#4ADE80"
-                    android:textSize="42sp"
-                    android:textStyle="bold"/>
-
                 <TextView android:id="@+id/tvStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
                     android:text="NORMAL"
                     android:textColor="#4ADE80"
                     android:textSize="16sp"
@@ -381,8 +377,8 @@
             </LinearLayout>
 
             <ImageView android:id="@+id/ivMascot"
-                android:layout_width="320dp"
-                android:layout_height="320dp"
+                android:layout_width="464dp"
+                android:layout_height="464dp"
                 android:layout_gravity="center"
                 android:visibility="gone"
                 android:scaleType="fitCenter"
@@ -544,6 +540,16 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:text="Ativar Voz do Personagem"
+            android:checked="false"
+            android:textColor="@color/text_primary"
+            app:useMaterialThemeColors="true" />
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switchAutoStart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="Iniciar automaticamente com o Android"
             android:checked="false"
             android:textColor="@color/text_primary"
             app:useMaterialThemeColors="true" />

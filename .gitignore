@@ -11,3 +11,7 @@ app/build/
 # Android Studio / local environment
 local.properties
 *.iml
+
+# Python generated files
+__pycache__/
+*.pyc
