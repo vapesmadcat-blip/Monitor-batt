@@ -316,7 +316,7 @@ class MonitorBatt:
         if (now - self.last_voice_time) < self.voice_cooldown:
             return
 
-        if level <= max(self.voice_verylow, self.voice_critical):
+        if level <= self.voice_verylow:
             msg = (f"Alerta crítico! A bateria está em apenas {level} por cento. "
                    "Conecte o carregador imediatamente.")
         elif level <= self.voice_low:
