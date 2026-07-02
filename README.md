@@ -43,6 +43,8 @@ O repositório possui workflow automático em `.github/workflows/release.yml` pa
    ```
 5. A primeira versão do app precisa ser enviada manualmente no Play Console para criar o listing. Depois disso, os próximos envios podem ser automatizados pelo workflow.
 
+> Sem credenciais de release (`keystore.properties` ou variáveis `RELEASE_*`), o build `release` é gerado **sem assinatura de debug** (unsigned), evitando confusão entre artefatos de debug e release.
+
 ## Build local (Android Studio)
 
 1. `File → Open` → selecione a pasta `Monitor-batt`.
