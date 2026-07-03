@@ -964,16 +964,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         try {
-            AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
             int volume = seekVoiceVolume != null ? seekVoiceVolume.getProgress() : 80;
-            
-            // Forçar o volume do canal ALARM para o máximo do sistema, para que o ToneGenerator tenha controle total
-            if (am != null) {
-                int maxSystemVol = am.getStreamMaxVolume(AudioManager.STREAM_ALARM);
-                am.setStreamVolume(AudioManager.STREAM_ALARM, maxSystemVol, 0);
-            }
-
-            ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, volume);
+            ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_MUSIC, volume);
             tg.startTone(ToneGenerator.TONE_PROP_BEEP2, 300);
             volumePreviewHandler.postDelayed(tg::release, 500);
         } catch (Exception e) {
@@ -989,15 +981,8 @@ public class MainActivity extends AppCompatActivity {
             boolean muted = preferences.getBoolean(BatteryService.KEY_MUTED, false);
             if (!muted) {
                 try {
-                    AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
                     int volume = seekVoiceVolume != null ? seekVoiceVolume.getProgress() : 80;
-                    
-                    if (am != null) {
-                        int maxSystemVol = am.getStreamMaxVolume(AudioManager.STREAM_ALARM);
-                        am.setStreamVolume(AudioManager.STREAM_ALARM, maxSystemVol, 0);
-                    }
-
-                    ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, volume);
+                    ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_MUSIC, volume);
                     tg.startTone(ToneGenerator.TONE_PROP_BEEP, 250);
                     volumePreviewHandler.postDelayed(tg::release, 450);
                 } catch (Exception e) {

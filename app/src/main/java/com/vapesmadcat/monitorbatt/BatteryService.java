@@ -227,28 +227,18 @@ public class BatteryService extends Service {
             return;
         }
         
-        // Atualizar o ToneGenerator com o volume atual antes de tocar
         int volume = prefs.getInt(KEY_VOICE_VOLUME, DEFAULT_VOICE_VOLUME);
         
-        // Forçar o volume do canal de áudio no sistema
-        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        if (am != null) {
-            int maxSystemVol = am.getStreamMaxVolume(AudioManager.STREAM_ALARM);
-            am.setStreamVolume(AudioManager.STREAM_ALARM, maxSystemVol, 0);
+        try {
+            // Usar um ToneGenerator temporário para o bip, evitando manter recursos abertos
+            ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_MUSIC, volume);
+            tg.startTone(getToneForLevel(), getToneDurationMs());
+            // Liberar após o tempo do tom (máximo 800ms)
+            handler.postDelayed(tg::release, 1000);
+        } catch (Exception e) {
+            Log.e("BatteryService", "Erro ao tocar tom", e);
         }
 
-        if (toneGenerator != null) {
-            toneGenerator.release();
-        }
-        toneGenerator = createToneGenerator();
-
-        if (toneGenerator != null) {
-            try {
-                toneGenerator.startTone(getToneForLevel(), getToneDurationMs());
-            } catch (Exception e) {
-                Log.e("BatteryService", "Erro ao tocar tom", e);
-            }
-        }
         sendBroadcast(new Intent("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"));
         updateNotification();
     }
@@ -488,6 +478,7 @@ public class BatteryService extends Service {
             handler.removeCallbacksAndMessages(null);
         }
 
+        // Não usamos mais o toneGenerator persistente, mas limpamos por segurança
         if (toneGenerator != null) {
             toneGenerator.release();
             toneGenerator = null;
