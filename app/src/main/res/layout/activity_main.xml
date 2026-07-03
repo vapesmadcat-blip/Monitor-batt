@@ -281,9 +281,7 @@
             android:gravity="center"
             android:layout_marginBottom="16dp"/>
 
-        <!-- ============================================================ -->
-        <!-- ALERTA DE MAU CONTATO (oculto por padrão)                    -->
-        <!-- ============================================================ -->
+        <!-- Alerta de Mau Contato -->
         <LinearLayout
             android:id="@+id/layoutBadContactAlert"
             android:layout_width="match_parent"
@@ -293,7 +291,6 @@
             android:padding="12dp"
             android:layout_marginBottom="12dp"
             android:visibility="gone">
-
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -302,16 +299,6 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:gravity="center"/>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Detectada possibilidade de mau contato"
-                android:textColor="#FFFFFF"
-                android:textSize="13sp"
-                android:gravity="center"
-                android:layout_marginTop="4dp"/>
-
             <Button
                 android:id="@+id/btnDismissBadContact"
                 android:layout_width="wrap_content"
@@ -320,265 +307,373 @@
                 android:layout_marginTop="8dp"
                 android:text="OK"
                 android:textColor="#FF3B30"
-                android:backgroundTint="#FFFFFF"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"/>
+                android:backgroundTint="#FFFFFF" />
         </LinearLayout>
 
-        <!-- ============================================================ -->
-        <!-- BATERIA + MASCOTE (Centralizado)                             -->
-        <!-- ============================================================ -->
+        <!-- Bateria Visual -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="510dp"
-            android:layout_marginBottom="12dp">
-
+            android:layout_height="180dp"
+            android:layout_marginBottom="24dp">
             <LinearLayout
                 android:id="@+id/batteryContainer"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:orientation="vertical">
-
-                <FrameLayout
-                    android:layout_width="232dp"
-                    android:layout_height="435dp">
-
-                    <View android:layout_width="match_parent" android:layout_height="match_parent"
-                        android:background="@drawable/battery_shell"/>
-
-                    <View android:id="@+id/batteryFill"
+                <RelativeLayout
+                    android:layout_width="100dp"
+                    android:layout_height="160dp"
+                    android:background="@drawable/battery_shell">
+                    <View
+                        android:id="@+id/batteryFill"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
-                        android:layout_gravity="bottom"
-                        android:background="@drawable/battery_fill_high"/>
-
-                    <View android:layout_width="match_parent" android:layout_height="match_parent"
-                        android:background="@drawable/battery_gloss"/>
-
-                    <TextView android:id="@+id/tvChargingBolt"
+                        android:layout_alignParentBottom="true"
+                        android:layout_margin="8dp"
+                        android:background="@drawable/battery_fill_mid" />
+                    <TextView
+                        android:id="@+id/tvChargingBolt"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center"
+                        android:layout_centerInParent="true"
                         android:text="⚡"
-                        android:textColor="#FFD700"
-                        android:textSize="48sp"
-                        android:visibility="gone"/>
-                </FrameLayout>
-
-                <TextView android:id="@+id/tvStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="NORMAL"
-                    android:textColor="#4ADE80"
-                    android:textSize="16sp"
-                    android:textStyle="bold"/>
+                        android:textSize="40sp"
+                        android:visibility="gone" />
+                </RelativeLayout>
             </LinearLayout>
-
-            <ImageView android:id="@+id/ivMascot"
-                android:layout_width="464dp"
-                android:layout_height="464dp"
+            <ImageView
+                android:id="@+id/ivMascot"
+                android:layout_width="140dp"
+                android:layout_height="140dp"
                 android:layout_gravity="center"
-                android:visibility="gone"
-                android:scaleType="fitCenter"
-                android:src="@drawable/battery_mascot_1"/>
+                android:src="@drawable/battery_mascot_1"
+                android:visibility="gone" />
+            <TextView
+                android:id="@+id/tvBigPercentage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|center_horizontal"
+                android:text="--%"
+                android:textColor="@color/text_primary"
+                android:textSize="28sp"
+                android:textStyle="bold" />
         </FrameLayout>
 
-        <!-- Porcentagem Grande -->
-        <TextView android:id="@+id/tvBigPercentage"
+        <!-- Status e Bip Visual -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="--%"
-            android:textColor="#4ADE80"
-            android:textSize="68sp"
-            android:textStyle="bold"
             android:gravity="center"
-            android:layout_marginBottom="20dp"/>
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Monitoramento: DESATIVADO"
+                android:textColor="#FF4D4F"
+                android:textStyle="bold" />
+            <TextView
+                android:id="@+id/tvBipIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="🔊"
+                android:textSize="24sp"
+                android:alpha="0.3" />
+        </LinearLayout>
 
-        <!-- Indicador de Bip (feedback visual) -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="🔊 BIP (pisca quando toca)"
-            android:textColor="@color/text_secondary"
-            android:textSize="11sp"
-            android:gravity="center"
-            android:layout_marginBottom="2dp"/>
-
-        <TextView android:id="@+id/tvBipIndicator"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="🔊"
-            android:textColor="@color/text_primary"
-            android:textSize="24sp"
-            android:gravity="center"
-            android:layout_marginBottom="16dp"/>
-
-        <!-- ============================================================ -->
-        <!-- BOTÃO MONITOR (ÚNICO)                                         -->
-        <!-- ============================================================ -->
-        <Button
-            android:id="@+id/btnMonitor"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:layout_marginBottom="12dp"
-            android:text="▶ ATIVAR MONITOR"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:backgroundTint="#22C55E"
-            android:textColor="#FFFFFF"
-            android:stateListAnimator="@null"
-            android:elevation="4dp" />
-
-        <!-- ============================================================ -->
-        <!-- BOTÕES SILENCIAR + SOBRE                                      -->
-        <!-- ============================================================ -->
+        <!-- Botões de Ação -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="16dp">
-
+            android:layout_marginBottom="24dp">
+            <Button
+                android:id="@+id/btnMonitor"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:text="▶ ATIVAR MONITOR"
+                android:backgroundTint="@color/green" />
             <Button
                 android:id="@+id/btnMute"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginEnd="8dp"
-                android:text="🔊 Silenciar"
+                android:layout_marginStart="6dp"
+                android:text="🔇 SILENCIAR"
                 android:backgroundTint="@color/button_secondary_background"
                 android:textColor="@color/button_secondary_text" />
+        </LinearLayout>
+
+        <!-- ============================================================ -->
+        <!-- ÁREA BIP (NOVO QUADRO)                                        -->
+        <!-- ============================================================ -->
+        <LinearLayout
+            android:id="@+id/layoutBipArea"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/stat_card_background"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="ÁREA BIP"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp"/>
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switchBeep"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ativar Bip"
+                android:textColor="@color/text_primary"
+                app:useMaterialThemeColors="true" />
+
+            <!-- Volume do Bip -->
+            <LinearLayout
+                android:id="@+id/layoutBeepVolume"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="8dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="Volume do Bip:"
+                        android:textColor="@color/text_primary"/>
+                    <TextView android:id="@+id/tvBeepVolumeValue"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="80%" android:textColor="#4ADE80" android:textStyle="bold"/>
+                </LinearLayout>
+                <SeekBar android:id="@+id/seekBeepVolume"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="100"
+                    android:progress="80"/>
+            </LinearLayout>
+
+            <!-- Começar quando (Threshold) -->
+            <LinearLayout
+                android:id="@+id/layoutBeepThreshold"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="12dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="Começar quando (limite):"
+                        android:textColor="@color/text_primary"/>
+                    <TextView android:id="@+id/tvThresholdValue"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="10%" android:textColor="#4ADE80" android:textStyle="bold"/>
+                </LinearLayout>
+                <SeekBar android:id="@+id/seekThreshold"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="25"
+                    android:progress="5"/>
+            </LinearLayout>
+
+            <!-- Intervalo do Bip -->
+            <LinearLayout
+                android:id="@+id/layoutBeepInterval"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="12dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="Intervalo do Bip:"
+                        android:textColor="@color/text_primary"/>
+                    <TextView android:id="@+id/tvIntervalValue"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="15 seg" android:textColor="#4ADE80" android:textStyle="bold"/>
+                </LinearLayout>
+                <SeekBar android:id="@+id/seekInterval"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="11"
+                    android:progress="2"/>
+            </LinearLayout>
 
             <Button
-                android:id="@+id/btnSobre"
-                android:layout_width="0dp"
+                android:id="@+id/btnTestBeep"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="8dp"
-                android:text="ℹ️ Sobre"
+                android:layout_marginTop="12dp"
+                android:text="🔊 Testar Bip"
                 android:backgroundTint="@color/button_secondary_background"
                 android:textColor="@color/button_secondary_text" />
-
         </LinearLayout>
-
-        <!-- Configurações -->
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="Configurações" android:textColor="@color/text_secondary"
-            android:textSize="14sp" android:layout_marginBottom="8dp"/>
-
-        <!-- Threshold -->
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="horizontal" android:layout_marginBottom="12dp">
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:text="Alerta a partir de:"
-                android:textColor="@color/text_primary"/>
-            <TextView android:id="@+id/tvThresholdValue"
-                android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="15%" android:textColor="#4ADE80" android:textStyle="bold"/>
-        </LinearLayout>
-
-        <SeekBar android:id="@+id/seekThreshold"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"/>
-
-        <!-- Intervalo -->
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="horizontal" android:layout_marginBottom="12dp">
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:text="Intervalo do bip:"
-                android:textColor="@color/text_primary"/>
-            <TextView android:id="@+id/tvIntervalValue"
-                android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="30 segundos" android:textColor="#4ADE80" android:textStyle="bold"/>
-        </LinearLayout>
-
-        <SeekBar android:id="@+id/seekInterval"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"/>
 
         <!-- ============================================================ -->
-        <!-- SWITCHES DE ÁUDIO                                             -->
+        <!-- ÁREA VOZ (NOVO QUADRO)                                        -->
         <!-- ============================================================ -->
-
-        <!-- Switch Bip (independente) -->
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/switchBeep"
+        <LinearLayout
+            android:id="@+id/layoutVoiceArea"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="Ativar Bip"
-            android:checked="false"
-            android:textColor="@color/text_primary"
-            app:useMaterialThemeColors="true" />
+            android:orientation="vertical"
+            android:background="@drawable/stat_card_background"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
 
-        <!-- Separador de grupo exclusivo -->
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="Modo de voz (escolha um):"
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp"
-            android:layout_marginBottom="4dp"
-            android:layout_marginTop="8dp"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="ÁREA VOZ"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp"/>
 
-        <!-- Switch TTS (exclusivo com Personagem) -->
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/switchTts"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="Ativar TTS (síntese de voz)"
-            android:checked="false"
-            android:textColor="@color/text_primary"
-            app:useMaterialThemeColors="true" />
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switchTts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ativar TTS (síntese)"
+                android:textColor="@color/text_primary"
+                app:useMaterialThemeColors="true" />
 
-        <!-- Switch Personagem (exclusivo com TTS) -->
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/switchCharacterVoice"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:text="Ativar Voz do Personagem"
-            android:checked="false"
-            android:textColor="@color/text_primary"
-            app:useMaterialThemeColors="true" />
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switchCharacterVoice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ativar Personagem"
+                android:textColor="@color/text_primary"
+                app:useMaterialThemeColors="true" />
 
+            <!-- Seleção de Personagem -->
+            <LinearLayout
+                android:id="@+id/layoutCharacterSelection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="8dp">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Escolher Personagem:" android:textColor="@color/text_secondary"
+                    android:textSize="12sp" android:layout_marginBottom="4dp"/>
+                <Spinner android:id="@+id/spinnerCharacter"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/spinner_box_background"
+                    android:popupBackground="@color/spinner_dropdown_background"/>
+            </LinearLayout>
+
+            <!-- Volume da Voz -->
+            <LinearLayout
+                android:id="@+id/layoutVoiceVolume"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="12dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="Volume da Voz:"
+                        android:textColor="@color/text_primary"/>
+                    <TextView android:id="@+id/tvVoiceVolumeValue"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="80%" android:textColor="#4ADE80" android:textStyle="bold"/>
+                </LinearLayout>
+                <SeekBar android:id="@+id/seekVoiceVolume"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="100"
+                    android:progress="80"/>
+            </LinearLayout>
+
+            <!-- Porcentagens de Alerta -->
+            <LinearLayout
+                android:id="@+id/layoutVoiceThresholds"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="12dp">
+                
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Porcentagens de Alerta:" android:textColor="@color/text_secondary"
+                    android:textSize="12sp" android:layout_marginBottom="8dp"/>
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="Voz baixa:" />
+                    <TextView android:id="@+id/tvVoiceLowValue"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="10%" android:textColor="#4ADE80" android:textStyle="bold"/>
+                </LinearLayout>
+                <SeekBar android:id="@+id/seekVoiceLow" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginTop="8dp">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="Voz crítica:" />
+                    <TextView android:id="@+id/tvVoiceCriticalValue"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="5%" android:textColor="#F59E0B" android:textStyle="bold"/>
+                </LinearLayout>
+                <SeekBar android:id="@+id/seekVoiceCritical" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginTop="8dp">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="Voz muito baixa:" />
+                    <TextView android:id="@+id/tvVoiceVeryLowValue"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="2%" android:textColor="#EF4444" android:textStyle="bold"/>
+                </LinearLayout>
+                <SeekBar android:id="@+id/seekVoiceVeryLow" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="12dp">
+                <Button
+                    android:id="@+id/btnTestTTS"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:text="🗣️ Testar TTS"
+                    android:backgroundTint="@color/button_secondary_background"
+                    android:textColor="@color/button_secondary_text" />
+                <Button
+                    android:id="@+id/btnTestVoice"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:text="🎭 Testar Voz"
+                    android:backgroundTint="@color/button_secondary_background"
+                    android:textColor="@color/button_secondary_text" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Configurações Extras -->
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/switchAutoStart"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:text="Iniciar automaticamente com o Android"
-            android:checked="false"
+            android:layout_marginBottom="8dp"
+            android:text="Iniciar com o Android"
             android:textColor="@color/text_primary"
             app:useMaterialThemeColors="true" />
 
-        <!-- ============================================================ -->
-        <!-- VOLUME DA VOZ                                                  -->
-        <!-- ============================================================ -->
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="horizontal" android:layout_marginBottom="8dp">
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:text="Volume da voz:"
-                android:textColor="@color/text_primary"/>
-            <TextView android:id="@+id/tvVoiceVolumeValue"
-                android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="80%" android:textColor="#4ADE80" android:textStyle="bold"/>
-        </LinearLayout>
-
-        <SeekBar android:id="@+id/seekVoiceVolume"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:max="100"
-            android:progress="80"
-            android:layout_marginBottom="24dp"/>
-
-        <!-- Estilo Visual -->
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="Estilo Visual:" android:textColor="@color/text_secondary"
-            android:layout_marginBottom="6dp"/>
-
+            android:layout_marginBottom="4dp"/>
         <Spinner android:id="@+id/spinnerVisualStyle"
             android:layout_width="match_parent"
             android:layout_height="48dp"
@@ -586,111 +681,14 @@
             android:popupBackground="@color/spinner_dropdown_background"
             android:layout_marginBottom="24dp"/>
 
-        <!-- Personagem de voz -->
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="Voz do Personagem:" android:textColor="@color/text_secondary"
-            android:layout_marginBottom="6dp"/>
-
-        <Spinner android:id="@+id/spinnerCharacter"
+        <Button android:id="@+id/btnSobre"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:background="@drawable/spinner_box_background"
-            android:popupBackground="@color/spinner_dropdown_background"
+            android:layout_height="wrap_content"
+            android:text="Sobre o App"
+            android:backgroundTint="@color/button_secondary_background"
+            android:textColor="@color/button_secondary_text"
             android:layout_marginBottom="24dp"/>
 
-        <!-- Alertas de voz (thresholds) -->
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:text="Alertas de voz:" android:textColor="@color/text_secondary"
-            android:layout_marginBottom="6dp"/>
-
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="horizontal" android:layout_marginBottom="12dp">
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:text="Voz baixa:"
-                android:textColor="@color/text_primary"/>
-            <TextView android:id="@+id/tvVoiceLowValue"
-                android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="10%" android:textColor="#4ADE80" android:textStyle="bold"/>
-        </LinearLayout>
-
-        <SeekBar android:id="@+id/seekVoiceLow"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"/>
-
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="horizontal" android:layout_marginBottom="12dp">
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:text="Voz crítica:"
-                android:textColor="@color/text_primary"/>
-            <TextView android:id="@+id/tvVoiceCriticalValue"
-                android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="5%" android:textColor="#F59E0B" android:textStyle="bold"/>
-        </LinearLayout>
-
-        <SeekBar android:id="@+id/seekVoiceCritical"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"/>
-
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="horizontal" android:layout_marginBottom="12dp">
-            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1" android:text="Voz quase acabando:"
-                android:textColor="@color/text_primary"/>
-            <TextView android:id="@+id/tvVoiceVeryLowValue"
-                android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="2%" android:textColor="#EF4444" android:textStyle="bold"/>
-        </LinearLayout>
-
-        <SeekBar android:id="@+id/seekVoiceVeryLow"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"/>
-
-        <!-- ============================================================ -->
-        <!-- BOTÕES DE TESTE (Bip, TTS, Voz)                               -->
-        <!-- ============================================================ -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
-
-            <Button
-                android:id="@+id/btnTestBeep"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="6dp"
-                android:text="🔊 Bip"
-                android:backgroundTint="@color/button_secondary_background"
-                android:textColor="@color/button_secondary_text" />
-
-            <Button
-                android:id="@+id/btnTestTTS"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="6dp"
-                android:layout_marginEnd="6dp"
-                android:text="🗣️ TTS"
-                android:backgroundTint="@color/button_secondary_background"
-                android:textColor="@color/button_secondary_text" />
-
-            <Button
-                android:id="@+id/btnTestVoice"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="6dp"
-                android:text="🎭 Voz"
-                android:backgroundTint="@color/button_secondary_background"
-                android:textColor="@color/button_secondary_text" />
-
-        </LinearLayout>
-
-        <!-- Botão Salvar (oculto) -->
         <Button android:id="@+id/btnSave"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

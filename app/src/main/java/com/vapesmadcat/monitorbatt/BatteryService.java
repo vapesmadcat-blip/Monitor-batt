@@ -227,7 +227,7 @@ public class BatteryService extends Service {
             return;
         }
         
-        int volume = prefs.getInt(KEY_VOICE_VOLUME, DEFAULT_VOICE_VOLUME);
+        int volume = prefs.getInt("beep_volume", 80);
         
         try {
             // Usar um ToneGenerator temporário para o bip, evitando manter recursos abertos
