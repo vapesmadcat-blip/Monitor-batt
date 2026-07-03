@@ -226,6 +226,14 @@ public class BatteryService extends Service {
             updateNotification();
             return;
         }
+        
+        // Atualizar o ToneGenerator com o volume atual antes de tocar
+        int volume = prefs.getInt(KEY_VOICE_VOLUME, DEFAULT_VOICE_VOLUME);
+        if (toneGenerator != null) {
+            toneGenerator.release();
+        }
+        toneGenerator = createToneGenerator();
+
         if (toneGenerator != null) {
             try {
                 toneGenerator.startTone(getToneForLevel(), getToneDurationMs());
@@ -258,10 +266,11 @@ public class BatteryService extends Service {
     }
 
     private ToneGenerator createToneGenerator() {
+        int volume = prefs.getInt(KEY_VOICE_VOLUME, DEFAULT_VOICE_VOLUME);
         int[] streams = {AudioManager.STREAM_ALARM, AudioManager.STREAM_NOTIFICATION, AudioManager.STREAM_MUSIC};
         for (int stream : streams) {
             try {
-                ToneGenerator tg = new ToneGenerator(stream, 100);
+                ToneGenerator tg = new ToneGenerator(stream, volume);
                 if (tg != null) return tg;
             } catch (Exception ignored) {}
         }

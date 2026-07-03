@@ -454,7 +454,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             @Override public void onStartTrackingTouch(SeekBar s) {}
-            @Override public void onStopTrackingTouch(SeekBar s) {}
+            @Override public void onStopTrackingTouch(SeekBar s) {
+                if (s == thresholdSeek) {
+                    scheduleVolumePreviewBeep();
+                }
+            }
         };
         thresholdSeek.setOnSeekBarChangeListener(seekListener);
         intervalSeek.setOnSeekBarChangeListener(seekListener);
@@ -960,7 +964,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         try {
-            ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
+            int volume = seekVoiceVolume != null ? seekVoiceVolume.getProgress() : 80;
+            ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, volume);
             tg.startTone(ToneGenerator.TONE_PROP_BEEP2, 300);
             volumePreviewHandler.postDelayed(tg::release, 500);
         } catch (Exception e) {
@@ -976,7 +981,8 @@ public class MainActivity extends AppCompatActivity {
             boolean muted = preferences.getBoolean(BatteryService.KEY_MUTED, false);
             if (!muted) {
                 try {
-                    ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
+                    int volume = seekVoiceVolume != null ? seekVoiceVolume.getProgress() : 80;
+                    ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, volume);
                     tg.startTone(ToneGenerator.TONE_PROP_BEEP, 250);
                     volumePreviewHandler.postDelayed(tg::release, 450);
                 } catch (Exception e) {
