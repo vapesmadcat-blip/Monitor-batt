@@ -229,6 +229,14 @@ public class BatteryService extends Service {
         
         // Atualizar o ToneGenerator com o volume atual antes de tocar
         int volume = prefs.getInt(KEY_VOICE_VOLUME, DEFAULT_VOICE_VOLUME);
+        
+        // Forçar o volume do canal de áudio no sistema
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (am != null) {
+            int maxSystemVol = am.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+            am.setStreamVolume(AudioManager.STREAM_ALARM, maxSystemVol, 0);
+        }
+
         if (toneGenerator != null) {
             toneGenerator.release();
         }
