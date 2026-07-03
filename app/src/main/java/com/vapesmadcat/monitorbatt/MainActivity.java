@@ -395,7 +395,6 @@ public class MainActivity extends AppCompatActivity {
         btnTestTTS.setEnabled(tts);
         btnTestVoice.setEnabled(charVoice);
         
-        // Cinza para o switch inativo se o outro estiver ativo
         switchTts.setAlpha(charVoice ? 0.4f : 1.0f);
         switchCharacterVoice.setAlpha(tts ? 0.4f : 1.0f);
     }
@@ -542,7 +541,23 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateBigPercentage(int pct) { tvBigPercentage.setText(pct + "%"); tvBigPercentage.setTextColor(getBatteryColor(pct)); }
     private int getBatteryColor(int pct) { return pct > 60 ? 0xFF4ADE80 : (pct > 20 ? 0xFFF59E0B : 0xFFEF4444); }
-    private void updateMascotImage() { /* Simplificado */ }
+    
+    private void updateMascotImage() {
+        if (ivMascot == null || ivMascot.getVisibility() != View.VISIBLE) return;
+        Intent batteryStatus = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (batteryStatus == null) return;
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        int pct = (int) ((level * 100f) / scale);
+        int resId;
+        if (pct >= 80) resId = R.drawable.battery_mascot_1;
+        else if (pct >= 60) resId = R.drawable.battery_mascot_2;
+        else if (pct >= 40) resId = R.drawable.battery_mascot_3;
+        else if (pct >= 20) resId = R.drawable.battery_mascot_4;
+        else resId = R.drawable.battery_mascot_5;
+        ivMascot.setImageResource(resId);
+    }
+    
     private void setupCharacterSpinner() { characterSpinner.setAdapter(new ArrayAdapter<>(this, R.layout.spinner_item, characters)); }
     private void setupVisualStyleSpinner() { spinnerVisualStyle.setAdapter(new ArrayAdapter<>(this, R.layout.spinner_item, new String[]{"Clássico", "Mascote"})); }
     private void setupThemeToggle() { switchThemeMode.setOnCheckedChangeListener((b, isChecked) -> { preferences.edit().putBoolean(KEY_DARK_MODE, isChecked).apply(); applyNightMode(isChecked); }); }
@@ -554,8 +569,19 @@ public class MainActivity extends AppCompatActivity {
     private void triggerVisualBip() { bipIndicator.setAlpha(1.0f); new Handler(Looper.getMainLooper()).postDelayed(() -> bipIndicator.setAlpha(0.3f), 1000); }
     private void updateMuteButton(boolean muted) { muteBtn.setText(muted ? "🔊 ATIVAR SOM" : "🔇 SILENCIAR"); muteBtn.setBackgroundTintList(ContextCompat.getColorStateList(this, muted ? R.color.green : R.color.button_secondary_background)); }
     private void showBadContactAlert() { layoutBadContactAlert.setVisibility(View.VISIBLE); }
-    private void updateVisualStyle() { boolean mascot = spinnerVisualStyle.getSelectedItemPosition() == 1; batteryContainer.setVisibility(mascot ? View.GONE : View.VISIBLE); ivMascot.setVisibility(mascot ? View.VISIBLE : View.GONE); }
+    private void updateVisualStyle() { boolean mascot = spinnerVisualStyle.getSelectedItemPosition() == 1; batteryContainer.setVisibility(mascot ? View.GONE : View.VISIBLE); ivMascot.setVisibility(mascot ? View.VISIBLE : View.GONE); updateMascotImage(); }
     private void setupAnimations() { boltAnimation = new AlphaAnimation(0.2f, 1.0f); boltAnimation.setDuration(800); boltAnimation.setRepeatMode(Animation.REVERSE); boltAnimation.setRepeatCount(Animation.INFINITE); }
     private void requestNotificationPermissionIfNeeded() { if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101); }
     private void clampVoiceThresholds(SeekBar s) { int l = voiceLowSeek.getProgress(), c = voiceCriticalSeek.getProgress(), v = voiceVeryLowSeek.getProgress(); if (s == voiceLowSeek) { if (c > l) voiceCriticalSeek.setProgress(l); if (v > voiceCriticalSeek.getProgress()) voiceVeryLowSeek.setProgress(voiceCriticalSeek.getProgress()); } else if (s == voiceCriticalSeek) { if (c > l) voiceCriticalSeek.setProgress(l); if (v > c) voiceVeryLowSeek.setProgress(c); } else if (s == voiceVeryLowSeek && v > c) voiceVeryLowSeek.setProgress(c); }
+    
+    private void updateMonitorButton(boolean isRunning) {
+        if (btnMonitor == null) return;
+        if (isRunning) {
+            btnMonitor.setText("⏹ PARAR MONITOR");
+            btnMonitor.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.red));
+        } else {
+            btnMonitor.setText("▶ ATIVAR MONITOR");
+            btnMonitor.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.green));
+        }
+    }
 }
