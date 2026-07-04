@@ -148,7 +148,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        applyNightMode(getStoredDarkModeEnabled(preferences));
+        
+        // Modo escuro padrão obrigatório
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        
         setContentView(R.layout.activity_main);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
@@ -170,7 +173,6 @@ public class MainActivity extends AppCompatActivity {
         btnTestTTS = findViewById(R.id.btnTestTTS);
         btnTestVoice = findViewById(R.id.btnTestVoice);
 
-        switchThemeMode = findViewById(R.id.switchThemeMode);
         switchBeep = findViewById(R.id.switchBeep);
         switchTts = findViewById(R.id.switchTts);
         switchCharacterVoice = findViewById(R.id.switchCharacterVoice);
@@ -218,7 +220,6 @@ public class MainActivity extends AppCompatActivity {
 
         setupCharacterSpinner();
         setupVisualStyleSpinner();
-        setupThemeToggle();
         setupControls();
         setupAnimations();
         initTextToSpeech();
@@ -670,9 +671,7 @@ public class MainActivity extends AppCompatActivity {
     
     private void setupCharacterSpinner() { characterSpinner.setAdapter(new ArrayAdapter<>(this, R.layout.spinner_item, characters)); }
     private void setupVisualStyleSpinner() { spinnerVisualStyle.setAdapter(new ArrayAdapter<>(this, R.layout.spinner_item, new String[]{"Clássico", "Mascote"})); }
-    private void setupThemeToggle() { switchThemeMode.setOnCheckedChangeListener((b, isChecked) -> { preferences.edit().putBoolean(KEY_DARK_MODE, isChecked).apply(); applyNightMode(isChecked); }); }
-    private void applyNightMode(boolean dark) { AppCompatDelegate.setDefaultNightMode(dark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO); }
-    private boolean getStoredDarkModeEnabled(SharedPreferences p) { return p.getBoolean(KEY_DARK_MODE, (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES); }
+    private void applyNightMode(boolean dark) { AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES); }
     private void startBatteryService() { ContextCompat.startForegroundService(this, new Intent(this, BatteryService.class)); }
     private void stopBatteryService() { stopService(new Intent(this, BatteryService.class)); }
     private boolean isServiceRunning(Class<?> cls) { ActivityManager m = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE); for (ActivityManager.RunningServiceInfo s : m.getRunningServices(Integer.MAX_VALUE)) if (cls.getName().equals(s.service.getClassName())) return true; return false; }
