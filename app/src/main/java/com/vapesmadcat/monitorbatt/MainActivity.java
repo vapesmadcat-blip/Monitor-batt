@@ -565,13 +565,24 @@ public class MainActivity extends AppCompatActivity {
         if (!ttsInitialized) return;
         if (textToSpeech.isSpeaking()) textToSpeech.stop();
         
-        // Tentar configurar uma voz mais grave (se disponível)
-        textToSpeech.setPitch(0.6f); // Mais grave
-        textToSpeech.setSpeechRate(0.9f); // Um pouco mais lento e dramático
+        // Tentar selecionar uma voz masculina disponível no sistema
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            try {
+                for (android.speech.tts.Voice v : textToSpeech.getVoices()) {
+                    if (v.getName().toLowerCase().contains("male") || v.getName().toLowerCase().contains("pt-br-x-abd-local")) {
+                        textToSpeech.setVoice(v);
+                        break;
+                    }
+                }
+            } catch (Exception e) { Log.e("MainActivity", "Erro ao buscar vozes", e); }
+        }
+        
+        textToSpeech.setPitch(0.8f); // Um pouco mais grave para soar masculino
+        textToSpeech.setSpeechRate(1.0f); // Ritmo normal
         
         android.os.Bundle params = new android.os.Bundle();
         params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, seekVoiceVolume.getProgress() / 100f);
-        textToSpeech.speak("UM, DOIS, TRÊS! TESTANDO! UM, DOIS, TRÊS! LOCUTOR MEXICANO NA ÁREA!", TextToSpeech.QUEUE_FLUSH, params, "ex");
+        textToSpeech.speak("TTS ativado.", TextToSpeech.QUEUE_FLUSH, params, "ex");
     }
 
     private void updateBatteryReadout() {
