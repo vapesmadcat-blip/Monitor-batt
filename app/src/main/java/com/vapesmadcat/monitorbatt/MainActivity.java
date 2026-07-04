@@ -76,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnDismissBadContact;
     
     // Áreas de Layout para habilitar/desabilitar (cinza)
+    private LinearLayout layoutBipArea, layoutVoiceArea;
     private LinearLayout layoutBeepVolume, layoutBeepThreshold, layoutBeepInterval;
     private LinearLayout layoutCharacterSelection, layoutVoiceVolume, layoutVoiceThresholds;
     
@@ -109,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String KEY_SERVICE_ENABLED = "service_enabled";
     public static final String KEY_DARK_MODE = "dark_mode_enabled";
     public static final String KEY_AUTO_START_ON_BOOT = "auto_start_on_boot";
-    public static final String KEY_BEEP_VOLUME = "beep_volume";
+    // Removido para usar a constante do BatteryService
 
     private final String[] characters = {
         "Nenhum", "Lula", "Bolsonaro", "Goku", "Vegeta",
@@ -194,6 +195,8 @@ public class MainActivity extends AppCompatActivity {
         btnDismissBadContact = findViewById(R.id.btnDismissBadContact);
         
         // Layouts de grupo
+        layoutBipArea = findViewById(R.id.layoutBipArea);
+        layoutVoiceArea = findViewById(R.id.layoutVoiceArea);
         layoutBeepVolume = findViewById(R.id.layoutBeepVolume);
         layoutBeepThreshold = findViewById(R.id.layoutBeepThreshold);
         layoutBeepInterval = findViewById(R.id.layoutBeepInterval);
@@ -365,13 +368,27 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateBipAreaState(boolean enabled) {
         float alpha = enabled ? 1.0f : 0.4f;
-        layoutBeepVolume.setAlpha(alpha);
-        layoutBeepThreshold.setAlpha(alpha);
-        layoutBeepInterval.setAlpha(alpha);
         seekBeepVolume.setEnabled(enabled);
         thresholdSeek.setEnabled(enabled);
         intervalSeek.setEnabled(enabled);
         btnTestBeep.setEnabled(enabled);
+        
+        // Acinzentar tudo dentro da área do bip, exceto o switch principal
+        updateAlphaRecursively(layoutBeepVolume, alpha);
+        updateAlphaRecursively(layoutBeepThreshold, alpha);
+        updateAlphaRecursively(layoutBeepInterval, alpha);
+        updateAlphaRecursively(btnTestBeep, alpha);
+    }
+
+    private void updateAlphaRecursively(View view, float alpha) {
+        if (view instanceof android.view.ViewGroup) {
+            android.view.ViewGroup group = (android.view.ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                updateAlphaRecursively(group.getChildAt(i), alpha);
+            }
+        } else if (view instanceof TextView) {
+            view.setAlpha(alpha);
+        }
     }
 
     private void updateVoiceAreaState() {
@@ -382,21 +399,23 @@ public class MainActivity extends AppCompatActivity {
         float alphaAny = anyVoice ? 1.0f : 0.4f;
         float alphaChar = charVoice ? 1.0f : 0.4f;
         
-        layoutVoiceVolume.setAlpha(alphaAny);
-        layoutVoiceThresholds.setAlpha(alphaAny);
         seekVoiceVolume.setEnabled(anyVoice);
         voiceLowSeek.setEnabled(anyVoice);
         voiceCriticalSeek.setEnabled(anyVoice);
         voiceVeryLowSeek.setEnabled(anyVoice);
-        
-        layoutCharacterSelection.setAlpha(alphaChar);
         characterSpinner.setEnabled(charVoice);
-        
         btnTestTTS.setEnabled(tts);
         btnTestVoice.setEnabled(charVoice);
         
+        // Lógica de desabilitação visual (acinzentar)
         switchTts.setAlpha(charVoice ? 0.4f : 1.0f);
         switchCharacterVoice.setAlpha(tts ? 0.4f : 1.0f);
+        
+        updateAlphaRecursively(layoutVoiceVolume, alphaAny);
+        updateAlphaRecursively(layoutVoiceThresholds, alphaAny);
+        updateAlphaRecursively(layoutCharacterSelection, alphaChar);
+        updateAlphaRecursively(btnTestTTS, tts ? 1.0f : 0.4f);
+        updateAlphaRecursively(btnTestVoice, charVoice ? 1.0f : 0.4f);
     }
 
     private void loadSettings() {
@@ -408,7 +427,7 @@ public class MainActivity extends AppCompatActivity {
         int voiceCritical = preferences.getInt(BatteryService.KEY_VOICE_CRITICAL_THRESHOLD, BatteryService.DEFAULT_VOICE_CRITICAL_THRESHOLD);
         int voiceVeryLow = preferences.getInt(BatteryService.KEY_VOICE_VERYLOW_THRESHOLD, BatteryService.DEFAULT_VOICE_VERYLOW_THRESHOLD);
         int voiceVolume = preferences.getInt(BatteryService.KEY_VOICE_VOLUME, BatteryService.DEFAULT_VOICE_VOLUME);
-        int beepVolume = preferences.getInt(KEY_BEEP_VOLUME, 80);
+        int beepVolume = preferences.getInt(BatteryService.KEY_BEEP_VOLUME, 80);
 
         thresholdSeek.setProgress(Math.max(0, threshold - 5));
         intervalSeek.setProgress(Math.max(0, (intervalSeconds / 5) - 1));
@@ -444,7 +463,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putInt(BatteryService.KEY_VOICE_CRITICAL_THRESHOLD, voiceCriticalSeek.getProgress());
         editor.putInt(BatteryService.KEY_VOICE_VERYLOW_THRESHOLD, voiceVeryLowSeek.getProgress());
         editor.putInt(BatteryService.KEY_VOICE_VOLUME, seekVoiceVolume.getProgress());
-        editor.putInt(KEY_BEEP_VOLUME, seekBeepVolume.getProgress());
+        editor.putInt(BatteryService.KEY_BEEP_VOLUME, seekBeepVolume.getProgress());
         editor.apply();
     }
 
@@ -516,7 +535,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void speakBatteryStatusExample() {
         if (!ttsInitialized) return;
-        textToSpeech.speak("Monitor de Bateria Pro. Bateria em 87 por cento.", TextToSpeech.QUEUE_FLUSH, null, "ex");
+        android.os.Bundle params = new android.os.Bundle();
+        params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, seekVoiceVolume.getProgress() / 100f);
+        textToSpeech.speak("Monitor de Bateria Pro. Bateria em 87 por cento.", TextToSpeech.QUEUE_FLUSH, params, "ex");
     }
 
     private void updateBatteryReadout() {

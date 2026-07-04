@@ -49,6 +49,7 @@ public class BatteryService extends Service {
     public static final String KEY_VOICE_VERYLOW_THRESHOLD = "voice_verylow_threshold";
     public static final String KEY_VISUAL_STYLE = "visual_style";
     public static final String KEY_VOICE_VOLUME = "voice_volume"; // 0-100
+    public static final String KEY_BEEP_VOLUME = "beep_volume";
 
     public static final int DEFAULT_THRESHOLD = 10;
     public static final int DEFAULT_BEEP_INTERVAL_SECONDS = 15;
@@ -195,7 +196,9 @@ public class BatteryService extends Service {
         // Falar via TTS (tem prioridade sobre tudo)
         if (tts != null && !isMuted()) {
             String msg = "Atenção! Possível problema no cabo. Detectada possibilidade de mau contato.";
-            tts.speak(msg, TextToSpeech.QUEUE_FLUSH, null, "bad_contact");
+            android.os.Bundle params = new android.os.Bundle();
+            params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, getVoiceVolume() / 100f);
+            tts.speak(msg, TextToSpeech.QUEUE_FLUSH, params, "bad_contact");
         }
 
         showToast("⚠️ Possível mau contato no cabo detectado!");
@@ -206,7 +209,9 @@ public class BatteryService extends Service {
         if (isCharacterVoiceEnabled() && !isMuted()) {
             playSpecificVoice("charging");
         } else if (isTtsEnabled() && !isMuted() && tts != null) {
-            tts.speak("Carregador conectado. Monitoramento pausado.", TextToSpeech.QUEUE_FLUSH, null, "charging");
+            android.os.Bundle params = new android.os.Bundle();
+            params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, getVoiceVolume() / 100f);
+            tts.speak("Carregador conectado. Monitoramento pausado.", TextToSpeech.QUEUE_FLUSH, params, "charging");
         }
         showToast("Carregador conectado - Monitoramento pausado");
     }
@@ -216,7 +221,9 @@ public class BatteryService extends Service {
         if (isCharacterVoiceEnabled() && !isMuted()) {
             playSpecificVoice("full");
         } else if (isTtsEnabled() && !isMuted() && tts != null) {
-            tts.speak("Bateria cheia! 100%. Muito bem!", TextToSpeech.QUEUE_FLUSH, null, "full");
+            android.os.Bundle params = new android.os.Bundle();
+            params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, getVoiceVolume() / 100f);
+            tts.speak("Bateria cheia! 100%. Muito bem!", TextToSpeech.QUEUE_FLUSH, params, "full");
         }
         showToast("Bateria cheia! 100%");
     }
@@ -227,7 +234,7 @@ public class BatteryService extends Service {
             return;
         }
         
-        int volume = prefs.getInt("beep_volume", 80);
+        int volume = prefs.getInt(KEY_BEEP_VOLUME, 80);
         
         try {
             // Usar um ToneGenerator temporário para o bip, evitando manter recursos abertos
@@ -264,7 +271,7 @@ public class BatteryService extends Service {
     }
 
     private ToneGenerator createToneGenerator() {
-        int volume = prefs.getInt(KEY_VOICE_VOLUME, DEFAULT_VOICE_VOLUME);
+        int volume = prefs.getInt(KEY_BEEP_VOLUME, 80);
         int[] streams = {AudioManager.STREAM_ALARM, AudioManager.STREAM_NOTIFICATION, AudioManager.STREAM_MUSIC};
         for (int stream : streams) {
             try {
@@ -372,9 +379,12 @@ public class BatteryService extends Service {
         }
 
         try {
-            tts.speak(message, TextToSpeech.QUEUE_FLUSH, null, "battery_tts_" + level);
+            // Aplicar volume configurado via Bundle para o TTS (API 21+)
+            android.os.Bundle params = new android.os.Bundle();
+            params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, getVoiceVolume() / 100f);
+            tts.speak(message, TextToSpeech.QUEUE_FLUSH, params, "battery_tts_" + level);
             lastVoiceTime = currentTime;
-            Log.d("BatteryService", "TTS: " + message);
+            Log.d("BatteryService", "TTS: " + message + " vol=" + (getVoiceVolume() / 100f));
         } catch (Exception e) {
             Log.e("BatteryService", "Erro no TTS", e);
         }
