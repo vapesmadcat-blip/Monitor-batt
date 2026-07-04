@@ -585,8 +585,8 @@ public class MainActivity extends AppCompatActivity {
             statusText.setTextColor(0xFFFF4D4F);
         }
 
-        // Corrigir altura da pilha (usando proporção do container de 260dp)
-        int maxHeightPx = (int) (260 * getResources().getDisplayMetrics().density);
+        // Corrigir altura da pilha (usando proporção do container de 360dp)
+        int maxHeightPx = (int) (360 * getResources().getDisplayMetrics().density);
         int fillHeight = (int) (pct / 100f * (maxHeightPx - (16 * getResources().getDisplayMetrics().density))); 
         batteryFill.getLayoutParams().height = fillHeight;
         batteryFill.requestLayout();
