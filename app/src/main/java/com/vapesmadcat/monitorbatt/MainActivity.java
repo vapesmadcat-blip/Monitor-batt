@@ -329,7 +329,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             @Override public void onStartTrackingTouch(SeekBar s) {}
-            @Override public void onStopTrackingTouch(SeekBar s) { playCharacterVoiceSample(); }
+            @Override public void onStopTrackingTouch(SeekBar s) { 
+                if (switchCharacterVoice.isChecked()) {
+                    playCharacterVoiceSample(); 
+                } else if (switchTts.isChecked()) {
+                    speakBatteryStatusExample();
+                }
+            }
         });
 
         switchBeep.setOnCheckedChangeListener((b, isChecked) -> {
@@ -557,9 +563,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void speakBatteryStatusExample() {
         if (!ttsInitialized) return;
+        if (textToSpeech.isSpeaking()) textToSpeech.stop();
         android.os.Bundle params = new android.os.Bundle();
         params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, seekVoiceVolume.getProgress() / 100f);
-        textToSpeech.speak("Monitor de Bateria Pro. Bateria em 87 por cento.", TextToSpeech.QUEUE_FLUSH, params, "ex");
+        textToSpeech.speak("Testando. Um, dois, três, testando. Um, dois, três, um, dois, três.", TextToSpeech.QUEUE_FLUSH, params, "ex");
     }
 
     private void updateBatteryReadout() {
@@ -585,8 +592,8 @@ public class MainActivity extends AppCompatActivity {
             statusText.setTextColor(0xFFFF4D4F);
         }
 
-        // Corrigir altura da pilha (usando proporção do container de 360dp)
-        int maxHeightPx = (int) (360 * getResources().getDisplayMetrics().density);
+        // Corrigir altura da pilha (usando proporção do container de 400dp)
+        int maxHeightPx = (int) (400 * getResources().getDisplayMetrics().density);
         int fillHeight = (int) (pct / 100f * (maxHeightPx - (16 * getResources().getDisplayMetrics().density))); 
         batteryFill.getLayoutParams().height = fillHeight;
         batteryFill.requestLayout();
