@@ -269,6 +269,28 @@ public class MainActivity extends AppCompatActivity {
         updateTexts();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        registerReceiver(bipReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BIP_TRIGGERED"), Context.RECEIVER_NOT_EXPORTED);
+        registerReceiver(badContactReceiver, new IntentFilter("com.vapesmadcat.monitorbatt.BAD_CONTACT_DETECTED"), Context.RECEIVER_NOT_EXPORTED);
+        updateBatteryReadout();
+        updateMonitorButton(isServiceRunning(BatteryService.class));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        try {
+            unregisterReceiver(batteryReceiver);
+            unregisterReceiver(bipReceiver);
+            unregisterReceiver(badContactReceiver);
+        } catch (Exception e) {
+            Log.e("MainActivity", "Erro ao desregistrar receivers", e);
+        }
+    }
+
     private void setupControls() {
         thresholdSeek.setMax(25);
         intervalSeek.setMax(11);
@@ -553,11 +575,46 @@ public class MainActivity extends AppCompatActivity {
         chargingBolt.setVisibility(isCharging ? View.VISIBLE : View.GONE);
         if (isCharging) chargingBolt.startAnimation(boltAnimation); else chargingBolt.clearAnimation();
 
-        int height = (int) (pct * getResources().getDisplayMetrics().density * 1.4f);
-        batteryFill.getLayoutParams().height = height;
+        // Atualizar texto de status
+        boolean isRunning = isServiceRunning(BatteryService.class);
+        if (isRunning) {
+            statusText.setText("Monitoramento: ATIVO");
+            statusText.setTextColor(0xFF4ADE80);
+        } else {
+            statusText.setText("Monitoramento: DESATIVADO");
+            statusText.setTextColor(0xFFFF4D4F);
+        }
+
+        // Corrigir altura da pilha (usando proporção do container de 260dp)
+        int maxHeightPx = (int) (260 * getResources().getDisplayMetrics().density);
+        int fillHeight = (int) (pct / 100f * (maxHeightPx - (16 * getResources().getDisplayMetrics().density))); 
+        batteryFill.getLayoutParams().height = fillHeight;
         batteryFill.requestLayout();
         batteryFill.setBackgroundResource(pct > 60 ? R.drawable.battery_fill_high : (pct > 20 ? R.drawable.battery_fill_mid : R.drawable.battery_fill_low));
+        
+        // Atualizar estatísticas detalhadas
+        updateStats(batteryStatus);
         updateMascotImage();
+    }
+
+    private void updateStats(Intent intent) {
+        int voltage = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
+        int temperature = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0);
+        
+        tvBatteryVoltage.setText(String.format(Locale.US, "%.2f V", voltage / 1000.0));
+        tvBatteryTemp.setText(String.format(Locale.US, "%.1f °C", temperature / 10.0));
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            long currentNow = batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
+            tvBatteryCurrent.setText(currentNow / 1000 + " mA");
+            
+            // Cálculo aproximado de potência (P = V * I)
+            double power = (voltage / 1000.0) * (Math.abs(currentNow) / 1000000.0);
+            tvBatteryPower.setText(String.format(Locale.US, "%.2f W", power));
+        }
+        
+        tvVisualIndicator.setText(isCharging ? "⚡" : "🔋");
+        tvChargingRate.setText(isCharging ? "Carregando" : "Descarregando");
     }
 
     private void updateBigPercentage(int pct) { tvBigPercentage.setText(pct + "%"); tvBigPercentage.setTextColor(getBatteryColor(pct)); }

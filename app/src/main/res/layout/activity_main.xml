@@ -313,7 +313,7 @@
         <!-- Bateria Visual -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="180dp"
+            android:layout_height="280dp"
             android:layout_marginBottom="24dp">
             <LinearLayout
                 android:id="@+id/batteryContainer"
@@ -322,8 +322,8 @@
                 android:gravity="center"
                 android:orientation="vertical">
                 <RelativeLayout
-                    android:layout_width="100dp"
-                    android:layout_height="160dp"
+                    android:layout_width="160dp"
+                    android:layout_height="260dp"
                     android:background="@drawable/battery_shell">
                     <View
                         android:id="@+id/batteryFill"
@@ -344,8 +344,8 @@
             </LinearLayout>
             <ImageView
                 android:id="@+id/ivMascot"
-                android:layout_width="140dp"
-                android:layout_height="140dp"
+                android:layout_width="240dp"
+                android:layout_height="240dp"
                 android:layout_gravity="center"
                 android:src="@drawable/battery_mascot_1"
                 android:visibility="gone" />
@@ -356,7 +356,7 @@
                 android:layout_gravity="bottom|center_horizontal"
                 android:text="--%"
                 android:textColor="@color/text_primary"
-                android:textSize="28sp"
+                android:textSize="48sp"
                 android:textStyle="bold" />
         </FrameLayout>
 
