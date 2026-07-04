@@ -313,7 +313,7 @@
         <!-- Bateria Visual -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="420dp"
+            android:layout_height="460dp"
             android:layout_marginBottom="24dp">
             <LinearLayout
                 android:id="@+id/batteryContainer"
@@ -322,8 +322,8 @@
                 android:gravity="center"
                 android:orientation="vertical">
                 <RelativeLayout
-                    android:layout_width="260dp"
-                    android:layout_height="400dp"
+                    android:layout_width="290dp"
+                    android:layout_height="440dp"
                     android:background="@drawable/battery_shell">
                     <View
                         android:id="@+id/batteryFill"

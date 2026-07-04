@@ -432,8 +432,8 @@ public class MainActivity extends AppCompatActivity {
         voiceCriticalSeek.setEnabled(anyVoice);
         voiceVeryLowSeek.setEnabled(anyVoice);
         characterSpinner.setEnabled(charVoice);
-        btnTestTTS.setEnabled(tts);
-        btnTestVoice.setEnabled(charVoice);
+        btnTestTTS.setEnabled(true);
+        btnTestVoice.setEnabled(true);
         
         // Lógica de desabilitação visual (acinzentar)
         switchTts.setAlpha(charVoice ? 0.4f : 1.0f);
@@ -442,8 +442,8 @@ public class MainActivity extends AppCompatActivity {
         updateAlphaRecursively(layoutVoiceVolume, alphaAny);
         updateAlphaRecursively(layoutVoiceThresholds, alphaAny);
         updateAlphaRecursively(layoutCharacterSelection, alphaChar);
-        updateAlphaRecursively(btnTestTTS, tts ? 1.0f : 0.4f);
-        updateAlphaRecursively(btnTestVoice, charVoice ? 1.0f : 0.4f);
+        updateAlphaRecursively(btnTestTTS, 1.0f);
+        updateAlphaRecursively(btnTestVoice, 1.0f);
     }
 
     private void loadSettings() {
@@ -564,9 +564,14 @@ public class MainActivity extends AppCompatActivity {
     private void speakBatteryStatusExample() {
         if (!ttsInitialized) return;
         if (textToSpeech.isSpeaking()) textToSpeech.stop();
+        
+        // Tentar configurar uma voz mais grave (se disponível)
+        textToSpeech.setPitch(0.6f); // Mais grave
+        textToSpeech.setSpeechRate(0.9f); // Um pouco mais lento e dramático
+        
         android.os.Bundle params = new android.os.Bundle();
         params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, seekVoiceVolume.getProgress() / 100f);
-        textToSpeech.speak("Testando. Um, dois, três, testando. Um, dois, três, um, dois, três.", TextToSpeech.QUEUE_FLUSH, params, "ex");
+        textToSpeech.speak("UM, DOIS, TRÊS! TESTANDO! UM, DOIS, TRÊS! LOCUTOR MEXICANO NA ÁREA!", TextToSpeech.QUEUE_FLUSH, params, "ex");
     }
 
     private void updateBatteryReadout() {
@@ -592,8 +597,8 @@ public class MainActivity extends AppCompatActivity {
             statusText.setTextColor(0xFFFF4D4F);
         }
 
-        // Corrigir altura da pilha (usando proporção do container de 400dp)
-        int maxHeightPx = (int) (400 * getResources().getDisplayMetrics().density);
+        // Corrigir altura da pilha (usando proporção do container de 440dp)
+        int maxHeightPx = (int) (440 * getResources().getDisplayMetrics().density);
         int fillHeight = (int) (pct / 100f * (maxHeightPx - (16 * getResources().getDisplayMetrics().density))); 
         batteryFill.getLayoutParams().height = fillHeight;
         batteryFill.requestLayout();
@@ -624,7 +629,16 @@ public class MainActivity extends AppCompatActivity {
         tvChargingRate.setText(isCharging ? "Carregando" : "Descarregando");
     }
 
-    private void updateBigPercentage(int pct) { tvBigPercentage.setText(pct + "%"); tvBigPercentage.setTextColor(getBatteryColor(pct)); }
+    private void updateBigPercentage(int pct) { 
+        tvBigPercentage.setText(pct + "%"); 
+        boolean isMascot = spinnerVisualStyle.getSelectedItemPosition() == 1;
+        if (isMascot) {
+            tvBigPercentage.setTextColor(getBatteryColor(pct)); 
+        } else {
+            // Na pilha, usar Amarelo para destacar no fundo (especialmente no vermelho)
+            tvBigPercentage.setTextColor(0xFFFACC15); // Yellow-400
+        }
+    }
     private int getBatteryColor(int pct) { return pct > 60 ? 0xFF4ADE80 : (pct > 20 ? 0xFFF59E0B : 0xFFEF4444); }
     
     private void updateMascotImage() {
