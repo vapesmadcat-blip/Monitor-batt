@@ -206,9 +206,6 @@ public class MainActivity extends AppCompatActivity {
         layoutVoiceVolume = findViewById(R.id.layoutVoiceVolume);
         layoutVoiceThresholds = findViewById(R.id.layoutVoiceThresholds);
         
-        ivChargingSpeedIcon = findViewById(R.id.ivChargingSpeedIcon);
-        tvChargingRate = findViewById(R.id.tvChargingRate);
-        tvChargingTimeRemaining = findViewById(R.id.tvChargingTimeRemaining);
         tvChargingSpeedLabel = findViewById(R.id.tvChargingSpeedLabel);
         tvVisualIndicator = findViewById(R.id.tvVisualIndicator);
         pbChargingSpeed = findViewById(R.id.pbChargingSpeed);
@@ -638,7 +635,7 @@ public class MainActivity extends AppCompatActivity {
         }
         
         tvVisualIndicator.setText(isCharging ? "⚡" : "🔋");
-        tvChargingRate.setText(isCharging ? "Carregando" : "Descarregando");
+        // tvChargingRate e tvChargingTimeRemaining foram removidos do layout para simplificar
     }
 
     private void updateBigPercentage(int pct) { 
