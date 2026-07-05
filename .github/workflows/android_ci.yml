@@ -1,0 +1,62 @@
+name: Android CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Increment version
+      run: python3 increment_version.py
+
+    - name: Commit and push version changes
+      run: |
+        git config user.name "VAPESMADCAT"
+        git config user.email "vapesmadcat-blip@users.noreply.github.com"
+        git add app/build.gradle
+        git commit -m "CI: Increment version [skip ci]"
+        git push
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Build Android App Bundle
+      run: ./gradlew bundleRelease
+
+    - name: Sign AAB
+      uses: r0adkll/sign-android-release@v1
+      id: sign_app
+      with:
+        releaseDirectory: app/build/outputs/bundle/release
+        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+        alias: ${{ secrets.ALIAS }}
+        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+        keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+    - name: Upload to Google Play
+      uses: r0adkll/upload-google-play@v1
+      with:
+        serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+        packageName: com.vapesmadcat.monitorbatt
+        releaseFile: ${{ steps.sign_app.outputs.signedReleaseFile }}
+        track: internal
+        status: completed
