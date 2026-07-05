@@ -44,15 +44,9 @@ jobs:
             echo "::error::Missing GOOGLE_PLAY_SERVICE_ACCOUNT_JSON secret"
             exit 1
           fi
-          python - <<'PY'
-          import os
-          from pathlib import Path
-
-          Path(os.environ["RUNNER_TEMP"], "google-play-service-account.json").write_text(
-              os.environ["GOOGLE_PLAY_SERVICE_ACCOUNT_JSON"],
-              encoding="utf-8",
-          )
-          PY
+          cat > "$RUNNER_TEMP/google-play-service-account.json" <<EOF
+          $GOOGLE_PLAY_SERVICE_ACCOUNT_JSON
+          EOF
           echo "GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_FILE=$RUNNER_TEMP/google-play-service-account.json" >> "$GITHUB_ENV"
 
       - name: Build signed AAB
