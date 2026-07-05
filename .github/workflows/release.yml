@@ -36,6 +36,17 @@ jobs:
           echo "${{ secrets.RELEASE_STORE_FILE }}" | base64 --decode > "$RUNNER_TEMP/release.jks"
           echo "RELEASE_STORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
 
+      - name: Prepare Google Play service account file
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::Missing GOOGLE_PLAY_SERVICE_ACCOUNT_JSON secret"
+            exit 1
+          fi
+          printf '%s' "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/google-play-service-account.json"
+          echo "GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_FILE=$RUNNER_TEMP/google-play-service-account.json" >> "$GITHUB_ENV"
+
       - name: Build signed AAB
         env:
           RELEASE_STORE_FILE: ${{ env.RELEASE_STORE_FILE }}
@@ -53,8 +64,8 @@ jobs:
       - name: Upload to Google Play (internal)
         uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          serviceAccountJson: ${{ env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_FILE }}
           packageName: com.vapesmadcat.monitorbatt
           releaseFiles: app/build/outputs/bundle/release/*.aab
-          track: internal
+          tracks: internal
           status: completed
