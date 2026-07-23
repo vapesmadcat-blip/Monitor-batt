@@ -52,7 +52,7 @@ jobs:
       
       - name: Start emulator
         run: |
-          $ANDROID_HOME/emulator/emulator -avd test34 \
+          $ANDROID_HOME/emulator/emulator -avd Samsuns_G14 \
             -gpu swiftshader_indirect \
             -no-snapshot \
             -no-boot-anim \
