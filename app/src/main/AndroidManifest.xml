@@ -41,7 +41,9 @@ android:theme="@style/Theme.MonitorBatt"
             android:name=".BatteryService"
             android:foregroundServiceType="specialUse"
             android:exported="false">
-            <property android:name="android.app.PROPERTY_SPECIAL_USE_CATEGORY" android:value="battery_monitor" />
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Continuous user-initiated battery level and charging-state monitoring with an ongoing notification and configurable alerts." />
         </service>
 
         <receiver android:name=".BootReceiver" android:exported="false">
