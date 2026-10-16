@@ -18,12 +18,12 @@ def hasReleaseSigning = releaseStoreFile && releaseStorePassword && releaseKeyAl
 
 android {
     namespace 'com.vapesmadcat.monitorbatt'
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.vapesmadcat.monitorbatt"
         minSdk 24
-        targetSdk 34
+        targetSdk 36
         versionCode 18
         versionName "1.2.6"
     }
