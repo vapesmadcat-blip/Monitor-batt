@@ -7,9 +7,6 @@
 name: Release AAB to Play Store
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
   workflow_dispatch:
 
 permissions:
@@ -32,9 +29,14 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Decode release keystore
+        env:
+          RELEASE_STORE_FILE_B64: ${{ secrets.RELEASE_STORE_FILE }}
         run: |
-          echo "${{ secrets.RELEASE_STORE_FILE }}" | base64 --decode > "$RUNNER_TEMP/release.jks"
-          echo "RELEASE_STORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+          if [ -z "$RELEASE_STORE_FILE_B64" ]; then
+            echo "::error::Missing RELEASE_STORE_FILE secret"
+            exit 1
+          fi
+          echo "$RELEASE_STORE_FILE_B64" | base64 --decode > "$RUNNER_TEMP/release.jks"
 
       - name: Prepare Google Play service account file
         env:
