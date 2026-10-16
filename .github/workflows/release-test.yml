@@ -27,21 +27,19 @@ jobs:
       - name: Decode keystore
         env:
           RELEASE_STORE_FILE_B64: ${{ secrets.RELEASE_STORE_FILE }}
-          SIGNING_KEY_B64: ${{ secrets.SIGNING_KEY }}
         run: |
-          KEYSTORE_B64="${RELEASE_STORE_FILE_B64:-$SIGNING_KEY_B64}"
-          if [ -z "$KEYSTORE_B64" ]; then
-            echo "::error::Missing both RELEASE_STORE_FILE and SIGNING_KEY secrets"
+          if [ -z "$RELEASE_STORE_FILE_B64" ]; then
+            echo "::error::Missing RELEASE_STORE_FILE secret"
             exit 1
           fi
-          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          echo "$RELEASE_STORE_FILE_B64" | base64 --decode > "$RUNNER_TEMP/release.jks"
 
       - name: Build signed release APK (no publishing)
         env:
           RELEASE_STORE_FILE: ${{ runner.temp }}/release.jks
-          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD || secrets.KEY_STORE_PASSWORD }}
-          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS || secrets.ALIAS }}
-          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD || secrets.KEY_PASSWORD }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: ./gradlew assembleRelease
 
       - name: Upload APK artifact
