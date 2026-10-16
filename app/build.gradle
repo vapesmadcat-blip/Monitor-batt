@@ -15,6 +15,10 @@ def releaseStorePassword = keystoreProperties.getProperty("storePassword") ?: Sy
 def releaseKeyAlias = keystoreProperties.getProperty("keyAlias") ?: System.getenv("RELEASE_KEY_ALIAS")
 def releaseKeyPassword = keystoreProperties.getProperty("keyPassword") ?: System.getenv("RELEASE_KEY_PASSWORD")
 def hasReleaseSigning = releaseStoreFile && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+def isReleaseTask = gradle.startParameter.taskNames.any { it.toLowerCase().contains("release") }
+if (isReleaseTask && System.getenv("CI") == "true" && !hasReleaseSigning) {
+    throw new GradleException("Release build requires RELEASE_STORE_FILE, RELEASE_STORE_PASSWORD, RELEASE_KEY_ALIAS and RELEASE_KEY_PASSWORD in CI.")
+}
 
 android {
     namespace 'com.vapesmadcat.monitorbatt'
