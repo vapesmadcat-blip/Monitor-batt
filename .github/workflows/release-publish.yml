@@ -30,7 +30,7 @@ jobs:
 
       - name: Decode release keystore
         env:
-          RELEASE_STORE_FILE_B64: ${{ secrets.RELEASE_STORE_FILE }}
+          RELEASE_STORE_FILE_B64: ${{ secrets.RELEASE_STORE_FILE || secrets.SIGNING_KEY }}
         run: |
           if [ -z "$RELEASE_STORE_FILE_B64" ]; then
             echo "::error::Missing RELEASE_STORE_FILE secret"
@@ -54,9 +54,9 @@ jobs:
       - name: Build signed AAB
         env:
           RELEASE_STORE_FILE: ${{ runner.temp }}/release.jks
-          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
-          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
-          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD || secrets.KEY_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS || secrets.ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD || secrets.KEY_PASSWORD }}
         run: ./gradlew bundleRelease
 
       - name: Upload AAB artifact
