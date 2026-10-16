@@ -30,13 +30,15 @@ jobs:
 
       - name: Decode release keystore
         env:
-          RELEASE_STORE_FILE_B64: ${{ secrets.RELEASE_STORE_FILE || secrets.SIGNING_KEY }}
+          RELEASE_STORE_FILE_B64: ${{ secrets.RELEASE_STORE_FILE }}
+          SIGNING_KEY_B64: ${{ secrets.SIGNING_KEY }}
         run: |
-          if [ -z "$RELEASE_STORE_FILE_B64" ]; then
-            echo "::error::Missing RELEASE_STORE_FILE secret"
+          KEYSTORE_B64="${RELEASE_STORE_FILE_B64:-$SIGNING_KEY_B64}"
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::Missing both RELEASE_STORE_FILE and SIGNING_KEY secrets"
             exit 1
           fi
-          echo "$RELEASE_STORE_FILE_B64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/release.jks"
 
       - name: Prepare Google Play service account file
         env:
