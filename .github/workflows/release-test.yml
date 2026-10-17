@@ -1,6 +1,9 @@
-name: Release Test - APK only
+name: Build Release APK
 
 on:
+  push:
+    tags:
+      - 'v*.*.*'
   workflow_dispatch:
 
 permissions:
@@ -23,20 +26,15 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # 🔐 A assinatura é obrigatória para um artefato release distribuível
+      # 🔐 Se você NÃO estiver assinando, pode apagar esse bloco inteiro
       - name: Decode keystore
-        env:
-          RELEASE_STORE_FILE_B64: ${{ secrets.RELEASE_STORE_FILE }}
         run: |
-          if [ -z "$RELEASE_STORE_FILE_B64" ]; then
-            echo "::error::Missing RELEASE_STORE_FILE secret"
-            exit 1
-          fi
-          echo "$RELEASE_STORE_FILE_B64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          echo "${{ secrets.RELEASE_STORE_FILE }}" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          echo "RELEASE_STORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
 
-      - name: Build signed release APK (no publishing)
+      - name: Build signed APK
         env:
-          RELEASE_STORE_FILE: ${{ runner.temp }}/release.jks
+          RELEASE_STORE_FILE: ${{ env.RELEASE_STORE_FILE }}
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
