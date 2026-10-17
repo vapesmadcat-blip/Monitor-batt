@@ -31,7 +31,6 @@ jobs:
         run: |
           echo "${{ secrets.RELEASE_STORE_FILE }}" | base64 --decode > "$RUNNER_TEMP/release.jks"
           echo "RELEASE_STORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
-
       - name: Build signed APK
         env:
           RELEASE_STORE_FILE: ${{ env.RELEASE_STORE_FILE }}
